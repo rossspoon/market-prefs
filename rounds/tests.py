@@ -65,6 +65,20 @@ class PlayerBot(Bot):
     def before_market_page_tests(self):
         r_num = self.round_number
 
+        #the float should never change
+        expect(self.group.float, 10)
+
+        if r_num == 1:
+            expect(self.group.short, 10)
+        elif r_num == 2:
+            expect(self.group.short, 10)
+        elif r_num == 3:
+            expect(self.group.short, 10)
+        elif r_num == 4:
+            expect(self.group.short, 6)
+        elif r_num == 5:
+            expect(self.group.short, 6)
+
         # Player-level tests
         if r_num == 2 and self.p_type == 1:
             expect(self.player.cash, 0)

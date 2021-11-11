@@ -9,6 +9,7 @@ from statistics import mean
 import math
 from collections import defaultdict
 import numpy as np
+import pandas as pd
 
 
 class Constants(BaseConstants):
@@ -25,6 +26,7 @@ def creating_session(subsession):
 
     session = subsession.session
 
+    # Assemble config params regarding endowments
     cash_control = session.config['cash_endowment_control']
     shares_control = session.config['shares_endowment_control']
     cash_treatment = session.config['cash_endowment_treatment']
@@ -37,13 +39,15 @@ def creating_session(subsession):
         treated_ids = [int(x) for x in session.config['treated_ids'].split()]
         modulus = len(treated_ids)
         for group in subsession.get_groups():
-            for player in group.get_players():
-                idx = player.id_in_group % modulus
+            
+            #Make initial endowments to all players in the group
+            for _idx, player in enumerate(group.get_players()):
+                idx = _idx % modulus
                 endowment_idx = treated_ids[idx]
                 endow = endowments[endowment_idx]
                 player.cash = endow['cash']
                 player.shares = endow['shares']
-
+            
     else:
         # randomize to treatments
         fraction = session.config['fraction_of_short_starts']
@@ -159,19 +163,27 @@ def market_page_live_method(player, d):
 #######################################
 
 def standard_vars_for_template(player: Player):
+
+    #I'll send the entire session config
+    sess_config = player.session.config 
+
     price = get_last_period_price(player.group)
     pos_value = player.shares * price
+
     if (player.cash == 0):
         margin_ratio = None
         margin_ratio_pct = None
     else:
         margin_ratio = abs(float(pos_value) / float(player.cash))
         margin_ratio_pct = "{:.0%}".format(margin_ratio)
-    return dict( margin_ratio = margin_ratio
+
+    ret = dict( margin_ratio = margin_ratio
                 , margin_ratio_pct = margin_ratio_pct
                 , price = price
                 , pos_value = pos_value
                 )
+    ret.update(sess_config)
+    return ret
     
 
 def get_orders_for_group(group: Group):
@@ -373,6 +385,13 @@ def calculate_market(group: Group):
         group.volume = int(market_volume)
         group.dividend = dividend
 
+def get_player_df(group: Group):
+    return pd.DataFrame.from_records([p.to_dict() for p in group.get_players()])
+
+def set_float_and_short(group: Group):
+    #Calculate float the total shorts
+    group.float = sum( (p.shares for p in group.get_players()) )
+    group.short = sum( (abs(p.shares) for p in group.get_players() if p.shares < 0) )
 
 
 ############
@@ -399,6 +418,8 @@ class MarketWaitPage(WaitPage):
 class PreMarketWait(WaitPage):
     body_text = "Waiting for the experiment to begin"
     pass
+
+    after_all_players_arrive = set_float_and_short
 
 
 class MarketResults(Page):

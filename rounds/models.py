@@ -53,6 +53,10 @@ class Group(BaseGroup):
     price = models.CurrencyField()
     volume = models.IntegerField()
     dividend = models.IntegerField( initial = 0 )
+
+    float = models.IntegerField()
+    short = models.IntegerField()
+
    
 
 class Player(BasePlayer):
