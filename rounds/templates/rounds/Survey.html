@@ -1,0 +1,74 @@
+{{ block title }}
+    Results of Round {{player.round_number}}
+{{ endblock }}
+
+<style>
+.odd {
+    background-color: #ddd;
+    }
+</style>
+
+{{ block content }}
+    <table class="table">
+        {#
+        <tr class="odd">
+            <td>Initial Position (Cash/ Shares) </td>
+            <td>( {{player.cash}}  / {{player.shares}}  ) </td>
+        </tr>
+        <tr class="even">
+        {{ if player.order_type == 1 }}
+                <td>Your Offer  (Price / Shares)</td>
+                <td>( {{player.order_price}} / {{player.order_quantity}}  )</td>
+        {{ else}}
+            {{if player.order_type == -1 }}
+                <td>Your Bid(Price / Shares)</td>
+                <td>( {{player.order_price}} / {{player.order_quantity}}  )</td>
+            
+            {{ else }}
+                <td colspan="2"> <em> No order (timeout) </em> </td>
+            {{endif}}
+        {{ endif }}
+        <tr class="odd">
+            <td>Market Close (Price / Volume) </td>
+            <td>({{player.group.price}} / {{player.group.volume}} )</td>
+        </tr>
+        <tr class="even">
+        {{ if player.order_type == 1 }}
+            <td>Number of Shares Sold</td>
+            <td> {{player.quantity_final}} </td>
+        {{ else}}
+            {{if player.order_type == -1 }}
+                <td>Number of Shares Bought </td>
+                <td> {{player.quantity_final}} </td>
+            {{ else }}
+                <td colspan="2"> <em> No shares transacted  </em> </td>
+            {{endif}}
+        {{ endif }}
+        #}
+        </tr>
+        <tr class="odd">
+            <td>Cost of Trade</td>
+            <td> {{player.trans_cost}} </td>
+        </tr>
+        <tr class="even">
+            <td>Position After Trade (Cash / Shares) </td>
+            <td> ( {{ player.cash_after_trade }} / {{player.shares_result}}) </td>
+        </tr>
+        <tr class="odd">
+            <td>Dividend Earned (per share / total) </td>
+            <td>( {{player.group.dividend}} / {{player.dividend_earned}} ) </td>
+        </tr>
+        <tr class="even">
+            <td> Interest earned</td>
+            <td> {{player.interest_earned}}</td>
+        </tr>
+        <tr class="odd">
+            <td>End of Round Position (Cash / Shares)</td>
+            <td> ( {{player.cash_result}} / {{player.shares_result}} )</td>
+        </tr>
+    </table>
+
+    <hr/>
+        {{ formfields }}
+        {{ next_button }}
+{{ endblock }}
