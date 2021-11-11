@@ -13,3 +13,4 @@ __pycache__/
 *.otreezip
 .ipynb_checkpoints
 export_tests/
+*.swp
