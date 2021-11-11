@@ -34,31 +34,33 @@
             {{ endif }}
 
             <!-- Margin Ratio Message (warning / error) -->
-            {{if player.shares < 0 && margin_ratio < .3}} 
+            {{if player.shares < 0 && personal_margin < .3}} 
                 <div class="alert">
                 <p class = "message"> 
                     Worth of Shares Relative to Cash Holdings:
-                    <span class="bold-text"> {{margin_ratio_pct}} </span>
+                    <span class="bold-text"> {{personal_margin_pct}} </span>
                 </p>
                 </div>
             {{ endif  }}
-            {{if player.shares < 0 && margin_ratio > .3 && margin_ratio < .5}} 
+            {{if player.shares < 0 && personal_margin > margin_target_ratio && personal_margin < margin_ratio}} 
                 <div class="alert alert-warning">
                 <p class = "message">
                     Warning, the value of the shares that you owe is 
-                    <span class="bold-text"> {{margin_ratio_pct}} </span>
-                    of your cash holdings.  If that increases to 50%, we will submit a buy order
-                    on your behalf at 10% above the market price.
+                    <span class="bold-text"> {{personal_margin_pct}} </span>
+                    of your cash holdings.  If that increases to {{ marg_ratio_pct }},
+                    we will submit a buy order
+                    on your behalf at {{ margin_premium_pct }} above the market price.
                 </p>
                 </div>
             {{ endif  }}
-            {{if player.shares < 0 && margin_ratio > .5}} 
+            {{if player.shares < 0 && personal_margin > margin_ratio}} 
                 <div class="alert alert-danger">
                 <p class = "message">
                     Warning, the value of the shares that you owe is 
-                    <span class="bold-text"> {{margin_ratio_pct}} </span>
+                    <span class="bold-text"> {{personal_margin_pct}} </span>
                     of your cash holdings. 
-                    You are advised to buy enough shares this round to avoid an automatic buy-in.
+                    You are advised to buy enough shares this round to avoid an
+                    automatic buy-in.
                 </p>
                 </div>
             {{ endif  }}

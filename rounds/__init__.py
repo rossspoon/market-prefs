@@ -162,10 +162,17 @@ def market_page_live_method(player, d):
 ## END LIVE METHODS
 #######################################
 
+WHOLE_NUMER_PERCENT = "{:.0%}"
 def standard_vars_for_template(player: Player):
 
     #I'll send the entire session config
     sess_config = player.session.config 
+
+    #exress the ratios as a percent
+    marg_ratio_pct = WHOLE_NUMER_PERCENT.format(sess_config['margin_ratio']) 
+    marg_target_rat_pct = WHOLE_NUMER_PERCENT.format(sess_config['margin_target_ratio']) 
+    margin_premium_pct = WHOLE_NUMER_PERCENT.format(sess_config['margin_premium'] - 1) 
+     
 
     price = get_last_period_price(player.group)
     pos_value = player.shares * price
@@ -174,15 +181,19 @@ def standard_vars_for_template(player: Player):
         margin_ratio = None
         margin_ratio_pct = None
     else:
-        margin_ratio = abs(float(pos_value) / float(player.cash))
-        margin_ratio_pct = "{:.0%}".format(margin_ratio)
+        personal_margin = abs(float(pos_value) / float(player.cash))
+        personal_margin_pct = WHOLE_NUMER_PERCENT.format(personal_margin) 
 
-    ret = dict( margin_ratio = margin_ratio
-                , margin_ratio_pct = margin_ratio_pct
+    ret = dict( personal_margin = personal_margin
+                , personal_margin_pct = personal_margin_pct
                 , price = price
                 , pos_value = pos_value
+                , marg_ratio_pct = marg_ratio_pct
+                , marg_target_rat_pct = marg_target_rat_pct
+                , margin_premium_pct = margin_premium_pct
                 )
     ret.update(sess_config)
+    print (ret)
     return ret
     
 
