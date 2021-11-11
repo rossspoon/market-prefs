@@ -14,3 +14,4 @@ __pycache__/
 .ipynb_checkpoints
 export_tests/
 *.swp
+Testing_custom_distribution.ipynb
