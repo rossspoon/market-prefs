@@ -5,6 +5,7 @@ from rounds.models import *
 from rounds.call_market_price import MarketPrice
 from rounds.call_market_price import OrderFill
 from collections import defaultdict
+import math
 
 
 class CallMarket:
@@ -107,14 +108,14 @@ class CallMarket:
         d['cash_result'] = cash_result
         return d
 
-    def is_margin_violation(data, margin_ratio, market_price):
+    def is_margin_violation(self, data, market_price):
         b1 = data['shares_result'] < 0 
-        b2 = margin_ratio * data['cash_result'] <= abs(market_price * data['shares_result'])
+        b2 = self.margin_ratio * data['cash_result'] <= abs(market_price * data['shares_result'])
         return b1 and b2
 
-    def get_buy_in_players(new_data, old_players):
+    def get_buy_in_players(self, new_data, players):
         ret = []
-        for p in old_players:
+        for p in players:
             new_d_for_p = new_data.get(p)
             if new_d_for_p is None:
                 continue
@@ -125,14 +126,15 @@ class CallMarket:
         return ret
 
 
-    def generate_buy_in_order(player: Player, data, market_price, margin_premium, margin_target_ratio):
-        buy_in_price = int(round(market_price * margin_premium))  # premium of current market price
+    def generate_buy_in_order(self, data, market_price):
+        buy_in_price = int(round(market_price * self.margin_premium))  # premium of current market price
         current_value_of_position = abs(data.get('shares_result') * market_price)
         cash_position = data.get('cash_result')
-        target_value = math.floor(cash_position * margin_target_ratio) # value of shares to be in compliance
+        target_value = math.floor(cash_position * self.margin_target_ratio) # value of shares to be in compliance
         difference = current_value_of_position - target_value
         number_of_shares = int(math.ceil(difference / buy_in_price))
-
+        
+        player = data['p']
         return Order.create(player=player
                         , group = player.group
                         , order_type = OrderType.BID.value
@@ -185,7 +187,7 @@ class CallMarket:
                     buy_in_required = True
                     # determine buy-in orders
                     # add them to the proper lists
-                    buy_in_order = generate_buy_in_order(p, new_player_data[p], market_price, margin_premium, margin_target_ratio)
+                    buy_in_order = generate_buy_in_order(new_player_data[p], market_price, margin_premium, margin_target_ratio)
                     buy_ins.append( buy_in_order )
 
                 bids = base_bids + buy_ins

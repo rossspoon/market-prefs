@@ -10,6 +10,9 @@ BID = OrderType.BID.value
 OFFER = OrderType.OFFER.value
 NUM_ROUNDS = 5
 R = .1
+MARGIN_RATIO = .6
+MARGIN_PREM = 1.25
+MARGIN_TARGET= .3
 
 b_10_05 = Order(order_type = BID, price = 10, quantity = 5)
 b_10_06 = Order(order_type = BID, price = 10, quantity = 6)
@@ -29,9 +32,9 @@ class TestCallMarket(unittest.TestCase):
         group = Group()
         config_settings = dict(
                 interest_rate = R
-                , margin_ratio = .90
-                , margin_premium = .91
-                , margin_target_ratio = .92)
+                , margin_ratio = MARGIN_RATIO
+                , margin_premium = MARGIN_PREM
+                , margin_target_ratio = MARGIN_TARGET)
         session = MagicMock()
         session.config = config_settings
         group.session = session
@@ -64,9 +67,9 @@ class TestCallMarket(unittest.TestCase):
             self.assertEqual(cm.last_price, 47)
             CallMarket.get_last_period_price.assert_called_with()
             self.assertEqual( cm.interest_rate, R)
-            self.assertEqual( cm.margin_ratio, .90)
-            self.assertEqual( cm.margin_premium, .91)
-            self.assertEqual( cm.margin_target_ratio, .92)
+            self.assertEqual( cm.margin_ratio, MARGIN_RATIO)
+            self.assertEqual( cm.margin_premium, MARGIN_PREM)
+            self.assertEqual( cm.margin_target_ratio, MARGIN_TARGET)
 
 
     def test_get_orders_for_group(self):
@@ -336,3 +339,75 @@ class TestCallMarket(unittest.TestCase):
         self.assertEqual(d['dividend_earned'], 1000)
         self.assertEqual(d['interest_earned'], 20)
         self.assertEqual(d['cash_result'], 200 + 0 + 1000 + 20)
+
+    def test_is_margin_violation_zero_shares(self):
+        #Set-up
+        cm = self.basic_setup()
+        data = dict(cash_result = 10, shares_result = 0)
+
+        #Execute Test
+        self.assertFalse(cm.is_margin_violation(data, 100))
+
+    def test_is_margin_violation_zero_pos_shares(self):
+        #Set-up
+        cm = self.basic_setup()
+        data = dict(cash_result = 100, shares_result = 1)
+
+        #Execute Test
+        self.assertFalse(cm.is_margin_violation(data, 100))
+
+    def test_is_margin_violation_zero_neg_shares_under(self):
+        #Set-up
+        cm = self.basic_setup()
+        data = dict(cash_result = 100, shares_result = -1)
+
+        #Execute Test
+        self.assertFalse(cm.is_margin_violation(data, 59))
+
+    def test_is_margin_violation_zero_neg_shares_over(self):
+        #Set-up
+        cm = self.basic_setup()
+        data = dict(cash_result = 100, shares_result = -1)
+
+        #Execute #Assert
+        self.assertTrue(cm.is_margin_violation(data, 60))
+
+    def test_get_buy_in_players(self):
+        #Set-up
+        p1 = Player(margin_violation = False)
+        p2 = Player(margin_violation = False)
+        p3 = Player(margin_violation = True)
+        p4 = Player(margin_violation = True)
+        p5 = Player(margin_violation = True) # this player tests the non-data condiition
+        players = [p1, p2, p3, p4, p5]
+
+        d1 = dict(margin_violation_future = False)
+        d2 = dict(margin_violation_future = True)
+        d3 = dict(margin_violation_future = False)
+        d4 = dict(margin_violation_future = True)
+        data = {p1:d1, p2: d2, p3:d3, p4:d4}
+
+        cm = self.basic_setup()
+
+        #Execute
+        bip = cm.get_buy_in_players(data, players)
+
+        #assert
+        self.assertEqual(bip, [p4])
+
+    def test_generate_buy_in_order(self):
+        #Set-up
+        player = Player()
+        data = dict(shares_result = -10, cash_result = 1000, p = player)
+        cm = self.basic_setup()        
+        #Order.create = MagicMock(return_value = Order())
+
+        #Execute
+        o = cm.generate_buy_in_order(data, 60)
+
+        #Assert
+        self.assertTrue(o.is_buy_in)
+        self.assertEqual(o.order_type, BID)
+        self.assertEqual(o.price, 75)
+        self.assertEqual(o.quantity, 4)
+
