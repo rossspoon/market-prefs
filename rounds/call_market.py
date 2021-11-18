@@ -89,14 +89,18 @@ class CallMarket:
         enough_supply = True
         bids_for_loop = self.bids
         offers_for_loop = self.offers
+        new_player_data = {}
+        market_price = self.last_price
+        market_volume = 0
+
         # loop while at_least_once
         # players that are MV are still MV
         # still supply (offers) available
-        while not (has_looped) or (buy_in_required and enough_supply):
+        while not has_looped or (buy_in_required and enough_supply):
             has_looped = True
             buy_in_required = False
 
-            # Evaluate the new narket conditions
+            # Evaluate the new market conditions
             # Calculate the Market Price
             mp = MarketPrice(bids_for_loop, offers_for_loop)
             market_price, market_volume = mp.get_market_price(last_price=self.last_price)
@@ -108,7 +112,6 @@ class CallMarket:
 
             # Apply new market conditions to the players
             o_by_p = get_orders_by_player(all_orders)
-            new_player_data = {}
             buy_ins = []
             for p in self.group.get_players():
                 orders_for_player = o_by_p[p]

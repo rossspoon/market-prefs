@@ -34,7 +34,7 @@ class PlayerBot(Bot):
         ttr.run(suite)
 
     def init_tests(self):
-        ''' Run Unit tests and first-round player tests '''
+        """ Run Unit tests and first-round player tests """
         # Only run the unit tests once
         self.lock.acquire()
         if not PlayerBot.unit_tests_run:
@@ -184,31 +184,31 @@ def test_delete_order(method, player_id, oid):
 
 def round_1_live_tests(method, kwargs):
     # valid orders
-    test_place_order(method, 1, '-1', '50', '10')
-    test_get_orders_for_player(method, 1, 1)
-
-    test_place_order(method, 2, '1', '50', '10')
+    test_place_order(method, 2, '-1', '50', '10')
     test_get_orders_for_player(method, 2, 1)
+
+    test_place_order(method, 3, '1', '50', '10')
+    test_get_orders_for_player(method, 3, 1)
 
     # test order deletion
     # generate some sell orders for player 1 and delete them.
-    test_place_order(method, 1, '1', '12', '12')
-    test_place_order(method, 1, '1', '6', '6')
-    orders = test_get_orders_for_player(method, 1, 3)
+    test_place_order(method, 2, '1', '12', '12')
+    test_place_order(method, 2, '1', '6', '6')
+    orders = test_get_orders_for_player(method, 2, 3)
     # we'll delete the sell orders for this player
     for o in orders:
         if o.get('type') == 1:
-            test_delete_order(method, 1, o.get('oid'))
-    test_get_orders_for_player(method, 1, 1)
+            test_delete_order(method, 2, o.get('oid'))
+    test_get_orders_for_player(method, 2, 1)
 
     # expecting rejected orders
-    test_place_order(method, 1, '2', '50', '10', valid=False, code_expect=OrderErrorCode.BAD_TYPE)
-    test_place_order(method, 1, '1', 'a', '10', valid=False, code_expect=OrderErrorCode.PRICE_NOT_NUM)
-    test_place_order(method, 1, '1', '-1', '10', valid=False, code_expect=OrderErrorCode.PRICE_NEGATIVE)
-    test_place_order(method, 1, '1', '50', 'a', valid=False, code_expect=OrderErrorCode.QUANT_NOT_NUM)
-    test_place_order(method, 1, '1', '50', '-1', valid=False, code_expect=OrderErrorCode.QUANT_NEGATIVE)
-    test_place_order(method, 1, '2', 'a', '-1', valid=False, code_expect=22)
-    test_place_order(method, 1, '2', '-1', 'a', valid=False, code_expect=25)
+    test_place_order(method, 2, '2', '50', '10', valid=False, code_expect=OrderErrorCode.BAD_TYPE)
+    test_place_order(method, 2, '1', 'a', '10', valid=False, code_expect=OrderErrorCode.PRICE_NOT_NUM)
+    test_place_order(method, 2, '1', '-1', '10', valid=False, code_expect=OrderErrorCode.PRICE_NEGATIVE)
+    test_place_order(method, 2, '1', '50', 'a', valid=False, code_expect=OrderErrorCode.QUANT_NOT_NUM)
+    test_place_order(method, 2, '1', '50', '-1', valid=False, code_expect=OrderErrorCode.QUANT_NEGATIVE)
+    test_place_order(method, 2, '2', 'a', '-1', valid=False, code_expect=22)
+    test_place_order(method, 2, '2', '-1', 'a', valid=False, code_expect=25)
 
 
 def round_2_live_tests(method, kwargs):
@@ -216,7 +216,7 @@ def round_2_live_tests(method, kwargs):
 
 
 def round_3_live_tests(method, kwargs):
-    test_place_order(method, 1, '1', '50', '10')
+    test_place_order(method, 2, '1', '50', '10')
 
 
 def call_live_method(method, **kwargs):

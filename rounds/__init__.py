@@ -176,8 +176,12 @@ def standard_vars_for_template(player: Player):
     price = get_last_period_price(player.group)
     pos_value = player.shares * price
 
-    personal_margin = abs(float(pos_value) / float(player.cash))
-    personal_margin_pct = WHOLE_NUMBER_PERCENT.format(personal_margin)
+    if player.cash == 0:
+        personal_margin = 0
+        personal_margin_pct = '0'
+    else:
+        personal_margin = abs(float(pos_value) / float(player.cash))
+        personal_margin_pct = WHOLE_NUMBER_PERCENT.format(personal_margin)
 
     ret = dict(personal_margin=personal_margin,
                personal_margin_pct=personal_margin_pct,
