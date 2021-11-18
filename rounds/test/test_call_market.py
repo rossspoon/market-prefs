@@ -268,7 +268,7 @@ class TestCallMarket(unittest.TestCase):
         p1_o_06_07 = Order(player = p1, order_type = OFFER, price = 6, quantity = 7)
 
         orders = [p1_b_10_05, p2_b_10_06, p1_b_11_05, p2_b_11_06, p2_o_05_05, p1_o_05_06, p2_o_06_05, p1_o_06_07]
-        cm = self.basic_setup(orders = orders)
+        cm = self
 
         #Execute
         d = cm.get_orders_by_player(orders)

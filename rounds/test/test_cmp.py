@@ -65,18 +65,18 @@ class TestCallMarketPrice(unittest.TestCase):
         mp = MarketPrice(None, None)
 
         #Test with lists of Orders
-        b_actual, o_actual = mp.ensure_tuples(bids, offers)
+        b_actual, o_actual = ensure_tuples(bids, offers)
         self.assertEqual(b_actual, b_tup)
         self.assertEqual(o_actual, o_tup)
 
         #Test with lists of tuples
-        b_actual, o_actual = mp.ensure_tuples(b_tup, o_tup)
+        b_actual, o_actual = ensure_tuples(b_tup, o_tup)
         self.assertEqual(b_actual, b_tup)
         self.assertEqual(o_actual, o_tup)
 
 
         #Test with lists of None
-        b_actual, o_actual = mp.ensure_tuples(None, None)
+        b_actual, o_actual = ensure_tuples(None, None)
         self.assertIsNone(b_actual)
         self.assertIsNone(o_actual)
 
@@ -86,17 +86,17 @@ class TestCallMarketPrice(unittest.TestCase):
         mp = MarketPrice(None, None)
 
         #Regular test - Sell
-        csq = mp.get_cxq(4, orders, OrderType.OFFER)
+        csq = get_cxq(4, orders, OrderType.OFFER)
         self.assertEqual(csq, 30)
 
         #Regular test - Buy
-        csq = mp.get_cxq(4, orders, OrderType.BID)
+        csq = get_cxq(4, orders, OrderType.BID)
         self.assertEqual(csq, 120)
        
         #Test no orders
-        csq = mp.get_cxq(4, None, OrderType.OFFER)
+        csq = get_cxq(4, None, OrderType.OFFER)
         self.assertEqual(csq, 0)
-        csq = mp.get_cxq(4, [], OrderType.OFFER)
+        csq = get_cxq(4, [], OrderType.OFFER)
         self.assertEqual(csq, 0)
 
     @unittest.expectedFailure

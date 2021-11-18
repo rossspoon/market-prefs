@@ -119,8 +119,8 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill(orders)
 
         #Execute
-        bv = of.count_volume(of.bids)
-        ov = of.count_volume(of.offers)
+        bv = count_volume(of.bids)
+        ov = count_volume(of.offers)
 
         #Assert
         self.assertEqual(bv, 22)
@@ -131,8 +131,8 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill([])
 
         #Execute
-        bv = of.count_volume(of.bids)
-        ov = of.count_volume(of.offers)
+        bv = count_volume(of.bids)
+        ov = count_volume(of.offers)
 
         #Assert
         self.assertEqual(bv, 0)
@@ -145,7 +145,7 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill(orders)
 
         #Execute
-        part_orders = of.partial_fill(of.bids, 1)
+        part_orders = partial_fill(of.bids, 1)
         #Assert
         self.assertEqual(part_orders, [b_11_06])
         self.assertEqual(part_orders[0].quantity_final, 1)
@@ -156,7 +156,7 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill(orders)
 
         #Execute
-        part_orders = of.partial_fill(of.bids, 7)
+        part_orders = partial_fill(of.bids, 7)
         #Assert
         self.assertEqual(part_orders, [b_11_06, b_11_05])
         self.assertEqual(part_orders[0].quantity_final, 6)
@@ -168,7 +168,7 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill(orders)
 
         #Execute
-        part_orders = of.partial_fill(of.bids, 11)
+        part_orders = partial_fill(of.bids, 11)
         #Assert
         self.assertEqual(part_orders, [b_11_06, b_11_05])
         self.assertEqual(part_orders[0].quantity_final, 6)
@@ -180,7 +180,7 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill(orders)
 
         #Execute
-        part_orders = of.partial_fill(of.bids, 12)
+        part_orders = partial_fill(of.bids, 12)
         #Assert
         self.assertEqual(part_orders, [b_11_06, b_11_05, b_10_06])
         self.assertEqual(part_orders[0].quantity_final, 6)
@@ -197,7 +197,7 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill(orders)
 
         #Execute
-        part_orders = of.partial_fill(of.offers, 1)
+        part_orders = partial_fill(of.offers, 1)
         #Assert
         self.assertEqual(part_orders, [o_05_05])
         self.assertEqual(part_orders[0].quantity_final, 1)
@@ -208,7 +208,7 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill(orders)
 
         #Execute
-        part_orders = of.partial_fill(of.offers, 5)
+        part_orders = partial_fill(of.offers, 5)
         #Assert
         self.assertEqual(part_orders, [o_05_05])
         self.assertEqual(part_orders[0].quantity_final, 5)
@@ -219,7 +219,7 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill(orders)
 
         #Execute
-        part_orders = of.partial_fill(of.offers, 6)
+        part_orders = partial_fill(of.offers, 6)
         #Assert
         self.assertEqual(part_orders, [o_05_05, o_05_06])
         self.assertEqual(part_orders[0].quantity_final, 5)
@@ -231,7 +231,7 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill(orders)
 
         #Execute
-        part_orders = of.partial_fill(of.offers, 11)
+        part_orders = partial_fill(of.offers, 11)
         #Assert
         self.assertEqual(part_orders, [o_05_05, o_05_06])
         self.assertEqual(part_orders[0].quantity_final, 5)
@@ -248,7 +248,7 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill(orders)
 
         #Execute
-        part_orders = of.partial_fill(of.bids, 0)
+        part_orders = partial_fill(of.bids, 0)
         #Assert
         self.assertEqual(part_orders, [])
 
@@ -257,12 +257,12 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill([])
 
         #Execute
-        part_orders = of.partial_fill(of.bids, 1)
+        part_orders = partial_fill(of.bids, 1)
         #Assert
         self.assertEqual(part_orders, [])
 
         #Execute
-        part_orders = of.partial_fill(of.offers, 1)
+        part_orders = partial_fill(of.offers, 1)
         #Assert
         self.assertEqual(part_orders, [])
 
@@ -331,7 +331,7 @@ class TestCallMarketPrice(unittest.TestCase):
         of = OrderFill([])
 
         #Execute
-        cnt = of.count_filled_volume(orders)
+        cnt = count_filled_volume(orders)
 
         #Assert
         self.assertEqual(cnt, 21)

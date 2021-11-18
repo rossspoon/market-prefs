@@ -31,7 +31,7 @@ class TestOrderErrorCodeMethods(unittest.TestCase):
 class TestOrderMethods(unittest.TestCase):
 
     def test_to_dict(self):
-        ## Setup
+        # Setup
         p = Player()
         p.id_in_group = 77
         g = Group()
@@ -45,7 +45,7 @@ class TestOrderMethods(unittest.TestCase):
             , quantity = 80
             )
 
-        ## Some initializing tests
+        # Some initializing tests
         self.assertEqual(o.quantity_final, 0)
         self.assertFalse(o.is_buy_in)
 
