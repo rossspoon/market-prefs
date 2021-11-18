@@ -1,6 +1,7 @@
 import unittest
 from rounds.models import *
 from rounds.call_market import CallMarket
+from rounds.call_market import DataForPlayer
 from unittest.mock import MagicMock
 from unittest.mock import patch
 import pandas as pd
@@ -43,73 +44,80 @@ class TestCallMarket(unittest.TestCase):
 
     def basic_setup(self, orders = all_orders):
         with patch.object(CallMarket, 'get_last_period_price', return_value=47) as mock_method:
-            Order.filter = MagicMock(return_value = orders)
-            group = self.basic_group()
-            cm = CallMarket(group, NUM_ROUNDS)
+            with patch.object(Order, 'filter', return_value=orders) as filter_mock:
+
+                Order.filter = MagicMock(return_value = orders)
+                group = self.basic_group()
+                cm = CallMarket(group, NUM_ROUNDS)
         return cm
 
     def test_init(self):
         #Set up and
         with patch.object(CallMarket, 'get_last_period_price', return_value=47) as mock_method:
-            Order.filter = MagicMock(return_value = all_orders)
-            group = self.basic_group()
+            with patch.object(Order, 'filter', return_value=all_orders) as filter_mock:
+                group = self.basic_group()
 
-            #Execute
-            cm = CallMarket(group, NUM_ROUNDS)
+                #Execute
+                cm = CallMarket(group, NUM_ROUNDS)
 
-            #assert
-            self.assertEqual(cm.num_rounds, NUM_ROUNDS)
-            self.assertEqual(cm.group, group)
-            self.assertEqual(cm.session, group.session)
-            self.assertEqual(cm.bids, [b_10_05, b_10_06, b_11_05, b_11_06])
-            self.assertEqual(cm.offers, [o_05_05, o_05_06, o_06_05, o_06_07])
-            Order.filter.assert_called_with(group=group)
-            self.assertEqual(cm.last_price, 47)
-            CallMarket.get_last_period_price.assert_called_with()
-            self.assertEqual( cm.interest_rate, R)
-            self.assertEqual( cm.margin_ratio, MARGIN_RATIO)
-            self.assertEqual( cm.margin_premium, MARGIN_PREM)
-            self.assertEqual( cm.margin_target_ratio, MARGIN_TARGET)
+                #assert
+                self.assertEqual(cm.num_rounds, NUM_ROUNDS)
+                self.assertEqual(cm.group, group)
+                self.assertEqual(cm.session, group.session)
+                self.assertEqual(cm.bids, [b_10_05, b_10_06, b_11_05, b_11_06])
+                self.assertEqual(cm.offers, [o_05_05, o_05_06, o_06_05, o_06_07])
+                Order.filter.assert_called_with(group=group)
+                self.assertEqual(cm.last_price, 47)
+                CallMarket.get_last_period_price.assert_called_with()
+                self.assertEqual( cm.interest_rate, R)
+                self.assertEqual( cm.margin_ratio, MARGIN_RATIO)
+                self.assertEqual( cm.margin_premium, MARGIN_PREM)
+                self.assertEqual( cm.margin_target_ratio, MARGIN_TARGET)
 
 
     def test_get_orders_for_group(self):
-        #Set-up
-        cm = self.basic_setup()
-        group = cm.group
+        with patch.object(Order, 'filter', return_value=all_orders) as filter_mock:
+            #Set-up
+            cm = self.basic_setup()
+            group = cm.group
 
-        #Execute
-        bids, offers = cm.get_orders_for_group()
+            #Execute
+            bids, offers = cm.get_orders_for_group()
 
-        #Assert
-        self.assertEqual(bids, [b_10_05, b_10_06, b_11_05, b_11_06])
-        self.assertEqual(offers, [o_05_05, o_05_06, o_06_05, o_06_07])
-        Order.filter.assert_called_with(group=cm.group)
+            #Assert
+            self.assertEqual(bids, [b_10_05, b_10_06, b_11_05, b_11_06])
+            self.assertEqual(offers, [o_05_05, o_05_06, o_06_05, o_06_07])
+            Order.filter.assert_called_with(group=cm.group)
 
     def test_get_orders_for_group_bids(self):
-        #Set-up
-        cm = self.basic_setup(orders= [b_10_05, b_10_06, b_11_05, b_11_06])
-        group = cm.group
+        orders= [b_10_05, b_10_06, b_11_05, b_11_06]
+        with patch.object(Order, 'filter', return_value=orders) as filter_mock:
+            #Set-up
+            cm = self.basic_setup(orders= orders)
+            group = cm.group
 
-        #Execute
-        bids, offers = cm.get_orders_for_group()
+            #Execute
+            bids, offers = cm.get_orders_for_group()
 
-        #Assert
-        self.assertEqual(bids, [b_10_05, b_10_06, b_11_05, b_11_06])
-        self.assertEqual(offers, [])
-        Order.filter.assert_called_with(group=cm.group)
+            #Assert
+            self.assertEqual(bids, [b_10_05, b_10_06, b_11_05, b_11_06])
+            self.assertEqual(offers, [])
+            Order.filter.assert_called_with(group=cm.group)
 
     def test_get_orders_for_group_offers(self):
-        #Set-up
-        cm = self.basic_setup(orders = [o_05_05, o_05_06, o_06_05, o_06_07])
-        group = cm.group
+        orders = [o_05_05, o_05_06, o_06_05, o_06_07]
+        with patch.object(Order, 'filter', return_value=orders) as filter_mock:
+            #Set-up
+            cm = self.basic_setup(orders = orders)
+            group = cm.group
 
-        #Execute
-        bids, offers = cm.get_orders_for_group()
+            #Execute
+            bids, offers = cm.get_orders_for_group()
 
-        #Assert
-        self.assertEqual(bids, [])
-        self.assertEqual(offers, [o_05_05, o_05_06, o_06_05, o_06_07])
-        Order.filter.assert_called_with(group=cm.group)
+            #Assert
+            self.assertEqual(bids, [])
+            self.assertEqual(offers, [o_05_05, o_05_06, o_06_05, o_06_07])
+            Order.filter.assert_called_with(group=cm.group)
 
     def test_get_last_period_price_round_1(self):
         #Set-up
@@ -263,7 +271,7 @@ class TestCallMarket(unittest.TestCase):
         cm = self.basic_setup(orders = orders)
 
         #Execute
-        d = cm.get_orders_by_player()
+        d = cm.get_orders_by_player(orders)
 
         #Assert
         self.assertEqual(set(d.keys()), set([p1, p2]))
@@ -271,106 +279,146 @@ class TestCallMarket(unittest.TestCase):
         self.assertEqual(d[p2], [p2_b_10_06, p2_b_11_06, p2_o_05_05, p2_o_06_05])
 
 
+
+class TestDataForPlayer(unittest.TestCase):
+
+    def basic_setup(self):
+        return Player(shares = 100, cash = 200)
+
+    def basic_test_object(self, orders):
+        p = self.basic_setup()
+        for o in orders:
+            o.player = p
+
+        return DataForPlayer(p, orders)
+
+    def test_init(self):
+        #set-up
+        p =  self.basic_setup()
+
+        #Execute
+        d4p = DataForPlayer(p, [])
+
+        #Assert
+        self.assertEqual(d4p.orders, [])
+        self.assertEqual(d4p.player, p)
+        self.assertIsNone(d4p.shares_result)
+        self.assertIsNone(d4p.shares_transacted)
+        self.assertIsNone(d4p.trans_cost)
+        self.assertIsNone(d4p.cash_after_trade)
+        self.assertIsNone(d4p.dividend_earned)
+        self.assertIsNone(d4p.interest_earned)
+        self.assertIsNone(d4p.cash_result)
+        self.assertFalse(d4p.margin_violation_future)
+
+
     def test_get_new_player_pos_net_buy(self):
         #Set-up
-        cm = self.basic_setup()
-
-        p = Player(shares = 100, cash = 200)
-
-        o1 = Order(player = p, order_type = BID, quantity_final = 1)
-        o2 = Order(player = p, order_type = BID, quantity_final = 2)
-        o3 = Order(player = p, order_type = OFFER, quantity_final = 0)
-        o4 = Order(player = p, order_type = OFFER, quantity_final = 1)
+        o1 = Order(order_type = BID, quantity_final = 1)
+        o2 = Order(order_type = BID, quantity_final = 2)
+        o3 = Order(order_type = OFFER, quantity_final = 0)
+        o4 = Order(order_type = OFFER, quantity_final = 1)
         orders = [o1, o2, o3, o4]
 
+        d4p = self.basic_test_object(orders)
+
         # Execute
-        d = cm.get_new_player_position(orders, p, 10, 15)
+        d4p.get_new_player_position(10, R, 15)
 
         # Assert
-        self.assertEqual(d['p'], p)
-        self.assertEqual(d['shares_transacted'], 2)
-        self.assertEqual(d['shares_result'], 102)
-        self.assertEqual(d['trans_cost'], -30)
-        self.assertEqual(d['cash_after_trade'], 170)
-        self.assertEqual(d['dividend_earned'], 1020)
-        self.assertEqual(d['interest_earned'], 17)
-        self.assertEqual(d['cash_result'], 200 - 30 + 1020 + 17)
+        self.assertEqual(d4p.shares_transacted, 2)
+        self.assertEqual(d4p.shares_result, 102)
+        self.assertEqual(d4p.trans_cost, -30)
+        self.assertEqual(d4p.cash_after_trade, 170)
+        self.assertEqual(d4p.dividend_earned, 1020)
+        self.assertEqual(d4p.interest_earned, 17)
+        self.assertEqual(d4p.cash_result, 200 - 30 + 1020 + 17)
 
     def test_get_new_player_pos_net_sell(self):
         #Set-up
-        cm = self.basic_setup()
-
-        p = Player(shares = 100, cash = 200)
-
-        o1 = Order(player = p, order_type = BID, quantity_final = 1)
-        o2 = Order(player = p, order_type = BID, quantity_final = 0)
-        o3 = Order(player = p, order_type = OFFER, quantity_final = 2)
-        o4 = Order(player = p, order_type = OFFER, quantity_final = 1)
+        o1 = Order(order_type = BID, quantity_final = 1)
+        o2 = Order(order_type = BID, quantity_final = 0)
+        o3 = Order(order_type = OFFER, quantity_final = 2)
+        o4 = Order(order_type = OFFER, quantity_final = 1)
         orders = [o1, o2, o3, o4]
 
+        d4p = self.basic_test_object(orders)
+
         # Execute
-        d = cm.get_new_player_position(orders, p, 10, 15)
+        d4p.get_new_player_position(10, R,  15)
 
         # Assert
-        self.assertEqual(d['p'], p)
-        self.assertEqual(d['shares_transacted'], -2)
-        self.assertEqual(d['shares_result'], 98)
-        self.assertEqual(d['trans_cost'], 30)
-        self.assertEqual(d['cash_after_trade'], 230)
-        self.assertEqual(d['dividend_earned'], 980)
-        self.assertEqual(d['interest_earned'], 23)
-        self.assertEqual(d['cash_result'], 200 + 30 + 980 + 23)
+        self.assertEqual(d4p.shares_transacted, -2)
+        self.assertEqual(d4p.shares_result, 98)
+        self.assertEqual(d4p.trans_cost, 30)
+        self.assertEqual(d4p.cash_after_trade, 230)
+        self.assertEqual(d4p.dividend_earned, 980)
+        self.assertEqual(d4p.interest_earned, 23)
+        self.assertEqual(d4p.cash_result, 200 + 30 + 980 + 23)
 
     def test_get_new_player_pos_no_orders(self):
         #Set-up
-        cm = self.basic_setup()
-
-        p = Player(shares = 100, cash = 200)
+        d4p = self.basic_test_object([])
 
         # Execute
-        d = cm.get_new_player_position([], p, 10, 15)
+        d4p.get_new_player_position(10, R,  15)
 
         # Assert
-        self.assertEqual(d['p'], p)
-        self.assertEqual(d['shares_transacted'], 0)
-        self.assertEqual(d['shares_result'], 100)
-        self.assertEqual(d['trans_cost'], 0)
-        self.assertEqual(d['cash_after_trade'], 200)
-        self.assertEqual(d['dividend_earned'], 1000)
-        self.assertEqual(d['interest_earned'], 20)
-        self.assertEqual(d['cash_result'], 200 + 0 + 1000 + 20)
+        self.assertEqual(d4p.shares_transacted, 0)
+        self.assertEqual(d4p.shares_result, 100)
+        self.assertEqual(d4p.trans_cost, 0)
+        self.assertEqual(d4p.cash_after_trade, 200)
+        self.assertEqual(d4p.dividend_earned, 1000)
+        self.assertEqual(d4p.interest_earned, 20)
+        self.assertEqual(d4p.cash_result, 200 + 0 + 1000 + 20)
 
     def test_is_margin_violation_zero_shares(self):
         #Set-up
-        cm = self.basic_setup()
-        data = dict(cash_result = 10, shares_result = 0)
+        d4p = self.basic_test_object([])
+        d4p.cash_result = 10
+        d4p.shares_result = 0
 
-        #Execute Test
-        self.assertFalse(cm.is_margin_violation(data, 100))
+        #Execute
+        d4p.set_mv_future(MARGIN_RATIO, 60)
 
-    def test_is_margin_violation_zero_pos_shares(self):
+        #Assert
+        self.assertFalse(d4p.margin_violation_future)
+
+    def test_is_margin_violation_pos_shares(self):
         #Set-up
-        cm = self.basic_setup()
-        data = dict(cash_result = 100, shares_result = 1)
+        d4p = self.basic_test_object([])
+        d4p.cash_result = 100
+        d4p.shares_result = 1
 
-        #Execute Test
-        self.assertFalse(cm.is_margin_violation(data, 100))
+        #Execute
+        d4p.set_mv_future(MARGIN_RATIO, 60)
 
-    def test_is_margin_violation_zero_neg_shares_under(self):
+        #Assert
+        self.assertFalse(d4p.margin_violation_future)
+
+    def test_is_margin_violation_neg_shares_under(self):
         #Set-up
-        cm = self.basic_setup()
-        data = dict(cash_result = 100, shares_result = -1)
+        d4p = self.basic_test_object([])
+        d4p.cash_result = 100
+        d4p.shares_result = -1
 
-        #Execute Test
-        self.assertFalse(cm.is_margin_violation(data, 59))
+        #Execute
+        d4p.set_mv_future(MARGIN_RATIO, 49)
 
-    def test_is_margin_violation_zero_neg_shares_over(self):
+        #Assert
+        self.assertFalse(d4p.margin_violation_future)
+
+    def test_is_margin_violation_neg_shares_over(self):
         #Set-up
-        cm = self.basic_setup()
-        data = dict(cash_result = 100, shares_result = -1)
+        d4p = self.basic_test_object([])
+        d4p.cash_result = 100
+        d4p.shares_result = -1
 
-        #Execute #Assert
-        self.assertTrue(cm.is_margin_violation(data, 60))
+        #Execute
+        d4p.set_mv_future(MARGIN_RATIO, 50)
+
+        #Assert
+        self.assertFalse(d4p.margin_violation_future)
 
     def test_get_buy_in_players(self):
         #Set-up
@@ -378,36 +426,34 @@ class TestCallMarket(unittest.TestCase):
         p2 = Player(margin_violation = False)
         p3 = Player(margin_violation = True)
         p4 = Player(margin_violation = True)
-        p5 = Player(margin_violation = True) # this player tests the non-data condiition
-        players = [p1, p2, p3, p4, p5]
 
-        d1 = dict(margin_violation_future = False)
-        d2 = dict(margin_violation_future = True)
-        d3 = dict(margin_violation_future = False)
-        d4 = dict(margin_violation_future = True)
-        data = {p1:d1, p2: d2, p3:d3, p4:d4}
+        d1 = DataForPlayer(p1, [])
+        d1.margin_violation_future = False
+        d2 = DataForPlayer(p2, [])
+        d2.margin_violation_future = True
+        d3 = DataForPlayer(p3, [])
+        d3.margin_violation_future = False
+        d4 = DataForPlayer(p4, [])
+        d4.margin_violation_future = True
 
-        cm = self.basic_setup()
-
-        #Execute
-        bip = cm.get_buy_in_players(data, players)
-
-        #assert
-        self.assertEqual(bip, [p4])
+        #Execute / Assert
+        self.assertFalse(d1.is_buy_in_required())
+        self.assertFalse(d2.is_buy_in_required())
+        self.assertFalse(d3.is_buy_in_required())
+        self.assertTrue(d4.is_buy_in_required())
 
     def test_generate_buy_in_order(self):
         #Set-up
-        player = Player()
-        data = dict(shares_result = -10, cash_result = 1000, p = player)
-        cm = self.basic_setup()        
+        d4p = self.basic_test_object([])
+        d4p.shares_result = -10
+        d4p.cash_result = 1000
         #Order.create = MagicMock(return_value = Order())
 
         #Execute
-        o = cm.generate_buy_in_order(data, 60)
+        o = d4p.generate_buy_in_order(60, MARGIN_PREM, MARGIN_TARGET)
 
         #Assert
         self.assertTrue(o.is_buy_in)
         self.assertEqual(o.order_type, BID)
         self.assertEqual(o.price, 75)
         self.assertEqual(o.quantity, 4)
-

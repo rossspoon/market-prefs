@@ -20,7 +20,7 @@ class PlayerBot(Bot):
                 participant_code,
             ):
         super().__init__(case_number, app_name, player_pk, subsession_pk, session_pk, participant_code)
-        self.p_type = self.player.id_in_group % 3  # 0 - treatment  :: 1 - first buyer :: 2 - first seller
+        self.p_type = (self.player.id_in_group-1) % 3  # 0 - treatment  :: 1 - first buyer :: 2 - first seller
 
     #only run the unit tests once, this lock of class-level variable control that 
     lock = Lock()
@@ -52,6 +52,7 @@ class PlayerBot(Bot):
         cash_treatment = self.session.config['cash_endowment_treatment']
         shares_treatment = self.session.config['shares_endowment_treatment']
 
+        print("PLAYER:", self.player.id_in_group, self.p_type, self.player.cash, self.player.shares)
         if (self.p_type == 0):
             #Should be treatment
             expect(self.player.cash, cash_treatment)

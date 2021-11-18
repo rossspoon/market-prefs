@@ -13,7 +13,6 @@ class Constants(BaseConstants):
     players_per_group = None
     num_rounds = 5
     MARKET_TIME = 50000
-    print("NUM_ROUNDS:", num_rounds)
 
 #assign treatments
 def creating_session(subsession):
@@ -41,6 +40,7 @@ def creating_session(subsession):
             for _idx, player in enumerate(group.get_players()):
                 idx = _idx % modulus
                 endowment_idx = treated_ids[idx]
+                print("assigning endowments: ", player.id_in_group, " IS Treatment:", endowment_idx)
                 endow = endowments[endowment_idx]
                 player.cash = endow['cash']
                 player.shares = endow['shares']
@@ -203,11 +203,14 @@ def set_float_and_short(group: Group):
     #Calculate float the total shorts
     group.float = sum( (p.shares for p in group.get_players()) )
     group.short = sum( (abs(p.shares) for p in group.get_players() if p.shares < 0) )
+    for p in group.get_players():
+        print("set_float_and_short: ", p.id_in_group, p.shares)
 
 #######################################
 ## CALCULATE MARKET
 def calculate_market(group: Group):
-    pass
+    cm = CallMarket(group, Constants.num_rounds)
+    cm.calculate_market()
 
 ############
 ## PAGES

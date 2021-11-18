@@ -219,7 +219,7 @@ class MarketPrice:
                 bids (list-like) - The bids given as a list of price/quantity pairs .  NOTE
                     If bids is a list of Orders, then it will be converted to list/price pairs.
                 offers (list-like) - The offers given as a list of price/quantity pairs
-                last_market_price (number) - This is the reference price used in
+                last_price (number) - This is the reference price used in
                                             last principle.  (Reference)  This should be
                                             rarely used as most markets pick a unique price
                                             based on the principle of maximum volume

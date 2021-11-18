@@ -75,66 +75,125 @@ class CallMarket:
 
         return int(exp / r)
 
-    def get_orders_by_player(self):
+    def get_orders_by_player(self, orders):
         d = defaultdict(list) 
-        for o in self.bids:
-            d[o.player].append(o)
-        for o in self.offers:
+        for o in orders:
             d[o.player].append(o)
         return d
 
-    def get_new_player_position(self, orders_for_player, p, dividend,  market_price):
-        d = p.to_dict()
 
+    def calculate_market(self):
+
+            dividend = self.get_dividend()
+
+            has_looped = False
+            buy_in_required = False
+            enough_supply = True
+            bids_for_loop = self.bids
+            offers_for_loop = self.offers
+            # loop while at_least_once
+            ## players that are MV are still MV
+            ## still supply (offers) available
+            while not(has_looped) or (buy_in_required and enough_supply):
+                has_looped = True
+                buy_in_required = False
+                
+                ##Evaluate the new narket conditions
+                ## Calculate the Market Price
+                mp = MarketPrice(bids_for_loop, offers_for_loop)
+                market_price, market_volume = mp.get_market_price(last_price = self.last_price)
+
+                #Fill Orders
+                all_orders = bids_for_loop + offers_for_loop
+                of = OrderFill(all_orders)
+                filled_bids, filled_offers = of.fill_orders(market_price)
+
+                #Apply new market conditions to the players
+                o_by_p = self.get_orders_by_player(all_orders)
+                new_player_data = {}
+                buy_ins = []
+                for p in self.group.get_players():
+                    orders_for_player = o_by_p[p]
+                    data_for_player = DataForPlayer(p, orders_for_player)
+                    data_for_player.get_new_player_position( dividend, self.interest_rate , market_price)
+                    data_for_player.set_mv_future(self.margin_ratio, market_price)
+                    new_player_data[p] = data_for_player
+
+                    # determine buy-in orders
+                    # add them to the proper lists
+                    if data_for_player.is_buy_in_required():
+                        buy_in_order = data_for_player.generate_buy_in_order(market_price, self.margin_premium, self.margin_target_ratio)
+                        buy_ins.append( buy_in_order )
+
+                
+                buy_in_required = len(buy_ins) > 0
+                bids_for_loop = self.bids + buy_ins
+
+                #determine if there is remaining supply, if market volume is exactly equal 
+                # the outstanding supply that is less than or equal to the new market price
+                buy_in_demand = sum([o.quantity for o in buy_ins])
+                total_supply = sum([o.quantity for o in self.offers])
+                enough_supply = buy_in_demand <= total_supply
+            
+
+            #Finally update all the players
+            for p in self.group.get_players():
+                data = new_player_data[p]
+                data.update_player()
+                self.set_up_future_player(data.player, margin_violation = data.margin_violation_future)
+
+            # Update the group
+            self.group.price = int(market_price)
+            self.group.volume = int(market_volume)
+            self.group.dividend = dividend
+
+class DataForPlayer():
+    def __init__(self, player:Player, orders):
+        self.player = player
+        self.orders = orders
+
+        self.shares_result = None
+        self.shares_transacted = None
+        self.trans_cost = None
+        self.cash_after_trade = None
+        self.dividend_earned = None
+        self.interest_earned = None
+        self.cash_result = None
+        self.margin_violation_future = False
+
+    def get_new_player_position(self, dividend, interest_rate , market_price):
         #calculate players positions
-        net_shares_per_order = (-1 * o.order_type * o.quantity_final for o in orders_for_player)
-        shares_transacted = sum(net_shares_per_order)
-        new_position = p.shares + shares_transacted
-        trans_cost = -1 * int(shares_transacted) * int(market_price)
-        cash_after_trade = int(p.cash + trans_cost)
+        net_shares_per_order = (-1 * o.order_type * o.quantity_final for o in self.orders)
+        self.shares_transacted = sum(net_shares_per_order)
+        self.shares_result = self.player.shares + self.shares_transacted
+        self.new_position = self.player.shares + self.shares_transacted
+        self.trans_cost = -1 * int(self.shares_transacted) * int(market_price)
+        self.cash_after_trade = int(self.player.cash + self.trans_cost)
 
         #assign interest and dividends
-        dividend_earned =  dividend * new_position #if new_position is negative then the player pays out dividends
-        interest_earned = int(cash_after_trade * self.interest_rate)
-        cash_result = int(p.cash + interest_earned + trans_cost + dividend_earned)
-
-        d['p'] = p
-        d['shares_result'] = new_position
-        d['shares_transacted'] = shares_transacted
-        d['trans_cost'] = trans_cost
-        d['cash_after_trade'] = cash_after_trade
-        d['dividend_earned'] = dividend_earned
-        d['interest_earned'] = interest_earned
-        d['cash_result'] = cash_result
-        return d
-
-    def is_margin_violation(self, data, market_price):
-        b1 = data['shares_result'] < 0 
-        b2 = self.margin_ratio * data['cash_result'] <= abs(market_price * data['shares_result'])
-        return b1 and b2
-
-    def get_buy_in_players(self, new_data, players):
-        ret = []
-        for p in players:
-            new_d_for_p = new_data.get(p)
-            if new_d_for_p is None:
-                continue
-
-            if (new_d_for_p.get('margin_violation_future') and p.margin_violation):
-                ret.append(p)
-
-        return ret
+        self.dividend_earned =  dividend * self.new_position #if self.new_position is negative then the player pays out dividends
+        self.interest_earned = int(self.cash_after_trade * interest_rate)
+        self.cash_result = int(self.player.cash + self.interest_earned + self.trans_cost + self.dividend_earned)
 
 
-    def generate_buy_in_order(self, data, market_price):
-        buy_in_price = int(round(market_price * self.margin_premium))  # premium of current market price
-        current_value_of_position = abs(data.get('shares_result') * market_price)
-        cash_position = data.get('cash_result')
-        target_value = math.floor(cash_position * self.margin_target_ratio) # value of shares to be in compliance
+    def set_mv_future(self, margin_ratio, market_price):
+        b1 = self.shares_result < 0 
+        b2 = margin_ratio * self.cash_result <= abs(market_price * self.shares_result)
+        self.margin_violation_future = b1 and b2
+
+
+    def is_buy_in_required(self):
+        return self.player.margin_violation and self.margin_violation_future
+
+    def generate_buy_in_order(self, market_price, margin_premium, margin_target_ratio):
+        buy_in_price = int(round(market_price * margin_premium))  # premium of current market price
+        current_value_of_position = abs(self.shares_result * market_price)
+        cash_position = self.cash_result
+        target_value = math.floor(cash_position * margin_target_ratio) # value of shares to be in compliance
         difference = current_value_of_position - target_value
         number_of_shares = int(math.ceil(difference / buy_in_price))
         
-        player = data['p']
+        player = self.player
         return Order.create(player=player
                         , group = player.group
                         , order_type = OrderType.BID.value
@@ -142,72 +201,14 @@ class CallMarket:
                         , quantity = number_of_shares
                         , is_buy_in = True)
 
+    def update_player(self):
+        p = self.player
+        p.shares_result = self.shares_result
+        p.shares_transacted = self.shares_transacted
+        p.trans_cost = self.trans_cost
+        p.cash_after_trade = self.cash_after_trade
+        p.dividend_earned = self.dividend_earned
+        p.interest_earned = self.interest_earned
+        p.cash_result = self.cash_result
 
-    def calculate_market(group: Group):
-
-            dividend = get_dividend()
-
-            has_not_looped = True
-            buy_in_required = False
-            enough_supply = True
-            # loop while at_least_once
-            ## players that are MV are still MV
-            ## still supply (offers) available
-            while has_not_looped or (buy_in_required and enough_supply):
-                has_not_looped = False
-                ##Evaluate the new narket conditions
-                ## Calculate the Market Price
-                mp = MarketPrice(bids, offers)
-                market_price, market_volume = mp.get_market_price(last_price = last_price)
-                print("Principal:", mp.final_principle)
-                print("DF:\n", mp.price_df)
-
-                #Fill Orders
-                of = OrderFill(bids + offers)
-                filled_bids, filled_offers = of.fill_orders(market_price)
-
-                #Apply new market conditions to the players
-                o_by_p = get_orders_by_player(Order.filter(group=group))
-                new_player_data = {}
-                for p in group.get_players():
-                    orders_for_player = o_by_p[p]
-                    data_for_player = get_new_player_position(orders_for_player, p, dividend, r, market_price)
-
-                    #determine if the player is violating the margin requirement
-                    mv = is_margin_violation(data_for_player, margin_ratio, market_price)
-                    data_for_player['margin_violation_future'] =  mv
-
-                    new_player_data[p] = data_for_player
-
-
-                # If there are MV's that require buy-in
-                buy_ins = []
-                buy_in_required = False
-                for p in get_buy_in_players(new_player_data, group.get_players()):
-                    buy_in_required = True
-                    # determine buy-in orders
-                    # add them to the proper lists
-                    buy_in_order = generate_buy_in_order(new_player_data[p], market_price, margin_premium, margin_target_ratio)
-                    buy_ins.append( buy_in_order )
-
-                bids = base_bids + buy_ins
-
-                #determine if there is remaining supply, if market volume is exactly equal 
-                # the out standing supply that is less than or equal to the new market price
-                buy_in_demand = sum([o.quantity for o in buy_ins])
-                total_supply = sum([o.quantity for o in offers])
-                enough_supply = buy_in_demand <= total_supply
-            
-
-            #Finally update all the players
-            for p in group.get_players():
-                data = new_player_data[p]
-                p.update_from_dict(data)
-                mv = data.get('margin_violation_future')
-                set_up_future_player(p, margin_violation = mv)
-
-            # Update the group
-            group.price = int(market_price)
-            group.volume = int(market_volume)
-            group.dividend = dividend
 
