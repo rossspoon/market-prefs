@@ -1,6 +1,6 @@
 import unittest
 from rounds.models import *
-from rounds.call_market import CallMarket
+from rounds.call_market import CallMarket, get_orders_by_player
 from rounds.call_market import DataForPlayer
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -267,7 +267,7 @@ class TestCallMarket(unittest.TestCase):
         cm = self
 
         # Execute
-        d = cm.get_orders_by_player(orders)
+        d = get_orders_by_player(orders)
 
         # Assert
         self.assertEqual(set(d.keys()), set([p1, p2]))

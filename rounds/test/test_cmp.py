@@ -1,6 +1,6 @@
 import unittest
 from rounds.models import *
-from rounds.call_market_price import MarketPrice
+from rounds.call_market_price import MarketPrice, ensure_tuples, get_cxq
 from rounds.call_market_price import Principle
 from unittest.mock import MagicMock
 import pandas as pd
