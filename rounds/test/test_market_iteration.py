@@ -61,10 +61,9 @@ class TestMarketIteration(unittest.TestCase):
             self.assertIsInstance(pdat, DataForPlayer)
             self.assertEqual(p, pdat.player)
 
-        pdat1 = mi.players[0]
-        self.assertEqual(len(pdat1.orders), 2)
-        pdat2 = mi.players[1]
-        self.assertEqual(len(pdat2.orders), 1)
+        o4p = mi.orders_by_player
+        self.assertEqual(len(o4p[mi.players[0].player]), 2)
+        self.assertEqual(len(o4p[mi.players[1].player]), 1)
 
         self.assertEqual(mi.dividend, 4)
         self.assertEqual(mi.last_price, -99)
@@ -196,7 +195,7 @@ class TestMarketIteration(unittest.TestCase):
 
     def test_compute_player_pos_no_buy_in(self):
         # Set up
-        d4p = DataForPlayer(p1, [])
+        d4p = DataForPlayer(p1)
         d4p.get_new_player_position = MagicMock()
         d4p.set_mv_future = MagicMock()
         d4p.is_buy_in_required = MagicMock(return_value=False)
@@ -209,14 +208,14 @@ class TestMarketIteration(unittest.TestCase):
 
         # Assert
         self.assertIsNone(bi)
-        d4p.get_new_player_position.assert_called_with(4, .1, 44)
+        d4p.get_new_player_position.assert_called_with([], 4, .1, 44)
         d4p.set_mv_future.assert_called_with(.2, 44)
         d4p.is_buy_in_required.assert_called_once()
         d4p.generate_buy_in_order.assert_not_called()
 
     def test_compute_player_pos_with_buy_in(self):
         # Set up
-        d4p = DataForPlayer(p1, [])
+        d4p = DataForPlayer(p1)
         d4p.get_new_player_position = MagicMock()
         d4p.set_mv_future = MagicMock()
         d4p.is_buy_in_required = MagicMock(return_value=True)
@@ -229,7 +228,7 @@ class TestMarketIteration(unittest.TestCase):
 
         # Assert
         self.assertEqual(bi, buy_in_p1)
-        d4p.get_new_player_position.assert_called_with(4, .1, 44)
+        d4p.get_new_player_position.assert_called_with([], 4, .1, 44)
         d4p.set_mv_future.assert_called_with(.2, 44)
         d4p.is_buy_in_required.assert_called_once()
         d4p.generate_buy_in_order.assert_called_with(44, .3, .4)
@@ -251,8 +250,8 @@ class TestMarketIteration(unittest.TestCase):
         mi.get_market_price.assert_called_once()
         mi.fill_orders.assert_called_with(200)
         self.assertEqual(mi.compute_player_position.call_count, 2)
-        calls = [call(DataForPlayer(p1, []), 200),
-                 call(DataForPlayer(p2, []), 200)]
+        calls = [call(DataForPlayer(p1), 200),
+                 call(DataForPlayer(p2), 200)]
         mi.compute_player_position.assert_has_calls(calls, any_order=True)
 
     def test_get_all_orders_with_buy_in(self):

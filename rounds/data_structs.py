@@ -65,9 +65,8 @@ class DataForOrder:
 
 
 class DataForPlayer:
-    def __init__(self, player: Player, orders):
+    def __init__(self, player: Player):
         self.player = player
-        self.orders = orders
 
         self.shares_result = None
         self.new_position = None
@@ -79,9 +78,9 @@ class DataForPlayer:
         self.cash_result = None
         self.margin_violation_future = False
 
-    def get_new_player_position(self, dividend, interest_rate, market_price):
+    def get_new_player_position(self, orders, dividend, interest_rate, market_price):
         # calculate players positions
-        net_shares_per_order = (-1 * o.order_type * o.quantity_final for o in self.orders)
+        net_shares_per_order = (-1 * o.order_type * o.quantity_final for o in orders)
         self.shares_transacted = sum(net_shares_per_order)
         self.shares_result = self.player.shares + self.shares_transacted
         self.new_position = self.player.shares + self.shares_transacted

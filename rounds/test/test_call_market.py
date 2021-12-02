@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 from rounds.call_market import CallMarket, get_total_quantity
-from rounds.call_market import DataForPlayer, DataForOrder
+from rounds.data_structs import DataForPlayer, DataForOrder
 from rounds.models import *
 
 BID = OrderType.BID.value
@@ -253,22 +253,14 @@ def basic_player():
 
 class TestDataForPlayer(unittest.TestCase):
 
-    def basic_test_object(self, orders):
-        p = basic_player()
-        for o in orders:
-            o.player = p
-
-        return DataForPlayer(p, orders)
-
     def test_init(self):
         # set-up
         p = basic_player()
 
         # Execute
-        d4p = DataForPlayer(p, [])
+        d4p = DataForPlayer(p)
 
         # Assert
-        self.assertEqual(d4p.orders, [])
         self.assertEqual(d4p.player, p)
         self.assertIsNone(d4p.shares_result)
         self.assertIsNone(d4p.shares_transacted)
@@ -281,16 +273,19 @@ class TestDataForPlayer(unittest.TestCase):
 
     def test_get_new_player_pos_net_buy(self):
         # Set-up
+        p = basic_player()
         o1 = Order(order_type=BID, quantity_final=1)
         o2 = Order(order_type=BID, quantity_final=2)
         o3 = Order(order_type=OFFER, quantity_final=0)
         o4 = Order(order_type=OFFER, quantity_final=1)
         orders = [o1, o2, o3, o4]
+        for o in orders:
+            o.player = p
 
-        d4p = self.basic_test_object(orders)
+        d4p = DataForPlayer(p)
 
         # Execute
-        d4p.get_new_player_position(10, R, 15)
+        d4p.get_new_player_position(orders, 10, R, 15)
 
         # Assert
         self.assertEqual(d4p.shares_transacted, 2)
@@ -303,16 +298,19 @@ class TestDataForPlayer(unittest.TestCase):
 
     def test_get_new_player_pos_net_sell(self):
         # Set-up
+        p = basic_player()
         o1 = Order(order_type=BID, quantity_final=1)
         o2 = Order(order_type=BID, quantity_final=0)
         o3 = Order(order_type=OFFER, quantity_final=2)
         o4 = Order(order_type=OFFER, quantity_final=1)
         orders = [o1, o2, o3, o4]
+        for o in orders:
+            o.player = p
 
-        d4p = self.basic_test_object(orders)
+        d4p = DataForPlayer(p)
 
         # Execute
-        d4p.get_new_player_position(10, R, 15)
+        d4p.get_new_player_position(orders, 10, R, 15)
 
         # Assert
         self.assertEqual(d4p.shares_transacted, -2)
@@ -325,10 +323,11 @@ class TestDataForPlayer(unittest.TestCase):
 
     def test_get_new_player_pos_no_orders(self):
         # Set-up
-        d4p = self.basic_test_object([])
+        p = basic_player()
+        d4p = DataForPlayer(p)
 
         # Execute
-        d4p.get_new_player_position(10, R, 15)
+        d4p.get_new_player_position([], 10, R, 15)
 
         # Assert
         self.assertEqual(d4p.shares_transacted, 0)
@@ -341,7 +340,8 @@ class TestDataForPlayer(unittest.TestCase):
 
     def test_is_margin_violation_zero_shares(self):
         # Set-up
-        d4p = self.basic_test_object([])
+        p = basic_player()
+        d4p = DataForPlayer(p)
         d4p.cash_result = 10
         d4p.shares_result = 0
 
@@ -353,7 +353,8 @@ class TestDataForPlayer(unittest.TestCase):
 
     def test_is_margin_violation_pos_shares(self):
         # Set-up
-        d4p = self.basic_test_object([])
+        p = basic_player()
+        d4p = DataForPlayer(p)
         d4p.cash_result = 100
         d4p.shares_result = 1
 
@@ -365,7 +366,8 @@ class TestDataForPlayer(unittest.TestCase):
 
     def test_is_margin_violation_neg_shares_under(self):
         # Set-up
-        d4p = self.basic_test_object([])
+        p = basic_player()
+        d4p = DataForPlayer(p)
         d4p.cash_result = 100
         d4p.shares_result = -1
 
@@ -377,7 +379,8 @@ class TestDataForPlayer(unittest.TestCase):
 
     def test_is_margin_violation_neg_shares_over(self):
         # Set-up
-        d4p = self.basic_test_object([])
+        p = basic_player()
+        d4p = DataForPlayer(p)
         d4p.cash_result = 100
         d4p.shares_result = -1
 
@@ -394,13 +397,13 @@ class TestDataForPlayer(unittest.TestCase):
         p3 = Player(margin_violation=True)
         p4 = Player(margin_violation=True)
 
-        d1 = DataForPlayer(p1, [])
+        d1 = DataForPlayer(p1)
         d1.margin_violation_future = False
-        d2 = DataForPlayer(p2, [])
+        d2 = DataForPlayer(p2)
         d2.margin_violation_future = True
-        d3 = DataForPlayer(p3, [])
+        d3 = DataForPlayer(p3)
         d3.margin_violation_future = False
-        d4 = DataForPlayer(p4, [])
+        d4 = DataForPlayer(p4)
         d4.margin_violation_future = True
 
         # Execute / Assert
@@ -411,7 +414,8 @@ class TestDataForPlayer(unittest.TestCase):
 
     def test_generate_buy_in_order(self):
         # Set-up
-        d4p = self.basic_test_object([])
+        p = basic_player()
+        d4p = DataForPlayer(p)
         d4p.shares_result = -10
         d4p.cash_result = 1000
         # Order.create = MagicMock(return_value = Order())

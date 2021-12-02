@@ -11,7 +11,8 @@ class MarketIteration:
         self.bids = ensure_order_data(bids)
         self.offers = ensure_order_data(offers)
         all_orders = concat_or_null([bids, offers])
-        self.players = ensure_player_data(players, get_orders_by_player(all_orders))
+        self.orders_by_player = get_orders_by_player(all_orders)
+        self.players = ensure_player_data(players)
         self.dividend = dividend
         self.last_price = last_price
         self.buy_ins = ensure_order_data(buy_ins)
@@ -55,7 +56,8 @@ class MarketIteration:
         return market_price, market_volume
 
     def compute_player_position(self, data_for_player, market_price):
-        data_for_player.get_new_player_position(self.dividend, self.interest_rate, market_price)
+        orders = self.orders_by_player[data_for_player.player]
+        data_for_player.get_new_player_position(orders, self.dividend, self.interest_rate, market_price)
         data_for_player.set_mv_future(self.margin_ratio, market_price)
         # determine buy-in orders
         # add them to the proper lists
@@ -84,14 +86,14 @@ def get_orders_by_player(orders):
     return d
 
 
-def ensure_player_data(players, o4p):
+def ensure_player_data(players):
     if players is None:
         return players
 
     ret = []
     for p in players:
         if type(p) == Player:
-            ret.append(DataForPlayer(p, o4p[p]))
+            ret.append(DataForPlayer(p))
         else:
             ret.append(p)
 
