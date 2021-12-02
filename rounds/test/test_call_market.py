@@ -1,18 +1,17 @@
 import unittest
-from rounds.models import *
-from rounds.call_market import CallMarket, get_orders_by_player
-from rounds.call_market import DataForPlayer
 from unittest.mock import MagicMock
 from unittest.mock import patch
-import pandas as pd
-import numpy as np
+
+from rounds.call_market import CallMarket, get_total_quantity
+from rounds.call_market import DataForPlayer, DataForOrder
+from rounds.models import *
 
 BID = OrderType.BID.value
 OFFER = OrderType.OFFER.value
 NUM_ROUNDS = 5
 R = .1
 MARGIN_RATIO = .6
-MARGIN_PREM = 1.25
+MARGIN_PREM = .25
 MARGIN_TARGET = .3
 
 b_10_05 = Order(order_type=BID, price=10, quantity=5)
@@ -136,7 +135,6 @@ class TestCallMarket(unittest.TestCase):
 
     def test_get_last_period_price_round_2(self):
         # Set-up
-        c = CallMarket.get_last_period_price
         cm = self.basic_setup()
         group = cm.group
         group.round_number = 2
@@ -248,40 +246,15 @@ class TestCallMarket(unittest.TestCase):
         # Assert
         self.assertEqual(f, 1400)
 
-    def test_get_orders_by_player(self):
-        # Set-up
-        p1 = Player(id=1234, id_in_group=1)
-        p2 = Player(id=6789, id_in_group=2)
 
-        p1_b_10_05 = Order(player=p1, order_type=BID, price=10, quantity=5)
-        p2_b_10_06 = Order(player=p2, order_type=BID, price=10, quantity=6)
-        p1_b_11_05 = Order(player=p1, order_type=BID, price=11, quantity=5)
-        p2_b_11_06 = Order(player=p2, order_type=BID, price=11, quantity=6)
-
-        p2_o_05_05 = Order(player=p2, order_type=OFFER, price=5, quantity=5)
-        p1_o_05_06 = Order(player=p1, order_type=OFFER, price=5, quantity=6)
-        p2_o_06_05 = Order(player=p2, order_type=OFFER, price=6, quantity=5)
-        p1_o_06_07 = Order(player=p1, order_type=OFFER, price=6, quantity=7)
-
-        orders = [p1_b_10_05, p2_b_10_06, p1_b_11_05, p2_b_11_06, p2_o_05_05, p1_o_05_06, p2_o_06_05, p1_o_06_07]
-        cm = self
-
-        # Execute
-        d = get_orders_by_player(orders)
-
-        # Assert
-        self.assertEqual(set(d.keys()), set([p1, p2]))
-        self.assertEqual(d[p1], [p1_b_10_05, p1_b_11_05, p1_o_05_06, p1_o_06_07])
-        self.assertEqual(d[p2], [p2_b_10_06, p2_b_11_06, p2_o_05_05, p2_o_06_05])
+def basic_player():
+    return Player(shares=100, cash=200)
 
 
 class TestDataForPlayer(unittest.TestCase):
 
-    def basic_setup(self):
-        return Player(shares=100, cash=200)
-
     def basic_test_object(self, orders):
-        p = self.basic_setup()
+        p = basic_player()
         for o in orders:
             o.player = p
 
@@ -289,7 +262,7 @@ class TestDataForPlayer(unittest.TestCase):
 
     def test_init(self):
         # set-up
-        p = self.basic_setup()
+        p = basic_player()
 
         # Execute
         d4p = DataForPlayer(p, [])
@@ -451,3 +424,96 @@ class TestDataForPlayer(unittest.TestCase):
         self.assertEqual(o.order_type, BID)
         self.assertEqual(o.price, 75)
         self.assertEqual(o.quantity, 4)
+
+
+class TestDataForOrder(unittest.TestCase):
+    def basic_setup(self):
+        g = Group()
+        p = basic_player()
+        p.group = g
+        o = Order(player=p, group=g, order_type=BID, price=10, quantity=5)
+        o.id = -999
+        return g, o, p
+
+    def test_init_null(self):
+        # Setup / Execute
+        d4o = DataForOrder()
+
+        # Assert
+        self.assertIsNone(d4o.order)
+        self.assertIsNone(d4o.id)
+        self.assertIsNone(d4o.player)
+        self.assertIsNone(d4o.group)
+        self.assertIsNone(d4o.order_type)
+        self.assertIsNone(d4o.price)
+        self.assertIsNone(d4o.quantity)
+        self.assertIsNone(d4o.quantity_final)
+        self.assertFalse(d4o.is_buy_in)
+
+    def test_init_not_null(self):
+        # Set up
+        g, o, p = self.basic_setup()
+
+        # Execute
+        d4o = DataForOrder(o=o)
+
+        # Assert
+        self.assertEqual(d4o.order, o)
+        self.assertEqual(d4o.id, -999)
+        self.assertEqual(d4o.player, p)
+        self.assertEqual(d4o.group, g)
+        self.assertEqual(d4o.price, 10)
+        self.assertEqual(d4o.quantity, 5)
+        self.assertIsNone(d4o.quantity_final)
+        self.assertFalse(d4o.is_buy_in)
+
+    def test_update_order(self):
+        # Set up
+        g, o, p = self.basic_setup()
+        d4o = DataForOrder(o=o)
+
+        # Execute
+        d4o.quantity_final = -7777
+        d4o.is_buy_in = True
+        d4o.update_order()
+
+        # Assert
+        self.assertEqual(d4o.order, o)
+        self.assertEqual(o.id, -999)
+        self.assertEqual(o.player, p)
+        self.assertEqual(o.group, g)
+        self.assertEqual(o.price, 10)
+        self.assertEqual(o.quantity, 5)
+        self.assertTrue(o.is_buy_in)
+        self.assertEqual(o.quantity_final, -7777)
+
+    def test_update_order_None(self):
+        # Setup
+        d4o = DataForOrder()
+        g, throw_away, p = self.basic_setup()
+
+        d4o.player = p
+        d4o.group = g
+        d4o.order_type = OFFER
+        d4o.price = -54
+        d4o.quantity = -55
+        d4o.quantity_final = -56
+        d4o.is_buy_in = True
+
+        # Execute
+        d4o.update_order()
+        o = d4o.order
+
+        # Assert
+        self.assertIsNotNone(o)
+        self.assertEqual(o.player, p)
+        self.assertEqual(o.group, g)
+        self.assertEqual(o.price, -54)
+        self.assertEqual(o.quantity, -55)
+        self.assertTrue(o.is_buy_in)
+        self.assertEqual(o.quantity_final, -56)
+
+    def test_get_total_quantity(self):
+        self.assertEqual(get_total_quantity(all_orders), 45)
+        self.assertEqual(get_total_quantity([]), 0)
+        self.assertEqual(get_total_quantity(None), 0)

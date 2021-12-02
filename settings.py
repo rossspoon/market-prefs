@@ -4,12 +4,12 @@ SESSION_CONFIGS = [
      dict(
         name='rounds',
         app_sequence=['rounds'],
-        num_demo_participants=2, 
+        num_demo_participants=2,
         interest_rate = 0.05,
         div_amount ='40 100',
         div_dist = '.5 .5',
         margin_ratio = .5,
-        margin_premium = 1.1,
+        margin_premium = 0.1,
         margin_target_ratio = .3,
 
         fraction_of_short_starts = .5,
@@ -21,12 +21,12 @@ SESSION_CONFIGS = [
      , dict(
         name='rounds_test',
         app_sequence=['rounds'],
-        num_demo_participants=3, 
+        num_demo_participants=3,
         interest_rate = 0,
         div_amount ='0 0',
         div_dist = '.5 .5',
         margin_ratio = .5,
-        margin_premium = 1.1,
+        margin_premium = 0.1,
         margin_target_ratio = .3,
 
         treated_ids= '1 0 0',

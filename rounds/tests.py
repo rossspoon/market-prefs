@@ -4,6 +4,10 @@ from threading import Lock
 
 from . import *
 
+P_TYPE_TREATMENT = 0
+P_TYPE_BUYER = 1
+P_TYPE_SELLER = 2
+
 
 class PlayerBot(Bot):
     p_type = -1
@@ -25,13 +29,15 @@ class PlayerBot(Bot):
 
     def run_unit_tests(self):
         suite = unittest.defaultTestLoader.discover('rounds/test')
-        print("FOUND CASES")
-        for s in suite:
-            for t in s:
-                print("TEST", t, "\n")
+        print("\n===========================\nRUNNING UNIT TESTS")
+        # for s in suite:
+        #    for t in s:
+        #        for i in t:
+        #            print("TEST", i, "\n")
 
         ttr = unittest.TextTestRunner(stream=sys.stdout)
         ttr.run(suite)
+        print("\n FINISHED UNIT TESTS\n===========================\n\n")
 
     def init_tests(self):
         """ Run Unit tests and first-round player tests """
@@ -49,7 +55,7 @@ class PlayerBot(Bot):
         shares_treatment = self.session.config['shares_endowment_treatment']
 
         print("PLAYER:", self.player.id_in_group, self.p_type, self.player.cash, self.player.shares)
-        if self.p_type == 0:
+        if self.p_type == P_TYPE_TREATMENT:
             # Should be treatment
             expect(self.player.cash, cash_treatment)
             expect(self.player.shares, shares_treatment)
@@ -77,27 +83,27 @@ class PlayerBot(Bot):
             expect(self.group.short, 6)
 
         # Player-level tests
-        if r_num == 2 and self.p_type == 1:
+        if r_num == 2 and self.p_type == P_TYPE_BUYER:
             expect(self.player.cash, 0)
             expect(self.player.shares, 20)
             expect(self.player.margin_violation, False)
 
-        elif r_num == 2 and self.p_type == 2:
+        elif r_num == 2 and self.p_type == P_TYPE_SELLER:
             expect(self.player.cash, 1000)
             expect(self.player.shares, 0)
             expect(self.player.margin_violation, False)
 
-        elif r_num == 2 and self.p_type == 0:
+        elif r_num == 2 and self.p_type == P_TYPE_TREATMENT:
             expect(self.player.cash, 1000)
             expect(self.player.shares, -10)
             expect(self.player.margin_violation, True)
 
-        elif r_num == 4 and self.p_type == 0:
+        elif r_num == 4 and self.p_type == P_TYPE_TREATMENT:
             expect(self.player.cash, 800)
             expect(self.player.shares, -6)
             expect(self.player.margin_violation, False)
 
-        elif r_num == 4 and self.p_type == 1:
+        elif r_num == 4 and self.p_type == P_TYPE_BUYER:
             expect(self.player.cash, 200)
             expect(self.player.shares, 16)
             expect(self.player.margin_violation, False)
@@ -121,11 +127,11 @@ class PlayerBot(Bot):
             expect(self.group.price, 50)
             expect(self.group.volume, 4)
 
-        if r_num in [2, 3] and self.p_type == 0:
-            # immediately after the close of the round-2 market
-            # the treatment player should have submitted an auto buy-in order
+        # Round 2 & 3 Tests for Treatment player
+        # immediately after the close of the round-2 market
+        # the treatment player should have submitted an auto buy-in order
+        if r_num in [2, 3] and self.p_type == P_TYPE_TREATMENT:
             orders = Order.filter(player=self.player)
-            print("R 2_3 Test: player: ", self.player.id_in_group, self.player, "\nOrders:", orders)
             expect(len(orders), 1)
             o = orders[0]
             expect(o.order_type, -1)

@@ -1,12 +1,14 @@
 from otree.api import *
 from enum import Enum
 
+
 class OrderType(Enum):
     """
         Enumeration representing the order type BID/OFFER
     """
     BID = -1
     OFFER = 1
+
 
 class OrderField(Enum):
     """
@@ -15,6 +17,7 @@ class OrderField(Enum):
     PRICE = 1
     QUANTITY = 2
     TYPE = 3
+
 
 class OrderErrorCode(Enum):
     """
@@ -25,12 +28,12 @@ class OrderErrorCode(Enum):
         obj = object.__new__(cls)
         obj._value_ = val
         obj.field = field
-        obj.desc  = desc
+        obj.desc = desc
         return obj
 
     PRICE_NEGATIVE = (1, OrderField.PRICE, 'Price must be greater than zero')
-    PRICE_NOT_NUM = (2,  OrderField.PRICE, 'Price must be an integer number')
-    QUANT_NEGATIVE = (4, OrderField.QUANTITY,  'Quantity must be greater than zero')
+    PRICE_NOT_NUM = (2, OrderField.PRICE, 'Price must be an integer number')
+    QUANT_NEGATIVE = (4, OrderField.QUANTITY, 'Quantity must be greater than zero')
     QUANT_NOT_NUM = (8, OrderField.QUANTITY, 'Quantity must be an integer number')
     BAD_TYPE = (16, OrderField.TYPE, 'Select a type')
 
@@ -40,56 +43,55 @@ class OrderErrorCode(Enum):
         return self.value | code
 
     def to_dict(self):
-        return dict(value = self.value,
-                field = self.field.value,
-                desc = self.desc)
+        return dict(value=self.value,
+                    field=self.field.value,
+                    desc=self.desc)
+
 
 class Subsession(BaseSubsession):
     pass
 
 
-
 class Group(BaseGroup):
     price = models.CurrencyField()
     volume = models.IntegerField()
-    dividend = models.IntegerField( initial = 0 )
+    dividend = models.IntegerField(initial=0)
 
     float = models.IntegerField()
     short = models.IntegerField()
 
-   
 
 class Player(BasePlayer):
-    cash = models.CurrencyField( initial= 1000 )
-    shares = models.IntegerField( initial= 50 )
+    cash = models.CurrencyField(initial=1000)
+    shares = models.IntegerField(initial=50)
 
     #  These items just exist to drive the form on the page.
     # The actual price and quantity are stored in the Order model
     type = models.IntegerField(
-            choices = [
-                    [-1, 'Buy'],
-                    [1, 'Sell'],
-                ]
-            ,  blank=True
-            )
+        choices=[
+            [-1, 'Buy'],
+            [1, 'Sell'],
+        ]
+        , blank=True
+    )
     price = models.IntegerField(blank=True)
     quantity = models.IntegerField(blank=True)
 
-    margin_violation = models.BooleanField(initial=False)   # Margin Warning this round?
+    margin_violation = models.BooleanField(initial=False)  # Margin Warning this round?
 
-    #Market Movement
+    # Market Movement
     shares_transacted = models.IntegerField(initial=0)
     trans_cost = models.IntegerField(initial=0)
     cash_after_trade = models.IntegerField()
     interest_earned = models.IntegerField()
     dividend_earned = models.IntegerField()
 
-    #Results
+    # Results
     cash_result = models.IntegerField()
     shares_result = models.IntegerField()
 
-    #Per-round Survey
-    emotion =  models.IntegerField(
+    # Per-round Survey
+    emotion = models.IntegerField(
         label='How do you feel about these results?'
         , choices=[
             [1, '<img src="/static/rounds/img/angry.png" style="width:50px;height:50px;"/>'],
@@ -125,22 +127,21 @@ class Player(BasePlayer):
         this.margin_violation = d.get('margin_violation')
 
 
-
 class Order(ExtraModel):
     player = models.Link(Player)
-    group =  models.Link(Group)
-    #uuid = models.StringField()
+    group = models.Link(Group)
+    # uuid = models.StringField()
     order_type = models.IntegerField()
     price = models.CurrencyField()
     quantity = models.IntegerField()
     quantity_final = models.IntegerField(initial=0)
-    is_buy_in = models.BooleanField(initial=False)   # is this order an automatic buy-in?
+    is_buy_in = models.BooleanField(initial=False)  # is this order an automatic buy-in?
 
     def to_dict(self):
         return dict(
-                 oid = self.id
-                , p_id = self.player.id_in_group
-                , group_id = self.group.id
-                , type = self.order_type
-                , price = self.price
-                , quantity = self.quantity)
+            oid=self.id
+            , p_id=self.player.id_in_group
+            , group_id=self.group.id
+            , type=self.order_type
+            , price=self.price
+            , quantity=self.quantity)

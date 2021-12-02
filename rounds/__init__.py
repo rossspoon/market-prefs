@@ -171,7 +171,7 @@ def standard_vars_for_template(player: Player):
     # express the ratios as a percent
     marg_ratio_pct = WHOLE_NUMBER_PERCENT.format(sess_config['margin_ratio'])
     marg_target_rat_pct = WHOLE_NUMBER_PERCENT.format(sess_config['margin_target_ratio'])
-    margin_premium_pct = WHOLE_NUMBER_PERCENT.format(sess_config['margin_premium'] - 1)
+    margin_premium_pct = WHOLE_NUMBER_PERCENT.format(sess_config['margin_premium'])
 
     price = get_last_period_price(player.group)
     pos_value = player.shares * price
