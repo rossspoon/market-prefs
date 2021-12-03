@@ -436,6 +436,7 @@ class TestDataForOrder(unittest.TestCase):
         p = basic_player()
         p.group = g
         o = Order(player=p, group=g, order_type=BID, price=10, quantity=5)
+        o.quantity_final = 0
         o.id = -999
         return g, o, p
 
@@ -451,7 +452,7 @@ class TestDataForOrder(unittest.TestCase):
         self.assertIsNone(d4o.order_type)
         self.assertIsNone(d4o.price)
         self.assertIsNone(d4o.quantity)
-        self.assertIsNone(d4o.quantity_final)
+        self.assertEqual(d4o.quantity_final, 0)
         self.assertFalse(d4o.is_buy_in)
 
     def test_init_not_null(self):
@@ -468,7 +469,7 @@ class TestDataForOrder(unittest.TestCase):
         self.assertEqual(d4o.group, g)
         self.assertEqual(d4o.price, 10)
         self.assertEqual(d4o.quantity, 5)
-        self.assertIsNone(d4o.quantity_final)
+        self.assertEqual(d4o.quantity_final, 0)
         self.assertFalse(d4o.is_buy_in)
 
     def test_update_order(self):
