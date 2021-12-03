@@ -76,6 +76,7 @@ class TestMarketIteration(unittest.TestCase):
     def test_init_with_buy_in(self):
         # Set-up
         buy_ins = [buy_in_p1]
+        buy_in_data = ensure_order_data(buy_ins)
 
         # Execute
         mi = MarketIteration(None, None, all_players, sess_config, 4, -99, buy_ins=buy_ins)
@@ -85,6 +86,10 @@ class TestMarketIteration(unittest.TestCase):
         self.assertEqual(mi.last_price, -99)
         self.assertIsNotNone(mi.buy_ins)
         self.assertEqual(len(mi.buy_ins), 1)
+        orders_for_p1 = mi.orders_by_player[p1]
+        self.assertEqual(orders_for_p1, buy_in_data)
+        orders_for_p2 = mi.orders_by_player[p2]
+        self.assertEqual(orders_for_p2, [])
         self.assertIsInstance(mi.buy_ins[0], DataForOrder)
         self.assertEqual(mi.interest_rate, .1)
         self.assertEqual(mi.margin_ratio, .2)

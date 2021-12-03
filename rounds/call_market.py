@@ -74,17 +74,30 @@ class CallMarket:
         dividend = self.get_dividend()
         total_supply = get_total_quantity(self.offers)
 
-        buy_in_required = False
-        enough_supply = True
         players = self.group.get_players()
         config = self.group.session.config
-        iteration = None
-        buy_ins = None
+
+        # Run the market with out buy in.  It might be the case the everything clears up.
+        iteration = MarketIteration(self.bids, self.offers, players,
+                                    config, dividend, self.last_price,)
+
+        buy_ins = iteration.run_iteration()
+
+        if not buy_ins:
+            self.final_updates(iteration)
+            return
+
+        # If we made it this far then there is buy_in demand
+        buy_in_required = True
+        buy_in_demand = get_total_quantity(buy_ins)
+        enough_supply = buy_in_demand <= total_supply
 
         # loop while at_least_once
         # players that are MV are still MV
         # still supply (offers) available
-        while iteration is None or (buy_in_required and enough_supply):
+        # Note that as the bid price increases, the buy-in demand might change
+        # This means that we have to test for total supply each iteration of the market.
+        while buy_in_required and enough_supply:
             iteration = MarketIteration(self.bids, self.offers, players,
                                         config, dividend, self.last_price,
                                         buy_ins=buy_ins)
@@ -96,54 +109,31 @@ class CallMarket:
             buy_in_required = buy_in_demand > 0
             enough_supply = buy_in_demand <= total_supply
 
-            # all_orders = [DataForOrder(o=o) for o in bids_for_loop + offers_for_loop]
-            #
-            # # Evaluate the new market conditions
-            # # Calculate the Market Price
-            # mp = MarketPrice(bids_for_loop, offers_for_loop)
-            # market_price, market_volume = mp.get_market_price(last_price=self.last_price)
-            # print(mp.price_df)
-            #
-            # # Fill Orders
-            # of = OrderFill(all_orders)
-            # of.fill_orders(market_price)
-            #
-            # # Apply new market conditions to the players
-            # o_by_p = get_orders_by_player(all_orders)
-            # buy_ins = []
-            # for p in self.group.get_players():
-            #     orders_for_player = o_by_p[p]
-            #     data_for_player = DataForPlayer(p, orders_for_player)
-            #     data_for_player.get_new_player_position(dividend, self.interest_rate, market_price)
-            #     data_for_player.set_mv_future(self.margin_ratio, market_price)
-            #     new_player_data[p] = data_for_player
-            #
-            #     # determine buy-in orders
-            #     # add them to the proper lists
-            #     if data_for_player.is_buy_in_required():
-            #         buy_in_order = data_for_player.generate_buy_in_order(market_price, self.margin_premium,
-            #                                                              self.margin_target_ratio)
-            #         buy_ins.append(buy_in_order)
-            #
-            # buy_in_required = len(buy_ins) > 0
-            # bids_for_loop = base_bid_data + buy_ins
+        # If the loop exited because of a lack of supply
+        # Run the market one last time with the last set of buy ins
+        if not enough_supply:
+            iteration = MarketIteration(self.bids, self.offers, players,
+                                        config, dividend, self.last_price, buy_ins=buy_ins)
 
-        # The Market Iteration created by the last time through the loop contains all the
-        # information needed to update the players, orders, and groups.
+            iteration.run_iteration()
 
+        # Preform final updates
+        # with the last completed iteration.
+        self.final_updates(iteration)
+
+    def final_updates(self, iteration):
+        # Final Updates
         for p_data in iteration.players:
             p_data.update_player()
             # Propagate certain data to the next round.
             self.set_up_future_player(p_data.player, margin_violation=p_data.margin_violation_future)
-
         # update orders
         for o in iteration.get_all_orders():
             o.update_order()
-
         # Update the group
         self.group.price = int(iteration.market_price)
         self.group.volume = int(iteration.market_volume)
-        self.group.dividend = dividend
+        self.group.dividend = iteration.dividend
 
 
 def get_total_quantity(offers):

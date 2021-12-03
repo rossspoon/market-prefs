@@ -22,7 +22,7 @@ class DataForOrder:
             self.order_type = order_type
             self.price = price
             self.quantity = quantity
-            self.quantity_final = None
+            self.quantity_final = 0
             self.is_buy_in = is_buy_in
             return
 

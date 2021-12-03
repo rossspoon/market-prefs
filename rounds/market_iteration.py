@@ -10,12 +10,12 @@ class MarketIteration:
     def __init__(self, bids, offers, players, session_config, dividend, last_price, buy_ins=None):
         self.bids = ensure_order_data(bids)
         self.offers = ensure_order_data(offers)
-        all_orders = concat_or_null([bids, offers])
+        self.buy_ins = ensure_order_data(buy_ins)
+        all_orders = concat_or_null([self.bids, self.offers, self.buy_ins])
         self.orders_by_player = get_orders_by_player(all_orders)
         self.players = ensure_player_data(players)
         self.dividend = dividend
         self.last_price = last_price
-        self.buy_ins = ensure_order_data(buy_ins)
         self.market_price = None
         self.market_volume = None
 
