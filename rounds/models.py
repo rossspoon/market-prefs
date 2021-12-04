@@ -71,8 +71,8 @@ class Player(BasePlayer):
         choices=[
             [-1, 'Buy'],
             [1, 'Sell'],
-        ]
-        , blank=True
+        ],
+        blank=True
     )
     price = models.IntegerField(blank=True)
     quantity = models.IntegerField(blank=True)
@@ -92,39 +92,38 @@ class Player(BasePlayer):
 
     # Per-round Survey
     emotion = models.IntegerField(
-        label='How do you feel about these results?'
-        , choices=[
+        label='How do you feel about these results?',
+        choices=[
             [1, '<img src="/static/rounds/img/angry.png" style="width:50px;height:50px;"/>'],
             [2, '<img src="/static/rounds/img/annoyed.jpeg" style="width:50px;height:50px;"/>'],
             [3, '<img src="/static/rounds/img/meh.jpeg" style="width:50px;height:50px;"/>'],
             [4, '<img src="/static/rounds/img/happy.png" style="width:50px;height:50px;"/>'],
-            [5, '<img src="/static/rounds/img/big_grin.jpeg" style="width:50px;height:50px;"/>']]
-        , widget=widgets.RadioSelectHorizontal
+            [5, '<img src="/static/rounds/img/big_grin.jpeg" style="width:50px;height:50px;"/>']],
+        widget=widgets.RadioSelectHorizontal
     )
 
-    def to_dict(this):
-        d = {}
-        d['cash'] = this.field_maybe_none('cash')
-        d['shares'] = this.field_maybe_none('shares')
-        d['margin_violation'] = this.field_maybe_none('margin_violation')
-        d['shares_transacted'] = this.field_maybe_none('shares_transacted')
-        d['trans_cost'] = this.field_maybe_none('trans_cost')
-        d['cash_after_trade'] = this.field_maybe_none('cash_after_trade')
-        d['interest_earned'] = this.field_maybe_none('interest_earned')
-        d['dividend_earned'] = this.field_maybe_none('dividend_earned')
-        d['cash_result'] = this.field_maybe_none('cash_result')
-        d['shares_result'] = this.field_maybe_none('shares_result')
+    def to_dict(self):
+        d = {'cash': self.field_maybe_none('cash'),
+             'shares': self.field_maybe_none('shares'),
+             'margin_violation': self.field_maybe_none('margin_violation'),
+             'shares_transacted': self.field_maybe_none('shares_transacted'),
+             'trans_cost': self.field_maybe_none('trans_cost'),
+             'cash_after_trade': self.field_maybe_none('cash_after_trade'),
+             'interest_earned': self.field_maybe_none('interest_earned'),
+             'dividend_earned': self.field_maybe_none('dividend_earned'),
+             'cash_result': self.field_maybe_none('cash_result'),
+             'shares_result': self.field_maybe_none('shares_result')}
         return d
 
-    def update_from_dict(this, d):
-        this.shares_result = d.get('shares_result')
-        this.shares_transacted = d.get('shares_transacted')
-        this.trans_cost = d.get('trans_cost')
-        this.cash_after_trade = d.get('cash_after_trade')
-        this.dividend_earned = d.get('dividend_earned')
-        this.interest_earned = d.get('interest_earned')
-        this.cash_result = d.get('cash_result')
-        this.margin_violation = d.get('margin_violation')
+    def update_from_dict(self, d):
+        self.shares_result = d.get('shares_result')
+        self.shares_transacted = d.get('shares_transacted')
+        self.trans_cost = d.get('trans_cost')
+        self.cash_after_trade = d.get('cash_after_trade')
+        self.dividend_earned = d.get('dividend_earned')
+        self.interest_earned = d.get('interest_earned')
+        self.cash_result = d.get('cash_result')
+        self.margin_violation = d.get('margin_violation')
 
 
 class Order(ExtraModel):
@@ -139,9 +138,9 @@ class Order(ExtraModel):
 
     def to_dict(self):
         return dict(
-            oid=self.id
-            , p_id=self.player.id_in_group
-            , group_id=self.group.id
-            , type=self.order_type
-            , price=self.price
-            , quantity=self.quantity)
+            oid=self.id,
+            p_id=self.player.id_in_group,
+            group_id=self.group.id,
+            type=self.order_type,
+            price=self.price,
+            quantity=self.quantity)
