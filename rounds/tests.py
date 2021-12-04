@@ -42,11 +42,12 @@ class PlayerBot(Bot):
     def init_tests(self):
         """ Run Unit tests and first-round player tests """
         # Only run the unit tests once
-        self.lock.acquire()
         if not PlayerBot.unit_tests_run:
-            PlayerBot.unit_tests_run = True
-            self.run_unit_tests()
-        self.lock.release()
+            self.lock.acquire()
+            if not PlayerBot.unit_tests_run:
+                PlayerBot.unit_tests_run = True
+                self.run_unit_tests()
+            self.lock.release()
 
         # test treatment assignments
         cash_control = self.session.config['cash_endowment_control']
