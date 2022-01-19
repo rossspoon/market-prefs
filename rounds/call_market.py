@@ -72,24 +72,24 @@ class CallMarket:
 
     def calculate_market(self):
         dividend = self.get_dividend()
-        total_supply = get_total_quantity(self.offers)
+        total_supply = self.get_total_quantity(self.offers)   # get this once since it does not change
 
         players = self.group.get_players()
         config = self.group.session.config
 
-        # Run the market with out buy in.  It might be the case the everything clears up.
+        # Run the market without buy in.  It might be the case that everything clears up.
         iteration = MarketIteration(self.bids, self.offers, players,
                                     config, dividend, self.last_price,)
-
         buy_ins = iteration.run_iteration()
 
+        # Quick out if everything clears up
         if not buy_ins:
             self.final_updates(iteration)
             return
 
         # If we made it this far then there is buy_in demand
         buy_in_required = True
-        buy_in_demand = get_total_quantity(buy_ins)
+        buy_in_demand = self.get_total_quantity(buy_ins)
         enough_supply = buy_in_demand <= total_supply
 
         # loop while at_least_once
@@ -101,11 +101,10 @@ class CallMarket:
             iteration = MarketIteration(self.bids, self.offers, players,
                                         config, dividend, self.last_price,
                                         buy_ins=buy_ins)
-
             buy_ins = iteration.run_iteration()
 
             # determine the conditions that determine if we need another iteration.
-            buy_in_demand = get_total_quantity(buy_ins)
+            buy_in_demand = self.get_total_quantity(buy_ins)
             buy_in_required = buy_in_demand > 0
             enough_supply = buy_in_demand <= total_supply
 
@@ -114,7 +113,6 @@ class CallMarket:
         if not enough_supply:
             iteration = MarketIteration(self.bids, self.offers, players,
                                         config, dividend, self.last_price, buy_ins=buy_ins)
-
             iteration.run_iteration()
 
         # Preform final updates
@@ -135,9 +133,9 @@ class CallMarket:
         self.group.volume = int(iteration.market_volume)
         self.group.dividend = iteration.dividend
 
+    @staticmethod
+    def get_total_quantity(offers):
+        if offers is None:
+            return 0
 
-def get_total_quantity(offers):
-    if offers is None:
-        return 0
-
-    return sum((o.quantity for o in offers))
+        return sum((o.quantity for o in offers))

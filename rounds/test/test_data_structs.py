@@ -1,8 +1,6 @@
 import unittest
-from unittest.mock import MagicMock
-from unittest.mock import patch
 
-from rounds.call_market import CallMarket, get_total_quantity
+from rounds.call_market import CallMarket
 from rounds.data_structs import DataForPlayer, DataForOrder
 from rounds.models import *
 
@@ -298,6 +296,6 @@ class TestDataForOrder(unittest.TestCase):
         self.assertEqual(o.quantity_final, -56)
 
     def test_get_total_quantity(self):
-        self.assertEqual(get_total_quantity(all_orders), 45)
-        self.assertEqual(get_total_quantity([]), 0)
-        self.assertEqual(get_total_quantity(None), 0)
+        self.assertEqual(CallMarket.get_total_quantity(all_orders), 45)
+        self.assertEqual(CallMarket.get_total_quantity([]), 0)
+        self.assertEqual(CallMarket.get_total_quantity(None), 0)

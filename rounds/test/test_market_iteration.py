@@ -36,6 +36,7 @@ sess_config = dict(interest_rate=.1,
 
 
 class TestMarketIteration(unittest.TestCase):
+
     def test_init(self):
         # Execute
         mi = MarketIteration(all_bids, all_offers, all_players, sess_config, 4, -99)

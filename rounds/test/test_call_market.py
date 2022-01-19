@@ -2,40 +2,64 @@ import unittest
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from rounds.call_market import CallMarket, get_total_quantity
-from rounds.data_structs import DataForPlayer, DataForOrder
+from otree.models import Session
+
+from rounds.call_market import CallMarket
 from rounds.models import *
 
 BID = OrderType.BID.value
 OFFER = OrderType.OFFER.value
 NUM_ROUNDS = 5
 R = .1
-MARGIN_RATIO = .6
-MARGIN_PREM = .25
-MARGIN_TARGET = .3
+MARGIN_RATIO: float = .6
+MARGIN_PREM: float = .25
+MARGIN_TARGET: float = .3
 
-b_10_05 = Order(order_type=BID, price=10, quantity=5)
-b_10_06 = Order(order_type=BID, price=10, quantity=6)
-b_11_05 = Order(order_type=BID, price=11, quantity=5)
-b_11_06 = Order(order_type=BID, price=11, quantity=6)
 
-o_05_05 = Order(order_type=OFFER, price=5, quantity=5)
-o_05_06 = Order(order_type=OFFER, price=5, quantity=6)
-o_06_05 = Order(order_type=OFFER, price=6, quantity=5)
-o_06_07 = Order(order_type=OFFER, price=6, quantity=7)
+def get_order(**kwargs):
+    o = Order()
+    o.player = kwargs.get('player')
+    o.group = kwargs.get('group')
+    o.order_type = kwargs.get('order_type')
+    o.price = kwargs.get('price')
+    o.quantity = kwargs.get('quantity')
+    o.is_buy_in = kwargs.get('is_buy_in')
+    return o
+
+
+def get_player(**kwargs):
+    p = Player()
+    p.group = kwargs.get('group')
+    p.round_number = kwargs.get('round_number')
+    p.cash = kwargs.get('cash')
+    p.shares = kwargs.get('shares')
+    p.cash_result = kwargs.get('cash_result')
+    p.shares_result = kwargs.get('shares_result')
+    p.margin_violation = bool(kwargs.get('margin_violation'))
+
+    return p
+
+
+b_10_05 = get_order(order_type=BID, price=10, quantity=5)
+b_10_06 = get_order(order_type=BID, price=10, quantity=6)
+b_11_05 = get_order(order_type=BID, price=11, quantity=5)
+b_11_06 = get_order(order_type=BID, price=11, quantity=6)
+
+o_05_05 = get_order(order_type=OFFER, price=5, quantity=5)
+o_05_06 = get_order(order_type=OFFER, price=5, quantity=6)
+o_06_05 = get_order(order_type=OFFER, price=6, quantity=5)
+o_06_07 = get_order(order_type=OFFER, price=6, quantity=7)
 
 all_orders = [b_10_05, b_10_06, b_11_05, b_11_06, o_05_05, o_05_06, o_06_05, o_06_07]
 
 
 class TestCallMarket(unittest.TestCase):
 
-    def basic_group(self):
+    @staticmethod
+    def basic_group():
         group = Group()
-        config_settings = dict(
-            interest_rate=R
-            , margin_ratio=MARGIN_RATIO
-            , margin_premium=MARGIN_PREM
-            , margin_target_ratio=MARGIN_TARGET)
+        config_settings = {'interest_rate': R, 'margin_ratio': MARGIN_RATIO, 'margin_premium': MARGIN_PREM,
+                           'margin_target_ratio': MARGIN_TARGET}
         session = MagicMock()
         session.config = config_settings
         group.session = session
@@ -43,8 +67,8 @@ class TestCallMarket(unittest.TestCase):
         return group
 
     def basic_setup(self, orders=all_orders):
-        with patch.object(CallMarket, 'get_last_period_price', return_value=47) as mock_method:
-            with patch.object(Order, 'filter', return_value=orders) as filter_mock:
+        with patch.object(CallMarket, 'get_last_period_price', return_value=47):
+            with patch.object(Order, 'filter', return_value=orders):
                 Order.filter = MagicMock(return_value=orders)
                 group = self.basic_group()
                 cm = CallMarket(group, NUM_ROUNDS)
@@ -52,8 +76,8 @@ class TestCallMarket(unittest.TestCase):
 
     def test_init(self):
         # Set up and
-        with patch.object(CallMarket, 'get_last_period_price', return_value=47) as mock_method:
-            with patch.object(Order, 'filter', return_value=all_orders) as filter_mock:
+        with patch.object(CallMarket, 'get_last_period_price', return_value=47):
+            with patch.object(Order, 'filter', return_value=all_orders):
                 group = self.basic_group()
 
                 # Execute
@@ -74,10 +98,9 @@ class TestCallMarket(unittest.TestCase):
                 self.assertEqual(cm.margin_target_ratio, MARGIN_TARGET)
 
     def test_get_orders_for_group(self):
-        with patch.object(Order, 'filter', return_value=all_orders) as filter_mock:
+        with patch.object(Order, 'filter', return_value=all_orders):
             # Set-up
             cm = self.basic_setup()
-            group = cm.group
 
             # Execute
             bids, offers = cm.get_orders_for_group()
@@ -89,10 +112,9 @@ class TestCallMarket(unittest.TestCase):
 
     def test_get_orders_for_group_bids(self):
         orders = [b_10_05, b_10_06, b_11_05, b_11_06]
-        with patch.object(Order, 'filter', return_value=orders) as filter_mock:
+        with patch.object(Order, 'filter', return_value=orders):
             # Set-up
             cm = self.basic_setup(orders=orders)
-            group = cm.group
 
             # Execute
             bids, offers = cm.get_orders_for_group()
@@ -104,10 +126,10 @@ class TestCallMarket(unittest.TestCase):
 
     def test_get_orders_for_group_offers(self):
         orders = [o_05_05, o_05_06, o_06_05, o_06_07]
-        with patch.object(Order, 'filter', return_value=orders) as filter_mock:
+        with patch.object(Order, 'filter', return_value=orders):
             # Set-up
             cm = self.basic_setup(orders=orders)
-            group = cm.group
+            cm.group
 
             # Execute
             bids, offers = cm.get_orders_for_group()
@@ -156,9 +178,7 @@ class TestCallMarket(unittest.TestCase):
     def test_set_up_future_player_last_round(self):
         # Set-up
         cm = self.basic_setup()
-        group = cm.group
-
-        player = Player(round_number=NUM_ROUNDS)
+        player = get_player(round_number=NUM_ROUNDS)
         player.in_round = MagicMock(return_value=None)
 
         # Execute
@@ -170,14 +190,13 @@ class TestCallMarket(unittest.TestCase):
     def test_set_up_future_player_penultimate_round(self):
         # Set-up
         cm = self.basic_setup()
-        group = cm.group
 
-        player = Player(round_number=NUM_ROUNDS - 1
-                        , cash_result=123
-                        , shares_result=456
-                        , margin_violation=True
-                        )
-        next_player = Player(round_number=NUM_ROUNDS)
+        player = get_player(round_number=NUM_ROUNDS - 1,
+                            cash_result=123,
+                            shares_result=456,
+                            margin_violation=True
+                            )
+        next_player = get_player(round_number=NUM_ROUNDS)
         player.in_round = MagicMock(return_value=next_player)
 
         # Execute
@@ -208,9 +227,9 @@ class TestCallMarket(unittest.TestCase):
         # Set-up
         cm = self.basic_setup()
         group = cm.group
-        group.session.config.update(dict(div_dist='0.5 0.5'
-                                         , div_amount='40 100'
-                                         , interest_rate=0))
+        group.session.config.update(dict(div_dist='0.5 0.5',
+                                         div_amount='40 100',
+                                         interest_rate=0))
 
         # Execute
         f = cm.get_fundamental_value()
@@ -222,9 +241,9 @@ class TestCallMarket(unittest.TestCase):
         # Set-up
         cm = self.basic_setup()
         group = cm.group
-        group.session.config.update(dict(div_dist='0.5 0.5'
-                                         , div_amount='0 100'
-                                         , interest_rate=0.1))
+        group.session.config.update(dict(div_dist='0.5 0.5',
+                                         div_amount='0 100',
+                                         interest_rate=0.1))
 
         # Execute
         f = cm.get_fundamental_value()
@@ -236,12 +255,37 @@ class TestCallMarket(unittest.TestCase):
         # Set-up
         cm = self.basic_setup()
         group = cm.group
-        group.session.config.update(dict(div_dist='0.5 0.5'
-                                         , div_amount='40 100'
-                                         , interest_rate=0.05))
+        group.session.config.update(dict(div_dist='0.5 0.5',
+                                         div_amount='40 100',
+                                         interest_rate=0.05))
 
         # Execute
         f = cm.get_fundamental_value()
 
         # Assert
         self.assertEqual(f, 1400)
+
+    def test_market_case(self):
+        # Set up
+        session = Session()
+        sess_config = dict(interest_rate=0,
+                           margin_ratio=.5,
+                           margin_premium=.1,
+                           margin_target_ratio=.3)
+
+        session.config = sess_config
+        g = Group()
+        g.session = session
+
+        p1 = get_player(group=g, cash=100, shares=5)
+        p2 = get_player(group=g, cash=100, shares=5)
+        pt = get_player(group=g, cash=1000, shares=-5)
+
+        o1 = get_order(player=p1, group=g, order_type=BID, price=20, quantity=5)
+        o2 = get_order(player=p2, group=g, order_type=OFFER, price=20, quantity=5)
+
+        with patch.object(Order, 'filter', return_value=[o1, o2]):
+            cm = CallMarket(g, NUM_ROUNDS)
+
+        # Execute
+        cm.calculate_market()
