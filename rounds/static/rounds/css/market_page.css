@@ -78,7 +78,7 @@
 
 .box-header {
     font-weight:600;
-    font-size: 1.5em;
+    font-size: 1.1em;
     padding: 5px;
 }
 
@@ -95,7 +95,7 @@
 
 /* Element styles */
 .order-list-item{
-    font-size: 1.2em;
+    font-size: 1em;
     position: relative;
     padding: 3px;
     padding-left: 40px;
