@@ -111,7 +111,7 @@ class DataForPlayer:
         """
         price_multiplier = 1 + margin_premium
         buy_in_price = int(round(market_price * price_multiplier))  # premium of current market price
-        current_value_of_position = abs(self.shares_result * market_price)
+        current_value_of_position = abs(self.shares_result * buy_in_price)
         cash_position = self.cash_result
         target_value = math.floor(cash_position * margin_target_ratio)  # value of shares to be in compliance
         difference = current_value_of_position - target_value

@@ -265,27 +265,28 @@ class TestCallMarket(unittest.TestCase):
         # Assert
         self.assertEqual(f, 1400)
 
-    def test_market_case(self):
-        # Set up
-        session = Session()
-        sess_config = dict(interest_rate=0,
-                           margin_ratio=.5,
-                           margin_premium=.1,
-                           margin_target_ratio=.3)
-
-        session.config = sess_config
-        g = Group()
-        g.session = session
-
-        p1 = get_player(group=g, cash=100, shares=5)
-        p2 = get_player(group=g, cash=100, shares=5)
-        pt = get_player(group=g, cash=1000, shares=-5)
-
-        o1 = get_order(player=p1, group=g, order_type=BID, price=20, quantity=5)
-        o2 = get_order(player=p2, group=g, order_type=OFFER, price=20, quantity=5)
-
-        with patch.object(Order, 'filter', return_value=[o1, o2]):
-            cm = CallMarket(g, NUM_ROUNDS)
-
-        # Execute
-        cm.calculate_market()
+    # def test_market_case(self):
+    #     # Set up
+    #     session = Session()
+    #     sess_config = dict(interest_rate=0,
+    #                        margin_ratio=.5,
+    #                        margin_premium=.1,
+    #                        margin_target_ratio=.3)
+    #
+    #     session.config = sess_config
+    #     g = Group()
+    #     g.round_number = 1
+    #     g.session = session
+    #
+    #     p1 = get_player(group=g, cash=100, shares=5)
+    #     p2 = get_player(group=g, cash=100, shares=5)
+    #     pt = get_player(group=g, cash=1000, shares=-5)
+    #
+    #     o1 = get_order(player=p1, group=g, order_type=BID, price=20, quantity=5)
+    #     o2 = get_order(player=p2, group=g, order_type=OFFER, price=20, quantity=5)
+    #
+    #     with patch.object(Order, 'filter', return_value=[o1, o2]):
+    #         cm = CallMarket(g, NUM_ROUNDS)
+    #
+    #     # Execute
+    #     cm.calculate_market()

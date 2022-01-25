@@ -31,7 +31,11 @@ class CallMarket:
         # Get the market Price of the last period
         round_number = self.group.round_number
         if round_number == 1:
-            last_price = self.get_fundamental_value()
+            raw_value = self.group.session.config.get('initial_price')
+            if raw_value:
+                return int(raw_value)
+            else:
+                last_price = self.get_fundamental_value()
         else:
             # Look up call price from last period
             last_round_group = self.group.in_round(round_number - 1)
@@ -97,7 +101,8 @@ class CallMarket:
         # still supply (offers) available
         # Note that as the bid price increases, the buy-in demand might change
         # This means that we have to test for total supply each iteration of the market.
-        while buy_in_required and enough_supply:
+        cnt = 0
+        while buy_in_required and enough_supply and cnt < 10:
             iteration = MarketIteration(self.bids, self.offers, players,
                                         config, dividend, self.last_price,
                                         buy_ins=buy_ins)
@@ -107,6 +112,7 @@ class CallMarket:
             buy_in_demand = self.get_total_quantity(buy_ins)
             buy_in_required = buy_in_demand > 0
             enough_supply = buy_in_demand <= total_supply
+            cnt += 1
 
         # If the loop exited because of a lack of supply
         # Run the market one last time with the last set of buy ins

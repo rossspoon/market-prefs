@@ -20,22 +20,19 @@ $(window).on('load', function () {
     // Submit the order form
     $("#submit-btn").click(function(){
         data = get_order_details();
+        remove_all_error_messages();
         liveSend({'func':'submit-order', 'data': data});
     });
 
-    $(".form-control,.form-select").change(function(){
-        $(this).removeClass("form-error");
-        $(this).removeAttr("err-message")
-                .parents('.controls')
-                .removeClass('with-error')
-    });
-
+    // Remove the error message for a form field as it is changed
+    $(".form-control,.form-select").change(remove_error_message);
 })
 
 var num_orders = 0;
 $(document).on('click', ".close-button", function(){
     var raw_id = $(this).attr('id');
     oid = raw_id.substr(raw_id.indexOf('_') +1);
+    remove_all_error_messages();
     liveSend({'func': 'delete_order', 'oid': oid});
 
     $("#order_" + oid).detach();
@@ -49,6 +46,16 @@ $(document).on('click', ".close-button", function(){
     }
 });
 
+function remove_all_error_messages(){
+        $(".form-control,.form-select").each(remove_error_message);
+}
+
+function remove_error_message(){
+        $(this).removeClass("form-error");
+        $(this).removeAttr("err-message")
+                .parents('.controls')
+                .removeClass('with-error')
+    }
 
 function get_order_details() {
     o_type = $("#id_type").find(":selected").val();
@@ -128,7 +135,7 @@ function process_order_rejection(data) {
         code_data = js_vars.error_codes[code];
         is_on = code_data.value & code_from_server;
         if (is_on) {
-            //change feild to error type
+            //change field to error type
             field_select = field_type_to_select[code_data.field];
             f = $(field_select).addClass("form-error")
             f = $(field_select)

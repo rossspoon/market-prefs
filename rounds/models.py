@@ -31,11 +31,13 @@ class OrderErrorCode(Enum):
         obj.desc = desc
         return obj
 
-    PRICE_NEGATIVE = (1, OrderField.PRICE, 'Price must be greater than zero')
-    PRICE_NOT_NUM = (2, OrderField.PRICE, 'Price must be an integer number')
-    QUANT_NEGATIVE = (4, OrderField.QUANTITY, 'Quantity must be greater than zero')
-    QUANT_NOT_NUM = (8, OrderField.QUANTITY, 'Quantity must be an integer number')
+    PRICE_NEGATIVE = (1, OrderField.PRICE, 'Must be greater than zero')
+    PRICE_NOT_NUM = (2, OrderField.PRICE, 'Must be an integer number')
+    QUANT_NEGATIVE = (4, OrderField.QUANTITY, 'Must be greater than zero')
+    QUANT_NOT_NUM = (8, OrderField.QUANTITY, 'Must be an integer number')
     BAD_TYPE = (16, OrderField.TYPE, 'Select a type')
+    BID_GREATER_THAN_ASK = (32, OrderField.PRICE, 'Buy price must be less than all sell orders')
+    ASK_LESS_THAN_BID = (64, OrderField.PRICE, 'Sell price must be greater than all buy orders')
 
     def combine(self, code):
         if type(code) is OrderErrorCode:

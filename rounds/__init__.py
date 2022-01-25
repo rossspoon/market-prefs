@@ -1,5 +1,7 @@
 import math
 import random
+from collections import defaultdict
+
 import pandas as pd
 
 from rounds.call_market import CallMarket
@@ -11,6 +13,11 @@ class Constants(BaseConstants):
     players_per_group = None
     num_rounds = 5
     MARKET_TIME = 50000
+
+
+def get_session_name(obj):
+    session = obj.session
+    return session.config.get('name')
 
 
 # assign treatments
@@ -65,14 +72,16 @@ def get_js_vars(player: Player):
     group = player.group
     groups = group.in_previous_rounds()
 
-    prices = [g.price for g in groups]
-    volumes = [g.volume for g in groups]
+    init_price = get_init_price(player)
+
+    prices = [init_price] + [g.price for g in groups]
+    volumes = [0] + [g.volume for g in groups]
 
     # Error Codes
     error_codes = {e.value: e.to_dict() for e in OrderErrorCode}
 
     return dict(
-        labels=list(range(1, Constants.num_rounds + 1)),
+        labels=list(range(0, Constants.num_rounds + 1)),
         price_data=prices,
         volume_data=volumes,
         num_periods=Constants.num_rounds,
@@ -82,12 +91,19 @@ def get_js_vars(player: Player):
 
 #########################
 # LIVE PAGES FUNCTIONS
-def is_order_valid(data):
+def is_order_valid(player: Player, data):
     o_type = data['type']
     o_price = data['price']
     o_quant = data['quantity']
 
     error_code = 0
+
+    # We'll need to check this order against all other outstanding orders
+    # And categorize them by type
+    orders = get_orders_for_player(player)
+    orders_cat = defaultdict(list)
+    for o in orders:
+        orders_cat[o.order_type].append(o)
 
     # price tests
     if not o_price.lstrip('-').isnumeric():
@@ -105,13 +121,24 @@ def is_order_valid(data):
     if o_type not in ['-1', '1']:
         error_code = OrderErrorCode.BAD_TYPE.combine(error_code)
 
-    return error_code == 0, error_code
+    # If this is a bid, then its price must be less than the lowest ask
+    min_ask = min([o.price for o in orders_cat[OrderType.OFFER.value]], default=999999999)
+    max_bid = max([o.price for o in orders_cat[OrderType.BID.value]], default=-999)
+
+    if o_type == '-1' and float(o_price) >= min_ask:
+        error_code = OrderErrorCode.BID_GREATER_THAN_ASK.combine(error_code)
+
+    if o_type == '1' and float(o_price) <= max_bid:
+        error_code = OrderErrorCode.ASK_LESS_THAN_BID.combine(error_code)
+
+    return error_code
 
 
 def process_order_submit(player, data):
     p_id = player.id_in_group
 
-    valid, error_code = is_order_valid(data)
+    error_code = is_order_valid(player, data)
+    valid = error_code == 0
 
     if valid:
         o_type = int(data['type'])
@@ -137,6 +164,11 @@ def get_orders_for_player_live(player):
     p_id = player.id_in_group
     orders = [o.to_dict() for o in Order.filter(player=player)]
     return {p_id: dict(func='order_list', orders=orders)}
+
+
+def get_orders_for_player(player):
+    p_id = player.id_in_group
+    return Order.filter(player=player)
 
 
 def delete_order(player, oid):
@@ -169,7 +201,8 @@ def standard_vars_for_template(player: Player):
     sess_config = player.session.config
 
     # express the ratios as a percent
-    marg_ratio_pct = WHOLE_NUMBER_PERCENT.format(sess_config['margin_ratio'])
+    margin_ratio = sess_config['margin_ratio']
+    marg_ratio_pct = WHOLE_NUMBER_PERCENT.format(margin_ratio)
     marg_target_rat_pct = WHOLE_NUMBER_PERCENT.format(sess_config['margin_target_ratio'])
     margin_premium_pct = WHOLE_NUMBER_PERCENT.format(sess_config['margin_premium'])
 
@@ -183,6 +216,9 @@ def standard_vars_for_template(player: Player):
         personal_margin = abs(float(pos_value) / float(player.cash))
         personal_margin_pct = WHOLE_NUMBER_PERCENT.format(personal_margin)
 
+    if personal_margin > margin_ratio:
+        player.margin_violation = True
+
     ret = dict(personal_margin=personal_margin,
                personal_margin_pct=personal_margin_pct,
                price=price,
@@ -192,12 +228,24 @@ def standard_vars_for_template(player: Player):
                margin_premium_pct=margin_premium_pct,
                )
     ret.update(sess_config)
-    print(ret)
     return ret
 
 
+def get_init_price(obj):
+    raw_value = obj.session.config.get('initial_price')
+    if raw_value:
+        return int(raw_value)
+    else:
+        return 0
+
+
 def get_last_period_price(group: Group):
-    return 0
+    round_number = group.round_number
+    if round_number == 1:
+        return get_init_price(group)
+    else:
+        last_round_group = group.in_round(round_number - 1)
+        return last_round_group.price
 
 
 def get_player_df(group: Group):
@@ -208,8 +256,6 @@ def set_float_and_short(group: Group):
     # Calculate float the total shorts
     group.float = sum((p.shares for p in group.get_players()))
     group.short = sum((abs(p.shares) for p in group.get_players() if p.shares < 0))
-    for p in group.get_players():
-        print("set_float_and_short: ", p.id_in_group, p.shares)
 
 
 #######################################
@@ -253,6 +299,10 @@ class MarketResults(Page):
 class Survey(Page):
     form_model = 'player'
     form_fields = ['emotion']
+
+    @staticmethod
+    def is_displayed(player: Player):
+        return get_session_name(player) == 'rounds'
 
 
 page_sequence = [PreMarketWait, Market, MarketWaitPage, Survey]
