@@ -92,6 +92,11 @@ class Player(BasePlayer):
     cash_result = models.IntegerField()
     shares_result = models.IntegerField()
 
+    # Forecasting Item
+    f0 = models.CurrencyField()
+    f1 = models.CurrencyField()
+    f2 = models.CurrencyField()
+
     # Per-round Survey
     emotion = models.IntegerField(
         label='How do you feel about these results?',

@@ -1,0 +1,31 @@
+/* Layout styles */
+.otree-body { max-width: 90%;
+}
+
+.boxed_area {
+    border: 3px solid #ddd;
+    border-radius: 8px;
+}
+
+.box-header {
+    font-weight:600;
+    font-size: 1.1em;
+    padding: 5px;
+}
+
+.chart-history-area {
+    width:100%;
+}
+.chart-volume-area{
+    width:100%;
+}
+
+.vitals ul {
+    display: inline;
+    list-style-type: none;
+}
+.vitals li {
+    float: left;
+    width: 32%;
+    text-align: center;
+}

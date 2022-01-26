@@ -231,6 +231,19 @@ def standard_vars_for_template(player: Player):
     return ret
 
 
+def vars_for_forecast_template(player: Player):
+    ret = standard_vars_for_template(player)
+    round_number = player.round_number
+    include_f1 = round_number < Constants.num_rounds
+    include_f2 = round_number < Constants.num_rounds - 1
+
+    ret['period_f1_prompt'] = "What do you think the market price will be in period {}?".format( round_number + 1)
+    ret['period_f2_prompt'] = "What do you think the market price will be in period {}?".format( round_number + 2)
+    ret['include_f1'] = include_f1
+    ret['include_f2'] = include_f2
+    return ret
+
+
 def get_init_price(obj):
     raw_value = obj.session.config.get('initial_price')
     if raw_value:
@@ -248,8 +261,8 @@ def get_last_period_price(group: Group):
         return last_round_group.price
 
 
-def get_player_df(group: Group):
-    return pd.DataFrame.from_records([p.to_dict() for p in group.get_players()])
+#def get_player_df(group: Group):
+#    return pd.DataFrame.from_records([p.to_dict() for p in group.get_players()])
 
 
 def set_float_and_short(group: Group):
@@ -269,22 +282,6 @@ def calculate_market(group: Group):
 # PAGES
 ##########
 
-class Market(Page):
-    timeout_seconds = Constants.MARKET_TIME
-    form_model = 'player'
-    form_fields = ['type', 'price', 'quantity']
-
-    # method bindings
-    js_vars = get_js_vars
-    live_method = market_page_live_method
-    vars_for_template = standard_vars_for_template
-
-
-class MarketWaitPage(WaitPage):
-    # template_name = 'rounds/MarketWaitPage.html'
-    after_all_players_arrive = calculate_market
-
-
 class PreMarketWait(WaitPage):
     body_text = "Waiting for the experiment to begin"
     pass
@@ -292,11 +289,62 @@ class PreMarketWait(WaitPage):
     after_all_players_arrive = set_float_and_short
 
 
-class MarketResults(Page):
+class Market(Page):
+    timeout_seconds = Constants.MARKET_TIME
+    form_model = 'player'
+    form_fields = ['type', 'price', 'quantity']
+
+    # method bindings
     js_vars = get_js_vars
+    vars_for_template = standard_vars_for_template
+    live_method = market_page_live_method
 
 
-class Survey(Page):
+class ForecastPage(Page):
+    form_model = 'player'
+    form_fields = ['f0', 'f1', 'f2']
+
+    js_vars = get_js_vars
+    vars_for_template = vars_for_forecast_template
+
+
+def get_forecasters_choices(player: Player, attr):
+    current_mp = get_last_period_price(player.group)
+    setattr(player, attr, current_mp)
+    step = 500
+    current_mp_nearest_step = (current_mp // step) * step
+    num_choices = 20
+
+    # choices below
+    below_start = current_mp_nearest_step - num_choices * step
+    below_start = max(0, below_start)
+    choices_below = list(range(below_start, current_mp_nearest_step + step, step))
+
+    # choices_above
+    above_stop = current_mp_nearest_step + step + num_choices * step
+    choices_above = list(range(current_mp_nearest_step + step, above_stop + step, step))
+
+    return choices_below + [current_mp] + choices_above
+
+
+def f0_choices(player: Player):
+    return get_forecasters_choices(player, 'f0')
+
+
+def f1_choices(player: Player):
+    return get_forecasters_choices(player, 'f1')
+
+
+def f2_choices(player: Player):
+    return get_forecasters_choices(player, 'f2')
+
+
+class MarketWaitPage(WaitPage):
+    # template_name = 'rounds/MarketWaitPage.html'
+    after_all_players_arrive = calculate_market
+
+
+class RoundResultsPage(Page):
     form_model = 'player'
     form_fields = ['emotion']
 
@@ -305,4 +353,8 @@ class Survey(Page):
         return get_session_name(player) == 'rounds'
 
 
-page_sequence = [PreMarketWait, Market, MarketWaitPage, Survey]
+class MarketResults(Page):
+    js_vars = get_js_vars
+
+
+page_sequence = [PreMarketWait, Market, ForecastPage, MarketWaitPage, RoundResultsPage]
