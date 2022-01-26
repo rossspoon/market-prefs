@@ -311,18 +311,25 @@ class ForecastPage(Page):
 def get_forecasters_choices(player: Player, attr):
     current_mp = get_last_period_price(player.group)
     setattr(player, attr, current_mp)
-    step = 500
+    step = Currency(500)
     current_mp_nearest_step = (current_mp // step) * step
     num_choices = 20
 
     # choices below
     below_start = current_mp_nearest_step - num_choices * step
-    below_start = max(0, below_start)
-    choices_below = list(range(below_start, current_mp_nearest_step + step, step))
+    working_price = max(Currency(0), below_start)
+    choices_below = []
+    while working_price < current_mp_nearest_step:
+        choices_below.append(working_price)
+        working_price += step
 
     # choices_above
-    above_stop = current_mp_nearest_step + step + num_choices * step
-    choices_above = list(range(current_mp_nearest_step + step, above_stop + step, step))
+    above_stop = current_mp_nearest_step + num_choices * step
+    working_price = current_mp_nearest_step + step
+    choices_above = []
+    while working_price <= above_stop:
+        choices_above.append(working_price)
+        working_price += step
 
     return choices_below + [current_mp] + choices_above
 
