@@ -96,6 +96,7 @@ class Player(BasePlayer):
     f0 = models.CurrencyField()
     f1 = models.CurrencyField()
     f2 = models.CurrencyField()
+    forecast_reward = models.CurrencyField()
 
     # Per-round Survey
     emotion = models.IntegerField(

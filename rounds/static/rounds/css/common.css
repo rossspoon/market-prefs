@@ -28,4 +28,9 @@
     float: left;
     width: 32%;
     text-align: center;
+    font-size: 1.25em;
+}
+
+.bold-text{
+    font-weight: bold;
 }

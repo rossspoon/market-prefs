@@ -67,10 +67,17 @@ def creating_session(subsession):
                 player.shares = endow['shares']
 
 
-def get_js_vars(player: Player):
+def get_js_vars_not_current(player: Player):
+    return get_js_vars(player, include_current=False)
+
+
+def get_js_vars(player: Player, include_current=True):
     # Price History
     group = player.group
-    groups = group.in_previous_rounds()
+    if include_current:
+        groups = list(filter(lambda g: g.field_maybe_none('price') is not None,  group.in_all_rounds()))
+    else:
+        groups = group.in_previous_rounds()
 
     init_price = get_init_price(player)
 
@@ -237,10 +244,40 @@ def vars_for_forecast_template(player: Player):
     include_f1 = round_number < Constants.num_rounds
     include_f2 = round_number < Constants.num_rounds - 1
 
-    ret['period_f1_prompt'] = "What do you think the market price will be in period {}?".format( round_number + 1)
-    ret['period_f2_prompt'] = "What do you think the market price will be in period {}?".format( round_number + 2)
+    ret['period_f1_prompt'] = "What do you think the market price will be in period {}?".format(round_number + 1)
+    ret['period_f2_prompt'] = "What do you think the market price will be in period {}?".format(round_number + 2)
     ret['include_f1'] = include_f1
     ret['include_f2'] = include_f2
+    return ret
+
+
+def vars_for_round_results_template(player: Player):
+    ret = standard_vars_for_template(player)
+
+    filled_amount = abs(player.shares_transacted)
+    price = player.group.price
+    orders = get_orders_for_player(player)
+
+    # All transaction types should be the same for a given player
+    trans_type = 0
+    if filled_amount > 0:
+        # get the order type
+        o_types = list(set(o.order_type for o in orders if o.quantity_final > 0))
+
+        if len(o_types) != 1:
+            trans_type = 0
+        else:
+            trans_type = o_types[0]
+
+    # Forecast Error
+    forecast_error = abs(price - player.f0)
+    player.forecast_reward = 500 if forecast_error <= 250 else 0
+
+    ret['filled_amount'] = filled_amount
+    ret['trans_type'] = trans_type
+    ret['trans_cost'] = filled_amount * player.group.price
+    ret['forecast_error'] = forecast_error
+
     return ret
 
 
@@ -261,7 +298,7 @@ def get_last_period_price(group: Group):
         return last_round_group.price
 
 
-#def get_player_df(group: Group):
+# def get_player_df(group: Group):
 #    return pd.DataFrame.from_records([p.to_dict() for p in group.get_players()])
 
 
@@ -278,36 +315,8 @@ def calculate_market(group: Group):
     cm.calculate_market()
 
 
-############
-# PAGES
-##########
-
-class PreMarketWait(WaitPage):
-    body_text = "Waiting for the experiment to begin"
-    pass
-
-    after_all_players_arrive = set_float_and_short
-
-
-class Market(Page):
-    timeout_seconds = Constants.MARKET_TIME
-    form_model = 'player'
-    form_fields = ['type', 'price', 'quantity']
-
-    # method bindings
-    js_vars = get_js_vars
-    vars_for_template = standard_vars_for_template
-    live_method = market_page_live_method
-
-
-class ForecastPage(Page):
-    form_model = 'player'
-    form_fields = ['f0', 'f1', 'f2']
-
-    js_vars = get_js_vars
-    vars_for_template = vars_for_forecast_template
-
-
+#######################################
+# CHOICES FOR the drop-downs on the forecasting page
 def get_forecasters_choices(player: Player, attr):
     current_mp = get_last_period_price(player.group)
     setattr(player, attr, current_mp)
@@ -346,22 +355,63 @@ def f2_choices(player: Player):
     return get_forecasters_choices(player, 'f2')
 
 
+def only_show_for_rounds_app(player: Player):
+    return get_session_name(player) == 'rounds'
+
+
+############
+# PAGES
+##########
+
+class PreMarketWait(WaitPage):
+    body_text = "Waiting for the experiment to begin"
+    pass
+
+    after_all_players_arrive = set_float_and_short
+
+
+class Market(Page):
+    timeout_seconds = Constants.MARKET_TIME
+    form_model = 'player'
+    form_fields = ['type', 'price', 'quantity']
+
+    # method bindings
+    js_vars = get_js_vars
+    vars_for_template = standard_vars_for_template
+    live_method = market_page_live_method
+
+
+class ForecastPage(Page):
+    form_model = 'player'
+
+    js_vars = get_js_vars_not_current
+    vars_for_template = vars_for_forecast_template
+    is_displayed = only_show_for_rounds_app
+
+    @staticmethod
+    def get_form_fields(player):
+        round_number = player.round_number
+        if round_number == Constants.num_rounds:
+            return ['f0']
+        elif round_number == Constants.num_rounds - 1:
+            return ['f0', 'f1']
+        else:
+            return ['f0', 'f1', 'f2']
+
+
 class MarketWaitPage(WaitPage):
-    # template_name = 'rounds/MarketWaitPage.html'
     after_all_players_arrive = calculate_market
 
 
 class RoundResultsPage(Page):
     form_model = 'player'
-    form_fields = ['emotion']
-
-    @staticmethod
-    def is_displayed(player: Player):
-        return get_session_name(player) == 'rounds'
+    is_displayed = only_show_for_rounds_app
+    js_vars = get_js_vars
+    vars_for_template = vars_for_round_results_template
 
 
 class MarketResults(Page):
     js_vars = get_js_vars
 
 
-page_sequence = [PreMarketWait, Market, ForecastPage, MarketWaitPage, RoundResultsPage]
+page_sequence = [PreMarketWait, Market, MarketWaitPage, ForecastPage, RoundResultsPage]
