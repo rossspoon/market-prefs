@@ -269,14 +269,9 @@ def vars_for_round_results_template(player: Player):
         else:
             trans_type = o_types[0]
 
-    # Forecast Error
-    forecast_error = abs(price - player.f0)
-    player.forecast_reward = 500 if forecast_error <= 250 else 0
-
     ret['filled_amount'] = filled_amount
     ret['trans_type'] = trans_type
     ret['trans_cost'] = filled_amount * player.group.price
-    ret['forecast_error'] = forecast_error
 
     return ret
 
@@ -313,6 +308,14 @@ def set_float_and_short(group: Group):
 def calculate_market(group: Group):
     cm = CallMarket(group, Constants.num_rounds)
     cm.calculate_market()
+
+    # Process current round forcasts
+    for p in group.get_players():
+        forecast_error = abs(group.price - p.f0)
+        forecast_reward = 500 if forecast_error <= 250 else 0
+        p.forecast_error = forecast_error
+        p.forecast_reward = forecast_reward
+        p.cash_result += forecast_reward
 
 
 #######################################
@@ -414,4 +417,4 @@ class MarketResults(Page):
     js_vars = get_js_vars
 
 
-page_sequence = [PreMarketWait, Market, MarketWaitPage, ForecastPage, RoundResultsPage]
+page_sequence = [PreMarketWait, Market, ForecastPage, MarketWaitPage, RoundResultsPage]

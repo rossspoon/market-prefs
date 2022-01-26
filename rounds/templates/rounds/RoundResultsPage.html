@@ -56,7 +56,10 @@
                 </li>
                 <li> Dividend Earned: {{ player.dividend_earned }}</li>
                 <li> Interest Earned: {{ player.interest_earned }}</li>
-                <li> Forecast Reward: {{ player.forecast_reward }} (Error: {{ forecast_error }} )</li>
+                <li>
+                    Forecast Reward: {{ player.forecast_reward }}
+                    <span class="forecast-error"> (Error: {{ player.forecast_error }} )<span>
+                </li>
                 <li>
                     You now have:
                     <ul class="tight-list">

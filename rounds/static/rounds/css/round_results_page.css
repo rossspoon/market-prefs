@@ -51,3 +51,8 @@
     bottom: 0px;
     right: 0px;
 }
+
+.forecast-error {
+    color: gray;
+    font-size: .7em;
+}
