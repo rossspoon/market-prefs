@@ -8,7 +8,6 @@ window.onload = function() {
         return ('' + value).padStart(4, ' ');
     }
 
-
     var ctx_price = document.getElementById('gr_price');
     var price_chart = new Chart(ctx_price, {
         type: 'line',
@@ -35,6 +34,9 @@ window.onload = function() {
                     },
                     ticks: {
                         callback: pad_val
+                        , suggestedMax: 3000
+                        , suggestedMin: 2600
+                        , stepSize: 100
                     }
                 }],
             },
@@ -74,6 +76,10 @@ window.onload = function() {
                     },
                     ticks: {
                         callback: pad_val
+                        , beginAtZero: true
+                        , suggestedMax: 4
+                        , stepSize: 1
+
                     }
 
                 }],
