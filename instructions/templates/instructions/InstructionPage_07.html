@@ -1,0 +1,29 @@
+{{ block title }}
+    MARKET PERIOD
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+    <p>A market period will last for one minute.   During this time, you will be able to create
+        up to 6 BUY or SELL orders.   At the end of the market period, all outstanding orders
+        will be used to determine the market clearing price.  This price will be chosen to maximize
+        the number of shares traded.  Once the market price is determined,
+        the system will execute as many trades as possible at that price.  </p>
+
+    <p>Note that if there is more supply than demand then not every SELL order will be completed.
+        Likewise, if there is more demand than supply, some BUY orders will not complete.
+        Priority in completing orders will be given to the highest BUY price and the lowest SELL
+        price among all the orders submitted.</p>
+
+
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

@@ -1,0 +1,58 @@
+/* Otree styles that I hi-jacked*/
+.otree-body {
+    max-width: 90%;
+}
+.page-header {
+    margin-top: 0px;
+    margin-bottom: 20px;
+    padding-top: 20px;
+}
+
+/* Layout */
+.layout-box {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 600px 1fr;
+    gap: 10px;
+}
+.main-block{
+    grid-column: 1;
+    grid-row: 1;
+    padding-top: 10px;
+    font-size: 1.5em;
+}
+
+.bottom-row{
+    grid-column: 1;
+    grid-row: 2;
+    position: relative;
+}
+
+.next-button-div {
+    position: absolute;
+    right: 30px;
+}
+
+/* General appearance */
+.example {
+    background-color: #b4e4ef;
+    border: 4px solid #3c8edc;
+    border-radius: 15px;
+    padding: 0px 20px 10px;
+    width: 80%;
+    margin: 50px auto 25px;
+    font-size: .75em;
+}
+.example::before{
+    position: relative;
+    top: -40px;
+    content: "EXAMPLE";
+    color: #3c8edc;
+    font-size: 1.15em;
+    font-weight: 500;
+}
+
+.example p + ul {
+    margin-top: -15px;
+    margin-bottom: 0px;
+}

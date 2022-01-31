@@ -1,0 +1,38 @@
+{{ block title }}
+    Instructions
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+    <div class="layout-box">
+    <div class="main-block">
+        <p>There are two assets in this experiment: CASH (valued in points) and STOCK.</p>
+        <p>Each period CASH will earn interest of 5%, and each unit of STOCK that you own will earn a dividend
+            of either 40 points or 100 points.  Either dividend amount is equally likely and past dividends do
+            not affect the dividend amount for the current period
+        </p>
+
+        <div class="example">
+            <p>
+            Suppose you ended the trading period with 12000 points in CASH and 5 units of STOCK, and the dividend
+            is 40 points per share.  The CASH will earn 12000 x .05 = 600 points in interested, and the STOCK will
+                earn 5 x 40 = 200 points.   Your resulting CASH amount will then be </p>
+            <p>12000 + 600 + 200 = 12800 points.
+            </p>
+        </div>
+        <p>
+            If you are trying to earn the most money, you might consider whether holding CASH or buying STOCK will
+            create the most earning.  Depending on the amount of CASH and STOCK that have, interest might exceed
+            dividend earning or vice versa.
+        </p>
+
+
+
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

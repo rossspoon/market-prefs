@@ -1,0 +1,34 @@
+{{ block title }}
+    BORROWING CASH
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+
+        <p>In this experiment, you will be allowed to borrow CASH to purchase STOCK.
+            This happens when you enter a BUY order that costs more than the amount of CASH you have.
+            If you borrow, your CASH debt will appear as a negative amount.
+        </p>
+        <div class="example">
+        <p>You have 5000 in CASH and enter the order (BUY 6 @ 1000 ).
+            This order will potentially cost you 6000 points.  Leaving you with a CASH balance of -1000 points.</p>
+        </div>
+
+        <p>    If you CASH balance becomes negative, you will be charged 5% interest.
+            To continue the above example, at the end of the market period,
+            you will be charged 1000 * 5% = 20 points in interest.
+            This will bring you CASH balance to -1020 points.
+        </p>
+</p>
+
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

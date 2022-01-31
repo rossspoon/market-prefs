@@ -1,9 +1,6 @@
 import math
 import random
 from collections import defaultdict
-
-import pandas as pd
-
 from rounds.call_market import CallMarket
 from .models import *
 
@@ -12,7 +9,7 @@ class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
     num_rounds = 5
-    MARKET_TIME = 50000
+    MARKET_TIME = 60
 
 
 def get_session_name(obj):

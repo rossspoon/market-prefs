@@ -1,0 +1,23 @@
+{{ block title }}
+   Welcome to the Market Experiment
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+    <p>
+    This experiment is about economic decision-making in an experimental market. If you make good decisions, you might
+    earn a considerable amount of money, which will be paid to you in US dollars at the end of the experiment.
+    The experiment will consist of a series of 50 trading periods in which you will have the opportunity to buy
+    or sell shares of an asset that can yield payments in the future.
+    </p>
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

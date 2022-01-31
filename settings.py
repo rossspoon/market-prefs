@@ -54,6 +54,12 @@ SESSION_CONFIGS = [
         cash_endowment_treatment=10000,
         shares_endowment_treatment=-10,
     )
+    , dict(
+        name='instructions',
+        app_sequence=['instructions'],
+        num_demo_participants=1
+    )
+
 ]
 
 # if you set a property in SESSION_CONFIG_DEFAULTS, it will be inherited by all configs
