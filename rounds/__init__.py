@@ -328,7 +328,7 @@ def get_forecasters_choices(player: Player, attr):
     below_start = current_mp_nearest_step - num_choices * step
     working_price = max(Currency(0), below_start)
     choices_below = []
-    while working_price < current_mp_nearest_step:
+    while working_price < current_mp:
         choices_below.append(working_price)
         working_price += step
 
