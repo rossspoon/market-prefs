@@ -1,0 +1,23 @@
+{{ block title }}
+    BANKRUPTCY
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+
+    <p>If both your CASH and STOCK amounts are less than zero, you are no longer able to trade in the market.
+        At this point your CASH and STOCK positions are cleared, and you will no longer be able to  participate
+        in the market. You will still receive your payment for participating, but you will be asked to wait until
+        the experiment is finished before completing a final survey at the end.
+    </p>
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

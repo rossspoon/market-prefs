@@ -1,0 +1,25 @@
+{{ block title }}
+    MARKET PAGE
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+
+        <p>This is the Market page.  At the top are the current period and your CASH and STOCK amounts.  The graph of the right shows the market’s price and volume history.  On the left, is the form to submit orders.  To enter an order, complete the form and click the
+            <span class="btn-look-alike">Submit</span> button.
+            If the order is valid, it will appear in the Outstanding Orders box below.</p>
+        <p>TThe middle portion of the screen is for messages and other information.  Here, you will find information like the time remaining until the market period closes, the current market price, and warnings of automatic BUYS or SELLS.
+        </p>
+        <p>After 45 seconds, this page will automatically advance to the Forecasting page.</p>
+        <img class="instr-img" src="{{ static 'instructions/img/market_01_sm.png' }}"/>
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

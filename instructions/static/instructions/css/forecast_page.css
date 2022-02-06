@@ -1,0 +1,17 @@
+/* Layout */
+.side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+    gap: 10px;
+}
+.sbs-left{
+    grid-column: 1;
+    grid-row: 1;
+    padding-top: 10px;
+}
+
+.sbs-right{
+    grid-column: 2;
+    grid-row: 1;
+}

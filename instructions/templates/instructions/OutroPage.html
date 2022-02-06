@@ -1,0 +1,23 @@
+{{ block title }}
+   END OF INSTRUCTIONS
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+    <p>
+        Next up, you will be allowed to play two practice rounds before participating in the market.
+        You will play these rounds with computerized players, so you will not be interacting with others
+        in the room.
+    </p>
+        <p>Anything earned during these practice rounds will not count toward your final compensation.</p>
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

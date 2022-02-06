@@ -1,0 +1,31 @@
+{{ block title }}
+    AUTOMATIC BUY-IN
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+
+    <p>When you short the STOCK, you will need to have a sufficient cash buffer.  As stated before, short positions are shown as a negative number of shares.  Multiplying by the current market’s price gives the value of your short position.   If this value is more than 50% of you cash position, that will trigger an automatic buy-in.   You will be given a warning at the start of the trading period.  If you are unable to buy back enough STOCK on your own, the system will submit a BUY order sufficient to bring the value of your short position to a below the 50% threshold.
+    </p>
+    <div class="example">
+        <p>Suppose you start a trading period with 6000 in CASH and you have shorted the STOCK by 2 shares (that is, your STOCK position is -2).  If the current market price is 1501 points, then the value of your short is 3002 points or just over 50% of your CASH.
+        </p>
+        <p>At the end of the period, if you have not been able to buy back enough stock, then the system will attempt to purchase stock on your behalf.
+        </p>
+    </div>
+
+    <p>These automatic buybacks can occur at very high prices so it’s best to try to maintain the proper CASH buffer.
+    </p>
+
+
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

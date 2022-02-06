@@ -1,0 +1,22 @@
+{{ block title }}
+    AUTOMATIC SELL-OFF
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+
+        <p>A similar thing happens if you borrow CASH.  This time the amount you borrowed must be less than 50% of the value of your STOCK at the current market price.</p>
+        <p>If you do not maintain that buffer, you will have one period to sell off enough STOCK to be within the 50% margin.  When the market closes that period, if you still have too much debt, the system will attempt to sell your STOCK to decrease your CASH debt.</p>
+        <p>These automatic sell-offs can possibly happen at very low prices. So be careful when borrowing CASH.</p>
+
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

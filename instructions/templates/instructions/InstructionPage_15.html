@@ -1,0 +1,24 @@
+{{ block title }}
+    END OF MARKET
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+        <p>The market will run for 50 periods.  Afterward you will be presented with a final summary page that will show you final holdings of CASH and STOCK and your final payment.</p>
+        <p>As part of the final amount of CASH, the experiment will pay out 1400 points for each share of STOCK that you own.   If you finish the market with a short position (negative shares), you will be charged 1400 points per share.
+        </p>
+        <p>Your final amount of CASH will be converted to actual payment.
+            You will be paid 1 US dollar for each 10,000 points of CASH that you hold.</p>
+        <p>Following the final summary page will be a short survey.</p>
+
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

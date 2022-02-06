@@ -1,0 +1,25 @@
+{{ block title }}
+    MARKET PERIOD
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+
+    <p>A market period will consist of three parts
+    </p>
+        <ul>
+            <li>Market Page: This is the page where you will enter BUY and SELL orders.  This page will be shown for 45 seconds and will automatically advance to the next page.</li>
+            <li>Forecasting Page:  Here you will be asked to estimate what you believe the market price will be in the current round, the next round, and the round after that.</li>
+            <li>Period Results:  This page will show the results of the period, including the new market price, whether you bought or sold STOCK, and interest and dividend earnings</li>
+        </ul>
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}
