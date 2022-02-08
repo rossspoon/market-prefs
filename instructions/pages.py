@@ -10,63 +10,63 @@ class IntroPage(Page):
     pass
 
 
-class InstructionPage_01(Page):
+class _01_Assets(Page):
     pass
 
 
-class InstructionPage_02(Page):
+class _02_Trading(Page):
     pass
 
 
-class InstructionPage_03(Page):
+class _03_BorrowingCash(Page):
     pass
 
 
-class InstructionPage_04(Page):
+class _04_ShortingStock(Page):
     pass
 
 
-class InstructionPage_05(Page):
+class _05_MarketRestrictions_1(Page):
     pass
 
 
-class InstructionPage_06(Page):
+class _06_MarketRestrictions_2(Page):
     pass
 
 
-class InstructionPage_07(Page):
+class _07_MarketPeriod(Page):
     pass
 
 
-class InstructionPage_08(Page):
+class _08_AutoBuyIn(Page):
     pass
 
 
-class InstructionPage_09(Page):
+class _09_AutoSellOff(Page):
     pass
 
 
-class InstructionPage_10(Page):
+class _10_Bankruptcy(Page):
     pass
 
 
-class InstructionPage_11(Page):
+class _11_MarketPeriod_2(Page):
     pass
 
 
-class InstructionPage_12(Page):
+class _12_MarketPage(Page):
     pass
 
 
-class InstructionPage_13(Page):
+class _13_ForecastingPage(Page):
     pass
 
 
-class InstructionPage_14(Page):
+class _14_PeriodSummary(Page):
     pass
 
 
-class InstructionPage_15(Page):
+class _15_EndOfMarket(Page):
     pass
 
 
@@ -84,21 +84,21 @@ class OutroPage(Page):
 
 
 page_sequence = [IntroPage,
-                 InstructionPage_01,
-                 InstructionPage_02,
-                 InstructionPage_03,
-                 InstructionPage_04,
-                 InstructionPage_05,
-                 InstructionPage_06,
-                 InstructionPage_07,
+                 _01_Assets,
+                 _02_Trading,
+                 _03_BorrowingCash,
+                 _04_ShortingStock,
+                 _05_MarketRestrictions_1,
+                 _06_MarketRestrictions_2,
+                 _07_MarketPeriod,
                  Quiz01,
-                 InstructionPage_08,
-                 InstructionPage_09,
-                 InstructionPage_10,
-                 InstructionPage_11,
-                 InstructionPage_12,
-                 InstructionPage_13,
-                 InstructionPage_14,
-                 InstructionPage_15,
+                 _08_AutoBuyIn,
+                 _09_AutoSellOff,
+                 _10_Bankruptcy,
+                 _11_MarketPeriod_2,
+                 _12_MarketPage,
+                 _13_ForecastingPage,
+                 _14_PeriodSummary,
+                 _15_EndOfMarket,
                  Quiz02,
                  OutroPage]

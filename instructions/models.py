@@ -63,7 +63,7 @@ class Player(BasePlayer):
     qz2q2 = models.IntegerField(label="An automatic BUY-IN will occur when:",
                                 widget=widgets.RadioSelect,
                                 choices=[[0, 'The amount of CASH you borrowed is more than 50% of the value of you STOCK holdings'],
-                                         [1, 'The value of you shorted shares of STOCK is more that 50% of your amount of CASH'],
+                                         [1, 'The value of your shorted shares of STOCK is more that 50% of your amount of CASH'],
                                          [2, 'Every two rounds to ensure an equal distribution of STOCK']])
     qz2q3 = models.IntegerField(label="How many market periods will you participate in today?",
                                 choices=[10, 20, 30, 40, 50, 60])
