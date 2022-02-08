@@ -31,10 +31,8 @@
 
         <div class="message-box" >
             <!-- Current Market Price -->
-            {{ if player.round_number != 1 }}
-                <p class = "message"> Current Market Price: 
-                <span class="bold-text"> {{price}} </span>
-            {{ endif }}
+            <p class = "message"> Current Market Price:
+            <span class="bold-text"> {{price}} </span>
 
             <!-- Margin Ratio Message (warning / error) -->
             {{if player.shares < 0 && personal_margin < .3}} 
