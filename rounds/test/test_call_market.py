@@ -1,11 +1,9 @@
 import unittest
 from unittest.mock import MagicMock
 from unittest.mock import patch
-
-from otree.models import Session
-
 from rounds.call_market import CallMarket
 from rounds.models import *
+import common.SessionConfigFunctions as scf
 
 BID = OrderType.BID.value
 OFFER = OrderType.OFFER.value

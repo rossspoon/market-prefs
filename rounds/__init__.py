@@ -1,20 +1,17 @@
 import math
 import random
 from collections import defaultdict
+
 from rounds.call_market import CallMarket
 from .models import *
+import common.SessionConfigFunctions as scf
 
 
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
     num_rounds = 5
-    MARKET_TIME = 60
-
-
-def get_session_name(obj):
-    session = obj.session
-    return session.config.get('name')
+    MARKET_TIME = 6000
 
 
 # assign treatments
@@ -72,11 +69,11 @@ def get_js_vars(player: Player, include_current=True):
     # Price History
     group = player.group
     if include_current:
-        groups = list(filter(lambda g: g.field_maybe_none('price') is not None,  group.in_all_rounds()))
+        groups = list(filter(lambda g: g.field_maybe_none('price') is not None, group.in_all_rounds()))
     else:
         groups = group.in_previous_rounds()
 
-    init_price = get_init_price(player)
+    init_price = scf.get_init_price(player)
 
     prices = [init_price] + [g.price for g in groups]
     volumes = [0] + [g.volume for g in groups]
@@ -197,20 +194,16 @@ def market_page_live_method(player, d):
 # END LIVE METHODS
 #######################################
 
-WHOLE_NUMBER_PERCENT = "{:.0%}"
-
 
 def standard_vars_for_template(player: Player):
-    # I'll send the entire session config
-    sess_config = player.session.config
-
     # express the ratios as a percent
-    margin_ratio = sess_config['margin_ratio']
-    marg_ratio_pct = WHOLE_NUMBER_PERCENT.format(margin_ratio)
-    marg_target_rat_pct = WHOLE_NUMBER_PERCENT.format(sess_config['margin_target_ratio'])
-    margin_premium_pct = WHOLE_NUMBER_PERCENT.format(sess_config['margin_premium'])
+    # express the ratios as a percent
+    margin_ratio = scf.get_margin_ratio(player)
+    marg_ratio_pct = scf.get_margin_ratio(player, wnp=True)
+    marg_target_rate_pct = scf.get_margin_target_ratio(player, wnp=True)
+    margin_premium_pct = scf.get_margin_premium(player, wnp=True)
 
-    price = get_last_period_price(player.group)
+    price = player.group.get_last_period_price()
     pos_value = player.shares * price
 
     if player.cash == 0:
@@ -218,8 +211,9 @@ def standard_vars_for_template(player: Player):
         personal_margin_pct = '0'
     else:
         personal_margin = abs(float(pos_value) / float(player.cash))
-        personal_margin_pct = WHOLE_NUMBER_PERCENT.format(personal_margin)
+        personal_margin_pct = scf.as_wnp(personal_margin)
 
+    # move this to the end of the previous round
     if personal_margin > margin_ratio:
         player.margin_violation = True
 
@@ -228,10 +222,10 @@ def standard_vars_for_template(player: Player):
                price=price,
                pos_value=pos_value,
                marg_ratio_pct=marg_ratio_pct,
-               marg_target_rat_pct=marg_target_rat_pct,
+               marg_target_rat_pct=marg_target_rate_pct,
                margin_premium_pct=margin_premium_pct,
                )
-    ret.update(sess_config)
+    ret.update(scf.ensure_config(player))
     return ret
 
 
@@ -273,27 +267,6 @@ def vars_for_round_results_template(player: Player):
     return ret
 
 
-def get_init_price(obj):
-    raw_value = obj.session.config.get('initial_price')
-    if raw_value:
-        return int(raw_value)
-    else:
-        return 0
-
-
-def get_last_period_price(group: Group):
-    round_number = group.round_number
-    if round_number == 1:
-        return get_init_price(group)
-    else:
-        last_round_group = group.in_round(round_number - 1)
-        return last_round_group.price
-
-
-# def get_player_df(group: Group):
-#    return pd.DataFrame.from_records([p.to_dict() for p in group.get_players()])
-
-
 def set_float_and_short(group: Group):
     # Calculate float the total shorts
     group.float = sum((p.shares for p in group.get_players()))
@@ -306,19 +279,21 @@ def calculate_market(group: Group):
     cm = CallMarket(group, Constants.num_rounds)
     cm.calculate_market()
 
-    # Process current round forcasts
+    # Process current round forecasts
     for p in group.get_players():
-        forecast_error = abs(group.price - p.f0)
-        forecast_reward = 500 if forecast_error <= 250 else 0
-        p.forecast_error = forecast_error
-        p.forecast_reward = forecast_reward
-        p.cash_result += forecast_reward
+        f0 = p.field_maybe_none('f0')
+        if f0 is not None:
+            forecast_error = abs(group.price - p.f0)
+            forecast_reward = 500 if forecast_error <= 250 else 0
+            p.forecast_error = forecast_error
+            p.forecast_reward = forecast_reward
+            p.cash_result += forecast_reward
 
 
 #######################################
 # CHOICES FOR the drop-downs on the forecasting page
 def get_forecasters_choices(player: Player, attr):
-    current_mp = get_last_period_price(player.group)
+    current_mp = player.group.get_last_period_price()
     setattr(player, attr, current_mp)
     step = Currency(500)
     current_mp_nearest_step = (current_mp // step) * step
@@ -356,7 +331,7 @@ def f2_choices(player: Player):
 
 
 def only_show_for_rounds_app(player: Player):
-    return get_session_name(player) == 'rounds'
+    return scf.get_session_name(player) == 'rounds'
 
 
 ############

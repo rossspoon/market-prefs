@@ -4,6 +4,7 @@ import numpy as np
 
 from rounds.market_iteration import MarketIteration
 from rounds.models import *
+import common.SessionConfigFunctions as scf
 
 
 class CallMarket:
@@ -13,35 +14,19 @@ class CallMarket:
         self.group = group
         self.session = group.session
         self.bids, self.offers = self.get_orders_for_group()
-        self.last_price = self.get_last_period_price()
+        self.last_price = group.get_last_period_price()
 
         # get session parameters
-        self.interest_rate = self.session.config['interest_rate']
-        self.margin_ratio = self.session.config['margin_ratio']
-        self.margin_premium = self.session.config['margin_premium']
-        self.margin_target_ratio = self.session.config['margin_target_ratio']
+        self.interest_rate = scf.get_interest_rate(self.session)
+        self.margin_ratio = scf.get_margin_ratio(self.session)
+        self.margin_premium = scf.get_margin_premium(self.session)
+        self.margin_target_ratio = scf.get_margin_target_ratio(self.session)
 
     def get_orders_for_group(self):
         group_orders = Order.filter(group=self.group)
         bids = [o for o in group_orders if OrderType(o.order_type) == OrderType.BID]
         offers = [o for o in group_orders if OrderType(o.order_type) == OrderType.OFFER]
         return bids, offers
-
-    def get_last_period_price(self):
-        # Get the market Price of the last period
-        round_number = self.group.round_number
-        if round_number == 1:
-            raw_value = self.group.session.config.get('initial_price')
-            if raw_value:
-                return int(raw_value)
-            else:
-                last_price = self.get_fundamental_value()
-        else:
-            # Look up call price from last period
-            last_round_group = self.group.in_round(round_number - 1)
-            last_price = last_round_group.price
-
-        return round(last_price)  # Round to the nearest integer (up or down)
 
     # Change this to fields of the participant
     def set_up_future_player(self, player, margin_violation=False):
@@ -55,24 +40,11 @@ class CallMarket:
             future_player.margin_violation = margin_violation
 
     def get_dividend(self):
-        div_probabilities = [float(x) for x in self.session.config['div_dist'].split()]
-        div_amts = [int(x) for x in self.session.config['div_amount'].split()]
+        div_probabilities = scf.get_dividend_probabilities(self)
+        div_amts = scf.get_dividend_amounts(self)
         # The realized dividend will be a random draw from the distribution described by the amounts and probs
         dividend = int(random.choices(div_amts, weights=div_probabilities)[0])
         return dividend
-
-    def get_fundamental_value(self):
-        session = self.session
-
-        dist = np.array([float(x) for x in session.config['div_dist'].split()])
-        div_amounts = np.array([int(x) for x in session.config['div_amount'].split()])
-        exp = dist.dot(div_amounts)
-        r = session.config['interest_rate']
-
-        if r == 0:
-            return 0
-
-        return int(exp / r)
 
     def calculate_market(self):
         dividend = self.get_dividend()

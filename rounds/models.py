@@ -1,5 +1,6 @@
 from otree.api import *
 from enum import Enum
+import common.SessionConfigFunctions as scf
 
 
 class OrderType(Enum):
@@ -61,6 +62,22 @@ class Group(BaseGroup):
 
     float = models.IntegerField()
     short = models.IntegerField()
+
+    def get_last_period_price(self):
+        # Get the market Price of the last period
+        round_number = self.round_number
+        if round_number == 1:
+            raw_value = scf.get_init_price(self)
+            if raw_value:
+                return raw_value
+            else:
+                last_price = scf.get_fundamental_value(self)
+        else:
+            # Look up call price from last period
+            last_round_group = self.in_round(round_number - 1)
+            last_price = last_round_group.price
+
+        return round(last_price)  # Round to the nearest integer (up or down)
 
 
 class Player(BasePlayer):

@@ -5,20 +5,6 @@ SESSION_CONFIGS = [
         name='rounds',
         app_sequence=['rounds'],
         num_demo_participants=2,
-        interest_rate=0.05,
-        div_amount='40 100',
-        div_dist='.5 .5',
-        margin_ratio=.5,
-        margin_premium=0.1,
-        margin_target_ratio=.3,
-
-        fraction_of_short_starts=.5,
-        cash_endowment_control=5000,
-        shares_endowment_control=12,
-        cash_endowment_treatment=10000,
-        shares_endowment_treatment=-2,
-
-        initial_price = 2800
     )
     , dict(
         name='rounds_test',
@@ -68,8 +54,22 @@ SESSION_CONFIGS = [
 # e.g. self.session.config['participation_fee']
 
 SESSION_CONFIG_DEFAULTS = dict(
-    real_world_currency_per_point=10000.00, participation_fee=0.00, doc=""
-    , use_browser_bots=False
+    real_world_currency_per_point=10000.00, participation_fee=10.00, doc="",
+    use_browser_bots=False,
+    interest_rate=0.05,
+    div_amount='40 100',
+    div_dist='.5 .5',
+    margin_ratio=.5,
+    margin_premium=0.1,
+    margin_target_ratio=.3,
+
+    fraction_of_short_starts=.5,
+    cash_endowment_control=5000,
+    shares_endowment_control=12,
+    cash_endowment_treatment=10000,
+    shares_endowment_treatment=-2,
+
+    initial_price=2800
 )
 
 PARTICIPANT_FIELDS = []

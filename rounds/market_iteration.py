@@ -3,6 +3,7 @@ from collections import defaultdict
 from rounds.call_market_price import MarketPrice, OrderFill
 from rounds.models import Player, Order
 from rounds.data_structs import DataForOrder, DataForPlayer
+import common.SessionConfigFunctions as scf
 
 
 class MarketIteration:
@@ -22,10 +23,10 @@ class MarketIteration:
         # get session parameters
         # These dict references will cause ValueErrors if they are missing
         # This enforces that the session config has these values
-        self.interest_rate = session_config['interest_rate']
-        self.margin_ratio = session_config['margin_ratio']
-        self.margin_premium = session_config['margin_premium']
-        self.margin_target_ratio = session_config['margin_target_ratio']
+        self.interest_rate = scf.get_interest_rate(session_config)
+        self.margin_ratio = scf.get_margin_ratio(session_config)
+        self.margin_premium = scf.get_margin_premium(session_config)
+        self.margin_target_ratio = scf.get_margin_target_ratio(session_config)
 
     def run_iteration(self):
         # Evaluate the new market conditions
