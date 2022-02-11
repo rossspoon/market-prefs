@@ -13,7 +13,7 @@ class OrderType(Enum):
 
 class OrderField(Enum):
     """
-        Enumeration resprenting fields on the order form
+        Enumeration representing fields on the order form
     """
     PRICE = 1
     QUANTITY = 2
