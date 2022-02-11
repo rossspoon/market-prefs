@@ -1,7 +1,4 @@
 import random
-
-import numpy as np
-
 from rounds.market_iteration import MarketIteration
 from rounds.models import *
 import common.SessionConfigFunctions as scf
@@ -12,15 +9,8 @@ class CallMarket:
     def __init__(self, group: Group, num_rounds):
         self.num_rounds = num_rounds
         self.group = group
-        self.session = group.session
         self.bids, self.offers = self.get_orders_for_group()
         self.last_price = group.get_last_period_price()
-
-        # get session parameters
-        self.interest_rate = scf.get_interest_rate(self.session)
-        self.margin_ratio = scf.get_margin_ratio(self.session)
-        self.margin_premium = scf.get_margin_premium(self.session)
-        self.margin_target_ratio = scf.get_margin_target_ratio(self.session)
 
     def get_orders_for_group(self):
         group_orders = Order.filter(group=self.group)

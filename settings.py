@@ -43,7 +43,10 @@ SESSION_CONFIGS = [
     , dict(
         name='instructions',
         app_sequence=['instructions'],
-        num_demo_participants=1
+        num_demo_participants=1,
+
+        _08_example_cash=6000,
+        _08_example_short=2
     )
 
 ]

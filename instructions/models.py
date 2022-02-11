@@ -8,6 +8,9 @@ from otree.api import (
     Currency as c,
     currency_range,
 )
+import common.SessionConfigFunctions as scf
+import rounds
+import numpy as np
 
 doc = """
 Instructions for the Short-squeeze market experiment
@@ -34,8 +37,7 @@ class Player(BasePlayer):
                                 label='What is the maximum number of orders that you may place in each round?')
     qz1q2 = models.BooleanField(label="It is possible to both buy and sell shares in a single market round.")
     qz1q3 = models.BooleanField(label="When you short the STOCK you must pay out the dividend.")
-    qz1q4 = models.StringField(choices=['1%', '2%', '3%', '4%', '5%', '6%', '7%'],
-                               label='What is the interest rate paid out on CASH?')
+    qz1q4 = models.StringField(label='What is the interest rate paid out on CASH?')
 
     @staticmethod
     def qz1q1_error_message(player, value):
@@ -54,33 +56,60 @@ class Player(BasePlayer):
 
     @staticmethod
     def qz1q4_error_message(player, value):
-        if value != '5%':
-            return "Interest on CASH is earned at 5%."
+        ir = scf.as_wnp(scf.get_interest_rate(player))
+        if value != ir:
+            return f"Interest on CASH is earned at {ir}."
+
+    @staticmethod
+    def qz1q4_choices(player):
+        interest_rate = scf.get_interest_rate(player)
+        start = interest_rate - .04
+        end = interest_rate + .02
+        choices = [scf.as_wnp(x) for x in np.arange(start, end, .01)]
+        return choices
 
     ## QUIZ 2
-    qz2q1 = models.CurrencyField(label="At what price will shares of STOCK be bought back at the end of the experiment?",
-                                 choices=[1000, 1100, 1200, 1300, 1400, 1500])
+    qz2q1 = models.CurrencyField(
+        label="At what price will shares of STOCK be bought back at the end of the experiment?")
     qz2q2 = models.IntegerField(label="An automatic BUY-IN will occur when:",
-                                widget=widgets.RadioSelect,
-                                choices=[[0, 'The amount of CASH you borrowed is more than 50% of the value of you STOCK holdings'],
-                                         [1, 'The value of your shorted shares of STOCK is more that 50% of your amount of CASH'],
-                                         [2, 'Every two rounds to ensure an equal distribution of STOCK']])
-    qz2q3 = models.IntegerField(label="How many market periods will you participate in today?",
-                                choices=[10, 20, 30, 40, 50, 60])
+                                widget=widgets.RadioSelect)
+    qz2q3 = models.IntegerField(label="How many market periods will you participate in today?")
 
     @staticmethod
     def qz2q1_error_message(player, value):
-        if value != 1400:
-            return 'The system will buy back share of STOCK at a price of 1400 points'
+        fundamental = scf.get_fundamental_value(player)
+        if value != fundamental:
+            return f'The system will buy back share of STOCK at a price of {fundamental} points'
 
     @staticmethod
     def qz2q2_error_message(player, value):
+        mr = scf.get_margin_ratio(player, wnp=True)
         if value != 1:
-            return 'The value of you shorted shares of STOCK is more that 50% of your amount of CASH'
+            return f'The value of you shorted shares of STOCK is more that {mr} of your amount of CASH'
 
     @staticmethod
     def qz2q3_error_message(player, value):
-        if value != 50:
-            return 'The market will last for 50 periods'
+        num = rounds.Constants.num_rounds
+        if value != num:
+            return f'The market will last for {num} periods'
 
+    @staticmethod
+    def qz2q1_choices(player):
+        fv = scf.get_fundamental_value(player)
+        start = fv - 500
+        end = fv + 300
+        return [int(x) for x in np.arange(start, end, 100)]
 
+    @staticmethod
+    def qz2q2_choices(player):
+        mr = scf.get_margin_ratio(player, wnp=True)
+        return [[0, f'The amount of CASH you borrowed is more than {mr} of the value of you STOCK holdings'],
+                [1, f'The value of your shorted shares of STOCK is more that {mr} of your amount of CASH'],
+                [2, 'Every two rounds to ensure an equal distribution of STOCK']]
+
+    @staticmethod
+    def qz2q3_choices(player):
+        num_rounds = rounds.Constants.num_rounds
+        start = max(num_rounds - 20, 0)
+        end = num_rounds + 30
+        return np.arange(start, end, 5)
