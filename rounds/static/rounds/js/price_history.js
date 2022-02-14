@@ -5,7 +5,17 @@ window.onload = function() {
     let volume_data = js_vars.volume_data
 
     function pad_val(value, index, values) {
-        return ('' + value).padStart(4, ' ');
+        let tick = ('' + value).padStart(4, ' ');
+        tick.replace(' ', 'nbsp;');
+        console.log(tick);
+        return tick;
+    }
+
+    function pad_val2(value, index, values) {
+        let tick = ('' + value).padStart(7, ' ');
+        tick.replace(' ', 'nbsp;');
+        console.log(tick);
+        return tick;
     }
 
     var ctx_price = document.getElementById('gr_price');
@@ -75,7 +85,7 @@ window.onload = function() {
                         , fontSize: 18
                     },
                     ticks: {
-                        callback: pad_val
+                        callback: pad_val2
                         , beginAtZero: true
                         , suggestedMax: 4
                         , stepSize: 1
