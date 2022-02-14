@@ -30,8 +30,8 @@ class CallMarket:
             future_player.margin_violation = margin_violation
 
     def get_dividend(self):
-        div_probabilities = scf.get_dividend_probabilities(self)
-        div_amts = scf.get_dividend_amounts(self)
+        div_probabilities = scf.get_dividend_probabilities(self.group)
+        div_amts = scf.get_dividend_amounts(self.group)
         # The realized dividend will be a random draw from the distribution described by the amounts and probs
         dividend = int(random.choices(div_amts, weights=div_probabilities)[0])
         return dividend
