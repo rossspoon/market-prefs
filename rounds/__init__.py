@@ -10,7 +10,7 @@ import common.SessionConfigFunctions as scf
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
-    num_rounds = 5
+    num_rounds = 50
     MARKET_TIME = 6000
 
 

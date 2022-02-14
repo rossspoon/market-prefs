@@ -21,9 +21,12 @@ def vars_for_temp_common(player: Player):
     margin_premium_pct = scf.get_margin_premium(player, wnp=True)
 
     ret['interest_rate_pct'] = scf.as_wnp(scf.get_interest_rate(player))
+    ret['marg_ratio'] = margin_ratio
     ret['marg_ratio_pct'] = marg_ratio_pct
     ret['marg_target_rat_pct'] = marg_target_rate_pct
     ret['margin_premium_pct'] = margin_premium_pct
+    ret['num_rounds'] = rounds.Constants.num_rounds
+    ret['part_fee_whole_num'] = int(ret['participation_fee'])
 
     return ret
 
@@ -50,13 +53,12 @@ def vars_for_08_template(player: Player):
 def vars_for_15_template(player: Player):
     ret = vars_for_temp_common(player)
     ret['fund_value'] = scf.get_fundamental_value(player)
-    ret['num_rounds'] = rounds.Constants.num_rounds
     ret['conversion'] = int(ret['real_world_currency_per_point'])
     return ret
 
 
 class IntroPage(Page):
-    pass
+    vars_for_template = vars_for_temp_common
 
 
 class _01_Assets(Page):
