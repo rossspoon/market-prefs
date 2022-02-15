@@ -77,8 +77,8 @@ def get_js_vars(player: Player, include_current=True):
 
     if scf.is_random_hist(player):
         show_rounds = 2 * Constants.num_rounds // 3
-        prices = random.choices(range(2500, 3200), k=show_rounds)  # [init_price] + [g.price for g in groups]
-        volumes = random.choices(range(0, 11), k=show_rounds)  # [0] + [g.volume for g in groups]
+        prices = random.choices(range(2500, 3200), k=show_rounds) + [init_price]
+        volumes = random.choices(range(0, 11), k=show_rounds) + [4]
     else:
         prices = [init_price] + [g.price for g in groups]
         volumes = [0] + [g.volume for g in groups]
@@ -250,6 +250,10 @@ def get_messages(player: Player):
         ret.append(dict(class_attr="alert-danger",
                         msg="""You are now bankrupt.  Please wait until the end of the market experiement
                          to take the final survey."""))
+
+    # move this to the end of the previous round
+    if personal_stock_margin > margin_ratio:
+        player.margin_violation = True
 
     return ret
 
