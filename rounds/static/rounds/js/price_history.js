@@ -7,14 +7,12 @@ window.onload = function() {
     function pad_val(value, index, values) {
         let tick = ('' + value).padStart(4, ' ');
         tick.replace(' ', 'nbsp;');
-        console.log(tick);
         return tick;
     }
 
     function pad_val2(value, index, values) {
         let tick = ('' + value).padStart(7, ' ');
         tick.replace(' ', 'nbsp;');
-        console.log(tick);
         return tick;
     }
 

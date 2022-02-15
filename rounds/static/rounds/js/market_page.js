@@ -88,7 +88,6 @@ function add_form_order_to_list(live_data){
 
 function add_orders_to_list(live_data) {
     var orders = live_data.orders;
-    console.log(orders);
     orders.forEach((o) => {
         var oid = o.oid
         add_order_to_list(oid, o);
