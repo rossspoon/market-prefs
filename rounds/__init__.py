@@ -259,7 +259,7 @@ def get_messages(player: Player):
 
 
 def get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin):
-    ret: list[dict[str, str]] = []
+    ret: list[dict[str]] = []
     # Determine margin buy messages
     if personal_cash_margin < margin_target_ratio:
         ret.append(
@@ -271,11 +271,11 @@ def get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin):
             dict(class_attr="alert-warning",
                  msg=f"""Warning, the value of the debt you hold is
                         <span class="bold-text"> {personal_cash_margin:.0%} </span>
-                        of the value of stock holdings.  If that increases to {margin_ratio:.0% },
+                        of the value of stock holdings.  If that increases to {margin_ratio:.0%},
                         we will submit a sell order
                         on your behalf.""")
         )
-    elif personal_cash_margin > margin_ratio:
+    elif personal_cash_margin >= margin_ratio:
         ret.append(
             dict(class_attr="alert-danger",
                  msg=f"""Warning, the value of the debt that you hold is
@@ -302,11 +302,11 @@ def get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin)
             dict(class_attr="alert-warning",
                  msg=f"""Warning, the value of the shares that you have shorted is
                         <span class="bold-text"> {personal_stock_margin:.0%} </span>
-                        of your cash holdings.  If that increases to {margin_ratio:.0% },
+                        of your cash holdings.  If that increases to {margin_ratio:.0%},
                         we will submit a buy order
                         on your behalf.""")
         )
-    elif personal_stock_margin > margin_ratio:
+    elif personal_stock_margin >= margin_ratio:
         ret.append(
             dict(class_attr="alert-danger",
                  msg=f"""Warning, the value of the shares that you have shorted is
