@@ -64,7 +64,7 @@ class CallMarket:
         # Note that as the bid price increases, the buy-in demand might change
         # This means that we have to test for total supply each iteration of the market.
         cnt = 0
-        while buy_in_required and enough_supply and cnt < 10:
+        while buy_in_required and enough_supply and cnt < 100:
             iteration = MarketIteration(self.bids, self.offers, players,
                                         config, dividend, self.last_price,
                                         buy_ins=buy_ins)

@@ -196,36 +196,123 @@ def market_page_live_method(player, d):
 
 
 def standard_vars_for_template(player: Player):
-    # express the ratios as a percent
-    # express the ratios as a percent
-    margin_ratio = scf.get_margin_ratio(player)
-    marg_ratio_pct = scf.get_margin_ratio(player, wnp=True)
-    marg_target_rate_pct = scf.get_margin_target_ratio(player, wnp=True)
-    margin_premium_pct = scf.get_margin_premium(player, wnp=True)
+    is_short = player.shares < 0
+    is_debt = player.cash < 0
+    is_bankrupt = is_short and is_debt
 
-    price = player.group.get_last_period_price()
-    pos_value = player.shares * price
-
-    if player.cash == 0:
-        personal_margin = 0
-        personal_margin_pct = '0'
-    else:
-        personal_margin = abs(float(pos_value) / float(player.cash))
-        personal_margin_pct = scf.as_wnp(personal_margin)
-
-    # move this to the end of the previous round
-    if personal_margin > margin_ratio:
-        player.margin_violation = True
-
-    ret = dict(personal_margin=personal_margin,
-               personal_margin_pct=personal_margin_pct,
-               price=price,
-               pos_value=pos_value,
-               marg_ratio_pct=marg_ratio_pct,
-               marg_target_rat_pct=marg_target_rate_pct,
-               margin_premium_pct=margin_premium_pct,
+    ret = dict(is_short=is_short,
+               is_debt=is_debt,
+               is_bankrupt=is_bankrupt
                )
     ret.update(scf.ensure_config(player))
+    return ret
+
+
+def get_messages(player: Player):
+    ret = []
+    is_short = player.shares < 0
+    is_debt = player.cash < 0
+    is_bankrupt = is_short and is_debt
+    margin_target_ratio = scf.get_margin_target_ratio(player)
+    margin_ratio = scf.get_margin_ratio(player)
+
+    price = player.group.get_last_period_price()
+    stock_pos_value = player.shares * price
+    if player.cash == 0:
+        personal_stock_margin = 0
+    else:
+        personal_stock_margin = abs(float(stock_pos_value) / float(player.cash))
+
+    if stock_pos_value == 0:
+        personal_cash_margin = 0
+    else:
+        personal_cash_margin = abs(float(player.cash) / float(stock_pos_value))
+
+    # Current Market Price:
+    ret.append(dict(class_attr="",
+                    msg=f"""Current Market Price: <span class="bold-text"> {price}"""))
+
+    # Messages / Warning for short position
+    if is_short and not is_bankrupt:
+        ret += get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin)
+
+    # Messages / Warning for negative cash holding
+    if is_debt and not is_bankrupt:
+        ret += get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin)
+
+    # Bankrupt
+    if is_bankrupt:
+        ret.append(dict(class_attr="alert-danger",
+                        msg="""You are now bankrupt.  Please wait until the end of the market experiement
+                         to take the final survey."""))
+
+    return ret
+
+
+def get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin):
+    ret: list[dict[str, str]] = []
+    # Determine margin buy messages
+    if personal_cash_margin < margin_target_ratio:
+        ret.append(
+            dict(class_attr="",
+                 msg=f"Worth of debt relative to worth of stock: {personal_cash_margin:.0%}")
+        )
+    elif margin_target_ratio <= personal_cash_margin < margin_ratio:
+        ret.append(
+            dict(class_attr="alert-warning",
+                 msg=f"""Warning, the value of the debt you hold is
+                        <span class="bold-text"> {personal_cash_margin:.0%} </span>
+                        of the value of stock holdings.  If that increases to {margin_ratio:.0% },
+                        we will submit a sell order
+                        on your behalf.""")
+        )
+    elif personal_cash_margin > margin_ratio:
+        ret.append(
+            dict(class_attr="alert-danger",
+                 msg=f"""Warning, the value of the debt that you hold is
+                    <span class="bold-text"> {personal_cash_margin:.0%} </span>
+                    of the value of you stock holdings. 
+                    You are advised to sell enough shares this round to avoid an
+                    automatic sell-off.""")
+        )
+
+    return ret
+
+
+def get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin):
+    ret = []
+    # Determine short position messages
+    # Normal condition
+    if personal_stock_margin < margin_target_ratio:
+        ret.append(
+            dict(class_attr="",
+                 msg=f"Worth of short relative to cash holdings: {personal_stock_margin:.0%}")
+        )
+    elif margin_target_ratio <= personal_stock_margin < margin_ratio:
+        ret.append(
+            dict(class_attr="alert-warning",
+                 msg=f"""Warning, the value of the shares that you have shorted is
+                        <span class="bold-text"> {personal_stock_margin:.0%} </span>
+                        of your cash holdings.  If that increases to {margin_ratio:.0% },
+                        we will submit a buy order
+                        on your behalf.""")
+        )
+    elif personal_stock_margin > margin_ratio:
+        ret.append(
+            dict(class_attr="alert-danger",
+                 msg=f"""Warning, the value of the shares that you have shorted is
+                    <span class="bold-text"> {personal_stock_margin:.0%} </span>
+                    of your cash holdings. 
+                    You are advised to buy enough shares this round to avoid an
+                    automatic buy-in.""")
+        )
+
+    return ret
+
+
+def vars_for_market_template(player: Player):
+    ret = standard_vars_for_template(player)
+    ret['messages'] = get_messages(player)
     return ret
 
 
@@ -352,7 +439,7 @@ class Market(Page):
 
     # method bindings
     js_vars = get_js_vars
-    vars_for_template = standard_vars_for_template
+    vars_for_template = vars_for_market_template
     live_method = market_page_live_method
 
 

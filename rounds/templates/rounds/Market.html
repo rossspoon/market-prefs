@@ -30,41 +30,11 @@
         </div>
 
         <div class="message-box" >
-            <!-- Current Market Price -->
-            <p class = "message"> Current Market Price:
-            <span class="bold-text"> {{price}} </span>
-
-            <!-- Margin Ratio Message (warning / error) -->
-            {{ if player.shares < 0 && personal_margin < margin_target_ratio }}
-                <div class="alert">
-                <p class = "message"> 
-                    Worth of Shares Relative to Cash Holdings:
-                    <span class="bold-text"> {{personal_margin_pct}} </span>
-                </p>
+            {{ for msg in messages }}
+                <div class="alert {{ msg.class_attr }}">
+                    <p class = "message"> {{ msg.msg }}</p>
                 </div>
-            {{ endif  }}
-            {{if player.shares < 0 && personal_margin > margin_target_ratio && personal_margin < margin_ratio}} 
-                <div class="alert alert-warning">
-                <p class = "message">
-                    Warning, the value of the shares that you own is
-                    <span class="bold-text"> {{personal_margin_pct}} </span>
-                    of your cash holdings.  If that increases to {{ marg_ratio_pct }},
-                    we will submit a buy order
-                    on your behalf at {{ margin_premium_pct }} above the market price.
-                </p>
-                </div>
-            {{ endif  }}
-            {{if player.shares < 0 && personal_margin > margin_ratio}} 
-                <div class="alert alert-danger">
-                <p class = "message">
-                    Warning, the value of the shares that you own is
-                    <span class="bold-text"> {{personal_margin_pct}} </span>
-                    of your cash holdings. 
-                    You are advised to buy enough shares this round to avoid an
-                    automatic buy-in.
-                </p>
-                </div>
-            {{ endif  }}
+            {{  endfor }}
         </div>
 
         <div class="order-form-box boxed_area">
