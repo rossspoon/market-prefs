@@ -15,6 +15,7 @@ SK_CASH_ENDOWMENT_TREATMENT = 'cash_endowment_treatment'
 SK_SHARES_ENDOWMENT_TREATMENT = 'shares_endowment_treatment'
 SK_INITIAL_PRICE = 'initial_price'
 SK_SESSION_NAME = 'name'
+SK_RANDOMIZE_HISTORY = 'random_hist'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -42,6 +43,14 @@ def get_item_as_float(config, key):
         return float(raw_value)
     else:
         return 0
+
+
+def get_item_as_bool(config, key):
+    raw_value = config.get(key)
+    if raw_value:
+        return bool(raw_value)
+    else:
+        return False
 
 
 def get_fundamental_value(obj):
@@ -113,6 +122,7 @@ def get_dividend_amount(obj):
 def get_dividend_amounts(obj):
     return np.array([int(x) for x in get_dividend_amount(obj).split()])
 
+
 def get_interest_rate(obj):
     config = ensure_config(obj)
     return get_item_as_float(config, SK_INTEREST_RATE)
@@ -130,3 +140,8 @@ def get_fundamental_value(obj):
         return 0
 
     return int(exp / r)
+
+
+def is_random_hist(obj):
+    config = ensure_config(obj)
+    return get_item_as_bool(config, SK_RANDOMIZE_HISTORY)

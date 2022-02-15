@@ -5,6 +5,7 @@ SESSION_CONFIGS = [
         name='rounds',
         app_sequence=['rounds'],
         num_demo_participants=2,
+        random_hist=True
     )
     , dict(
         name='rounds_test',

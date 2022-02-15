@@ -75,8 +75,13 @@ def get_js_vars(player: Player, include_current=True):
 
     init_price = scf.get_init_price(player)
 
-    prices = [init_price] + [g.price for g in groups]
-    volumes = [0] + [g.volume for g in groups]
+    if scf.is_random_hist(player):
+        show_rounds = 2 * Constants.num_rounds // 3
+        prices = random.choices(range(2500, 3200), k=show_rounds)  # [init_price] + [g.price for g in groups]
+        volumes = random.choices(range(0, 11), k=show_rounds)  # [0] + [g.volume for g in groups]
+    else:
+        prices = [init_price] + [g.price for g in groups]
+        volumes = [0] + [g.volume for g in groups]
 
     # Error Codes
     error_codes = {e.value: e.to_dict() for e in OrderErrorCode}
