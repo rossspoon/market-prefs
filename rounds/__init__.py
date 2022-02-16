@@ -222,6 +222,7 @@ def get_messages(player: Player):
     margin_ratio = scf.get_margin_ratio(player)
 
     price = player.group.get_last_period_price()
+
     stock_pos_value = player.shares * price
     if player.cash == 0:
         personal_stock_margin = 0
@@ -248,7 +249,7 @@ def get_messages(player: Player):
     # Bankrupt
     if is_bankrupt:
         ret.append(dict(class_attr="alert-danger",
-                        msg="""You are now bankrupt.  Please wait until the end of the market experiement
+                        msg="""You are now bankrupt.  Please wait until the end of the market experiment
                          to take the final survey."""))
 
     # move this to the end of the previous round
@@ -269,7 +270,7 @@ def get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin):
     elif margin_target_ratio <= personal_cash_margin < margin_ratio:
         ret.append(
             dict(class_attr="alert-warning",
-                 msg=f"""Warning, the value of the debt you hold is
+                 msg=f"""Warning:  The value of the debt you hold is
                         <span class="bold-text"> {personal_cash_margin:.0%} </span>
                         of the value of stock holdings.  If that increases to {margin_ratio:.0%},
                         we will submit a sell order
@@ -278,11 +279,12 @@ def get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin):
     elif personal_cash_margin >= margin_ratio:
         ret.append(
             dict(class_attr="alert-danger",
-                 msg=f"""Warning, the value of the debt that you hold is
+                 msg=f"""Warning:  The debt that you hold is
                     <span class="bold-text"> {personal_cash_margin:.0%} </span>
-                    of the value of you stock holdings. 
-                    You are advised to sell enough shares this round to avoid an
-                    automatic sell-off.""")
+                    of the value of you STOCK holdings. 
+                    You are advised to sell  shares of the STOCK to lower this proportion.
+                    An automatic sell-off will be generated at the end of the this period if your proportion
+                    is still over <splan class="bold-text">{margin_ratio:.0%}</span>.""")
         )
 
     return ret
@@ -300,7 +302,7 @@ def get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin)
     elif margin_target_ratio <= personal_stock_margin < margin_ratio:
         ret.append(
             dict(class_attr="alert-warning",
-                 msg=f"""Warning, the value of the shares that you have shorted is
+                 msg=f"""Warning:  The value of the shares that you have shorted is
                         <span class="bold-text"> {personal_stock_margin:.0%} </span>
                         of your cash holdings.  If that increases to {margin_ratio:.0%},
                         we will submit a buy order
@@ -309,11 +311,12 @@ def get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin)
     elif personal_stock_margin >= margin_ratio:
         ret.append(
             dict(class_attr="alert-danger",
-                 msg=f"""Warning, the value of the shares that you have shorted is
+                 msg=f"""Warning:  The value of the shares that you have shorted is
                     <span class="bold-text"> {personal_stock_margin:.0%} </span>
                     of your cash holdings. 
-                    You are advised to buy enough shares this round to avoid an
-                    automatic buy-in.""")
+                    You are advised to buy back shares of the STOCK to lower this proportion.
+                    An automatic buy-in will be generated at the end of this period if your proportion
+                    is still over <splan class="bold-text">{margin_ratio:.0%}</span>.""")
         )
 
     return ret
