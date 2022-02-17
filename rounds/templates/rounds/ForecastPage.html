@@ -30,6 +30,7 @@
         </div>
 
         <div class="forecast-form-box boxed_area">
+        <div class="results-layout-box">
             {{ formfield 'f0' label="What do you think the market price will be this period?" }}
             {{ if include_f1 }}
                 {{ formfield 'f1' label=period_f1_prompt }}
@@ -37,6 +38,12 @@
             {{ if include_f2 }}
                 {{ formfield 'f2' label=period_f2_prompt }}
             {{ endif }}
-            {{ next_button }}
         </div>
+            <div class="next-button-div">
+                <div class="bottom-right">
+                    {{ next_button }}
+                </div>
+            </div>
+        </div>
+</div>
 {{ endblock }}
