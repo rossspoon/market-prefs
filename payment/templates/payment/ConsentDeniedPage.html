@@ -1,21 +1,19 @@
-{% extends "global/Page.html" %}
-{% load otree static %}
-
 {% block title %}
-    Thank you for participating!
+    Thank you for your consideration
 {% endblock %}
 
 {% block content %}
     <link rel="stylesheet" href="{{ static 'consent/css/consent_common.css' }}">
+    <link rel="stylesheet" href="{{ static 'consent/css/consent-page.css' }}">
     <link rel="stylesheet" href="{{ static 'css/global.css' }}">
 
     <div class="layout-box">
     <div class="top-row">
+        <div class="centered">
+            <p>You have earned a show-up fee of {{ session.participation_fee }}.  Use the participant id code
+            below to claim your payment.</p>
+        </div>
 
-    <p>For this experiment you are assigned a participation id.  Use this number at the end of the experiment to
-        collect your payment.  </p>
-    <p>There is no need to write this down, you will see this number again throughout
-        the experiment.</p>
     </div>
 
     <div class="main-block">
@@ -23,9 +21,7 @@
     </div>
 
     <div class="bottom-row">
-        <div class="next-button-div">
-            {{ next_button }}
-        </div>
+        <div class="centered">You are free to leave at any time.   Have a nice day.</div>
     </div>
     </div>
 {% endblock %}

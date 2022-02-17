@@ -51,7 +51,7 @@ SESSION_CONFIGS = [
     )
     , dict(
         name='consent',
-        app_sequence=['consent'],
+        app_sequence=['consent', 'instructions', 'rounds', 'payment'],
         num_demo_participants=1,
     )
 ]
@@ -80,7 +80,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     initial_price=2800
 )
 
-PARTICIPANT_FIELDS = ['PART_ID']
+PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT']
 SESSION_FIELDS = []
 
 # ISO-639 code

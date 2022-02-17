@@ -487,8 +487,5 @@ class RoundResultsPage(Page):
     vars_for_template = vars_for_round_results_template
 
 
-class MarketResults(Page):
-    js_vars = get_js_vars
-
 
 page_sequence = [PreMarketWait, Market, ForecastPage, MarketWaitPage, RoundResultsPage]

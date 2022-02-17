@@ -17,7 +17,7 @@ Your app description
 
 
 class Constants(BaseConstants):
-    name_in_url = 'consent'
+    name_in_url = 'payment'
     players_per_group = None
     num_rounds = 1
 
@@ -33,4 +33,4 @@ class Group(BaseGroup):
 
 
 class Player(BasePlayer):
-    consent_given = models.BooleanField()
+    pass

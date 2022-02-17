@@ -1,0 +1,34 @@
+{% block title %}
+{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="{{ static 'consent/css/consent_common.css' }}">
+    <link rel="stylesheet" href="{{ static 'consent/css/consent-page.css' }}">
+    <link rel="stylesheet" href="{{ static 'css/global.css' }}">
+
+    <div class="layout-box">
+    <div class="top-row">
+        <div class="centered"> Please read the information sheet on the desk in front of you.</div>
+    </div>
+
+    <div class="main-block">
+        <p>By clicking "Yes" below, you are confirming that you...</p>
+        <ul>
+            <li>Are 18 years of age or over</li>
+            <li>Can read and comprehend the English language</li>
+            <li>Have read and understood the information sheet</li>
+            <li>Are participating in this experiment voluntarily.</li>
+        </ul>
+    </div>
+
+    <div class="bottom-row">
+        <div class="centered">
+            <p>Do you wish to participate in the experiment?</p>
+            <button name="consent_given" value="True" class="btn-look-alike">Yes</button>
+            <button name="consent_given" value="False" class="btn-look-alike">No</button>
+        </div>
+    </div>
+    </div>
+{% endblock %}
+
+

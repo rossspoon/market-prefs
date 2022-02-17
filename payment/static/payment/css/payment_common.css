@@ -19,21 +19,3 @@
     margin: auto;
     font-size: 1.5em;
 }
-
-li {
-    font-style: italic;
-    font-size: .8em;
-}
-
-.bottom-row{
-    grid-column: 1;
-    grid-row: 3;
-    position: relative;
-    font-size: 1.5em;
-
-}
-
-.next-button-div {
-    position: absolute;
-    right: 30px;
-}
