@@ -5,6 +5,7 @@ from collections import defaultdict
 from rounds.call_market import CallMarket
 from .models import *
 import common.SessionConfigFunctions as scf
+from common.ParticipantFuctions import generate_participant_ids
 
 
 class Constants(BaseConstants):
@@ -16,6 +17,8 @@ class Constants(BaseConstants):
 
 # assign treatments
 def creating_session(subsession):
+    generate_participant_ids(subsession)
+
     # only set up endowments in the first round
     if subsession.round_number != 1:
         return

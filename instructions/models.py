@@ -11,6 +11,8 @@ from otree.api import (
 import common.SessionConfigFunctions as scf
 import rounds
 import numpy as np
+from common.ParticipantFuctions import generate_participant_ids
+
 
 doc = """
 Instructions for the Short-squeeze market experiment
@@ -24,7 +26,9 @@ class Constants(BaseConstants):
 
 
 class Subsession(BaseSubsession):
-    pass
+    @staticmethod
+    def creating_session(subsession: BaseSubsession):
+        generate_participant_ids(subsession)
 
 
 class Group(BaseGroup):
