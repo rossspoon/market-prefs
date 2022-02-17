@@ -1,0 +1,35 @@
+
+.really_big {
+    font-size: 300px;
+}
+
+/* Layout */
+.layout-box {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 2fr 1fr;
+    gap: 10px;
+}
+.top-row{
+    grid-column: 1;
+    grid-row: 1;
+    padding-top: 10px;
+    font-size: 1.5em;
+}
+
+.id-block {
+    grid-column: 1;
+    grid-row: 2;
+    align: center;
+}
+
+.bottom-row{
+    grid-column: 1;
+    grid-row: 3;
+    position: relative;
+}
+
+.next-button-div {
+    position: absolute;
+    right: 30px;
+}

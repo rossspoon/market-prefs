@@ -49,7 +49,11 @@ SESSION_CONFIGS = [
         _08_example_cash=6000,
         _08_example_short=2
     )
-
+    , dict(
+        name='consent',
+        app_sequence=['consent'],
+        num_demo_participants=1,
+    )
 ]
 
 # if you set a property in SESSION_CONFIG_DEFAULTS, it will be inherited by all configs

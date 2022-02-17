@@ -1,1 +1,0 @@
-This file is only here so that I could add the _static directory to the git repo.

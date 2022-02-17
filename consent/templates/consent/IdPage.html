@@ -1,0 +1,33 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+    Participant Id
+{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="{{ static 'consent/css/consent_common.css' }}">
+    <link rel="stylesheet" href="{{ static 'css/global.css' }}">
+
+    <div class="layout-box">
+    <div class="top-row">
+
+    <p>For this experiment you are assigned a participation id.  Use this id at the end of the experiment to
+        collect your payment.  </p>
+    <p>There is no need to write this down, you will see this number again after throughout
+        the experiment.</p>
+    </div>
+
+    <div class="id-block">
+        <span class="really_big"> {{ player.participant.PART_ID }}</span>
+    </div>
+
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+{% endblock %}
+
+
