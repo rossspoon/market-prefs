@@ -1,3 +1,10 @@
+.btn-primary {
+    color: #fff;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    animation-name: none;
+}
+
 /* Main Grid layout */
 .layout-box {
     display: grid;
