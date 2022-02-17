@@ -1,4 +1,3 @@
-import numpy as np
 from otree.models import Session
 import numpy as np
 

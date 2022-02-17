@@ -1,12 +1,7 @@
-import inspect
-import sys
-from otree.api import Currency as c, currency_range
-
 import rounds
 from ._builtin import Page, WaitPage
-from .models import  Player
+from .models import Player
 import common.SessionConfigFunctions as scf
-import numpy as np
 
 SK_08_example_cash = '_08_example_cash'
 SK_08_example_short = '_08_example_short'
