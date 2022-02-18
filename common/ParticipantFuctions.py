@@ -21,14 +21,19 @@ def generate_participant_id(x):
     return part_id
 
 
-def generate_participant_ids(subsession: BaseSubsession):
-    population = list(range(PARTICIPANT_ID_SPACE))
-    players = subsession.get_players()
-    num_parts = len(players)
-    ids = [generate_participant_id(x) for x in random.sample(population, num_parts)]
+#def generate_participant_ids(subsession: BaseSubsession):
+#    population = list(range(PARTICIPANT_ID_SPACE))
+#    players = subsession.get_players()
+#    num_parts = len(players)
+#    ids = [generate_participant_id(x) for x in random.sample(population, num_parts)]
+#    existing = player.participant.vars.get('PART_ID')
+#    if not existing:
+#        player.participant.PART_ID = pid
 
-    for pid, player in zip(ids, players):
+def generate_participant_ids(subsession: BaseSubsession):
+    for player in subsession.get_players():
+        participant = player.participant
         existing = player.participant.vars.get('PART_ID')
+        pid = participant.code[-3:].upper()
         if not existing:
             player.participant.PART_ID = pid
-

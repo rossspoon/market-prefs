@@ -51,8 +51,13 @@ SESSION_CONFIGS = [
     )
     , dict(
         name='consent',
-        app_sequence=['consent', 'instructions', 'rounds', 'payment'],
+        app_sequence=['consent', 'payment'],
         num_demo_participants=1,
+    )
+    , dict(
+        name='payment',
+        app_sequence=['payment'],
+        num_demo_participants=1
     )
 ]
 
@@ -62,7 +67,9 @@ SESSION_CONFIGS = [
 # e.g. self.session.config['participation_fee']
 
 SESSION_CONFIG_DEFAULTS = dict(
-    real_world_currency_per_point=10000.00, participation_fee=10.00, doc="",
+    real_world_currency_per_point=0.0001,
+    participation_fee=5.00,
+    doc="",
     use_browser_bots=False,
     interest_rate=0.05,
     div_amount='40 100',
@@ -77,7 +84,8 @@ SESSION_CONFIG_DEFAULTS = dict(
     cash_endowment_treatment=10000,
     shares_endowment_treatment=-2,
 
-    initial_price=2800
+    initial_price=2800,
+    bonus_cap=300000
 )
 
 PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT']

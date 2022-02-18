@@ -3,24 +3,20 @@
 {% endblock %}
 
 {% block content %}
-    <link rel="stylesheet" href="{{ static 'consent/css/consent_common.css' }}">
-    <link rel="stylesheet" href="{{ static 'consent/css/consent-page.css' }}">
+    <link rel="stylesheet" href="{{ static 'payment/css/payment_common.css' }}">
     <link rel="stylesheet" href="{{ static 'css/global.css' }}">
 
     <div class="layout-box">
     <div class="top-row">
         <div class="centered">
-            <p>You have earned a show-up fee of {{ session.participation_fee }}.  Use the participant id code
-            below to claim your payment.</p>
+            <p>You have earned a show-up fee of {{ session.participation_fee }}.</p>
+            <p>Use the participant id code below to claim your payment.</p>
         </div>
 
     </div>
 
-    <div class="main-block">
-        <span class="really_big"> {{ player.participant.PART_ID }}</span>
-    </div>
-
-    <div class="bottom-row">
+    <div class="main-block centered">
+        <div class="really_big"> {{ player.participant.PART_ID }}</div>
         <div class="centered">You are free to leave at any time.   Have a nice day.</div>
     </div>
     </div>

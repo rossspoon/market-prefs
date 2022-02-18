@@ -45,3 +45,11 @@
     font-size: 300px;
 }
 
+.centered {
+    text-align: center;
+}
+
+.bold-text{
+    font-weight: bold;
+}
+

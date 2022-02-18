@@ -3,19 +3,23 @@
 .layout-box {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr 4fr 1fr;
-    gap: 10px;
+    grid-template-rows: 1fr 2fr;
+    gap: 0px;
 }
 .top-row{
     grid-column: 1;
     grid-row: 1;
-    padding-top: 10px;
+    padding-top: 5px;
     font-size: 1.5em;
 }
 
 .main-block {
     grid-column: 1;
     grid-row: 2;
-    margin: auto;
     font-size: 1.5em;
+}
+
+table {
+    width: 80%;
+    margin: auto auto 30px;
 }

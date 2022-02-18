@@ -9,11 +9,17 @@ class ConsentDeniedPage(Page):
         return not self.player.participant.CONSENT
 
 
-class MarketResults(Page):
-    js_vars = get_js_vars
+class FinalResultsPage (Page):
+    def vars_for_template(self):
+        participant = self.player.participant
+        participant.code = participant.PART_ID
+        session = self.player.session
+        return {'bonus_rwc': participant.payoff.to_real_world_currency(session),
+                'total_pay': participant.payoff_plus_participation_fee()
+                }
 
     def is_displayed(self):
         return self.player.participant.CONSENT
 
 
-page_sequence = [ConsentDeniedPage]
+page_sequence = [ConsentDeniedPage, FinalResultsPage]

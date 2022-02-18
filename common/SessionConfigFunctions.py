@@ -1,3 +1,4 @@
+from otree.api import Currency as cu
 from otree.models import Session
 import numpy as np
 
@@ -15,6 +16,7 @@ SK_SHARES_ENDOWMENT_TREATMENT = 'shares_endowment_treatment'
 SK_INITIAL_PRICE = 'initial_price'
 SK_SESSION_NAME = 'name'
 SK_RANDOMIZE_HISTORY = 'random_hist'
+SK_BONUS_CAP = 'bonus_cap'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -42,6 +44,14 @@ def get_item_as_float(config, key):
         return float(raw_value)
     else:
         return 0
+
+
+def get_item_as_currency(config, key):
+    raw_value = config.get(key)
+    if raw_value:
+        return cu(raw_value)
+    else:
+        return cu(0)
 
 
 def get_item_as_bool(config, key):
@@ -144,3 +154,8 @@ def get_fundamental_value(obj):
 def is_random_hist(obj):
     config = ensure_config(obj)
     return get_item_as_bool(config, SK_RANDOMIZE_HISTORY)
+
+
+def get_bonus_cap(obj):
+    config = ensure_config(obj)
+    return get_item_as_currency(config, SK_BONUS_CAP)
