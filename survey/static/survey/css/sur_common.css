@@ -1,0 +1,57 @@
+.layout-box {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 600px 1fr;
+    gap: 10px;
+}
+.main-block{
+    grid-column: 1;
+    grid-row: 1;
+    padding-top: 10px;
+}
+
+
+.bottom-row{
+    grid-column: 1;
+    grid-row: 2;
+    position: relative;
+}
+
+.next-button-div {
+    position: absolute;
+    right: 30px;
+}
+
+.survey-question{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    gap: 10px;
+}
+
+.label-block {
+    grid-column: 1;
+    grid-row: 1;
+    margin-right: 40px;
+}
+.label-block label {
+    display: block;
+    float: right;
+}
+
+.select-block {
+    grid-column: 2;
+    grid-row: 1;
+    display: block;
+    float: right;
+}
+
+li {
+    margin-top: 30px;
+    font-size: 1.25em;
+    list-style: none;
+}
+
+table {
+    margin-bottom: 30px;
+}

@@ -55,6 +55,11 @@ SESSION_CONFIGS = [
         num_demo_participants=1,
     )
     , dict(
+        name='survey',
+        app_sequence=['survey'],
+        num_demo_participants=1,
+    )
+    , dict(
         name='payment',
         app_sequence=['payment'],
         num_demo_participants=1
