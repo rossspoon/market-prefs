@@ -1,12 +1,8 @@
 from otree.api import (
-    models,
-    widgets,
     BaseConstants,
     BaseSubsession,
     BaseGroup,
     BasePlayer,
-    Currency as c,
-    currency_range,
 )
 import common.SessionConfigFunctions as scf
 
@@ -20,7 +16,7 @@ This application handles the final pay off
 def set_payoffs(subsession):
     for player in subsession.get_players():
         payoff = max(min(player.payoff, scf.get_bonus_cap(subsession)), 0)
-        player.payoff = payoff + 10400
+        player.payoff = payoff
 
 
 class Constants(BaseConstants):
