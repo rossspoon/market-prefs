@@ -54,3 +54,7 @@ li {
 table {
     margin-bottom: 30px;
 }
+
+td {
+    width: 8%;
+}
