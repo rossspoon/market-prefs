@@ -15,7 +15,11 @@
                 <tr>
                     {{ for choice in f }}
                         <td>
-                            <div>{{choice.label}}</div>
+                            {{ if choice._value == '-1' }}
+                                <div>N/A</div>
+                            {{ else }}
+                                <div>{{choice.label}}</div>
+                            {{ endif }}
                             <div>{{ choice }}</div>
                         </td>
                     {{ endfor }}
