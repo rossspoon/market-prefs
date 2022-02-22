@@ -3,10 +3,15 @@ import sys
 
 from otree.api import *
 from otree.forms.widgets import RadioSelectHorizontal, RadioSelect
+from common.ParticipantFuctions import generate_participant_ids
 
 doc = """
 Socioeconomic Survey
 """
+
+
+def creating_session(subsession):
+    generate_participant_ids(subsession)
 
 
 def make_likert_scale(label):
