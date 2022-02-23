@@ -82,6 +82,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     margin_ratio=.5,
     margin_premium=0.1,
     margin_target_ratio=.3,
+    auto_trans_delay=1,
 
     fraction_of_short_starts=.5,
     cash_endowment_control=5000,

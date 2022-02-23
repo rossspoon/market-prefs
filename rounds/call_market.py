@@ -7,7 +7,6 @@ import common.SessionConfigFunctions as scf
 class CallMarket:
 
     def __init__(self, group: Group, num_rounds):
-        self.num_rounds = num_rounds
         self.group = group
         self.bids, self.offers = self.get_orders_for_group()
         self.last_price = group.get_last_period_price()
@@ -19,12 +18,11 @@ class CallMarket:
         return bids, offers
 
     # Change this to fields of the participant
+    #TODO:  Move this to the Player class
     def set_up_future_player(self, player, margin_violation=False):
         r_num = player.round_number
-        if r_num == self.num_rounds:
-            pass
-        else:
-            future_player = player.in_round(r_num + 1)
+        future_player = player.in_round_or_null(r_num + 1)
+        if future_player:
             future_player.cash = player.cash_result
             future_player.shares = player.shares_result
             future_player.margin_violation = margin_violation

@@ -204,38 +204,20 @@ def market_page_live_method(player, d):
 
 
 def standard_vars_for_template(player: Player):
-    is_short = player.shares < 0
-    is_debt = player.cash < 0
-    is_bankrupt = is_short and is_debt
-
-    ret = dict(is_short=is_short,
-               is_debt=is_debt,
-               is_bankrupt=is_bankrupt
-               )
-    ret.update(scf.ensure_config(player))
-    return ret
+    return scf.ensure_config(player)
 
 
 def get_messages(player: Player):
     ret = []
-    is_short = player.shares < 0
-    is_debt = player.cash < 0
-    is_bankrupt = is_short and is_debt
+    is_short = player.is_short()
+    is_debt = player.is_debt()
+    is_bankrupt = player.is_bankrupt()
     margin_target_ratio = scf.get_margin_target_ratio(player)
     margin_ratio = scf.get_margin_ratio(player)
 
     price = player.group.get_last_period_price()
-
-    stock_pos_value = player.shares * price
-    if player.cash == 0:
-        personal_stock_margin = 0
-    else:
-        personal_stock_margin = abs(float(stock_pos_value) / float(player.cash))
-
-    if stock_pos_value == 0:
-        personal_cash_margin = 0
-    else:
-        personal_cash_margin = abs(float(player.cash) / float(stock_pos_value))
+    personal_stock_margin = player.get_personal_stock_margin(price)
+    personal_cash_margin = player.get_personal_cash_margin(price)
 
     # Current Market Price:
     ret.append(dict(class_attr="",
@@ -254,11 +236,6 @@ def get_messages(player: Player):
         ret.append(dict(class_attr="alert-danger",
                         msg="""You are now bankrupt.  Please wait until the end of the market experiment
                          to take the final survey."""))
-
-    # move this to the end of the previous round
-    if personal_stock_margin > margin_ratio:
-        player.margin_violation = True
-
     return ret
 
 
@@ -375,6 +352,11 @@ def set_float_and_short(group: Group):
     group.short = sum((abs(p.shares) for p in group.get_players() if p.shares < 0))
 
 
+def set_margin_violation_for_next_period(group: Group):
+    for player in group.get_players():
+        player.determine_auto_trans_status()
+
+
 #######################################
 # CALCULATE MARKET
 def calculate_market(group: Group):
@@ -390,6 +372,9 @@ def calculate_market(group: Group):
             p.forecast_error = forecast_error
             p.forecast_reward = forecast_reward
             p.cash_result += forecast_reward
+
+    # update margin violations
+    set_margin_violation_for_next_period(group)
 
 
 #######################################
@@ -485,7 +470,6 @@ class RoundResultsPage(Page):
     is_displayed = only_show_for_rounds_app
     js_vars = get_js_vars
     vars_for_template = vars_for_round_results_template
-
 
 
 page_sequence = [PreMarketWait, Market, ForecastPage, MarketWaitPage, RoundResultsPage]

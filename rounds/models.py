@@ -1,5 +1,8 @@
 from otree.api import *
 from enum import Enum
+
+from otree.common import InvalidRoundError
+
 import common.SessionConfigFunctions as scf
 
 
@@ -97,6 +100,8 @@ class Player(BasePlayer):
     quantity = models.IntegerField(blank=True)
 
     margin_violation = models.BooleanField(initial=False)  # Margin Warning this round?
+    periods_until_auto_buy = models.IntegerField()
+    periods_until_auto_sell = models.IntegerField()
 
     # Market Movement
     shares_transacted = models.IntegerField(initial=0)
@@ -117,21 +122,22 @@ class Player(BasePlayer):
     forecast_reward = models.CurrencyField()
 
     # Per-round Survey
-    emotion = models.IntegerField(
-        label='How do you feel about these results?',
-        choices=[
-            [1, '<img src="/static/rounds/img/angry.png" style="width:50px;height:50px;"/>'],
-            [2, '<img src="/static/rounds/img/annoyed.jpeg" style="width:50px;height:50px;"/>'],
-            [3, '<img src="/static/rounds/img/meh.jpeg" style="width:50px;height:50px;"/>'],
-            [4, '<img src="/static/rounds/img/happy.png" style="width:50px;height:50px;"/>'],
-            [5, '<img src="/static/rounds/img/big_grin.jpeg" style="width:50px;height:50px;"/>']],
-        widget=widgets.RadioSelectHorizontal
-    )
+    # emotion = models.IntegerField(
+    #    label='How do you feel about these results?',
+    #    choices=[
+    #        [1, '<img src="/static/rounds/img/angry.png" style="width:50px;height:50px;"/>'],
+    #        [2, '<img src="/static/rounds/img/annoyed.jpeg" style="width:50px;height:50px;"/>'],
+    #        [3, '<img src="/static/rounds/img/meh.jpeg" style="width:50px;height:50px;"/>'],
+    #        [4, '<img src="/static/rounds/img/happy.png" style="width:50px;height:50px;"/>'],
+    #        [5, '<img src="/static/rounds/img/big_grin.jpeg" style="width:50px;height:50px;"/>']],
+    #    widget=widgets.RadioSelectHorizontal
+    # )
 
     def to_dict(self):
         d = {'cash': self.field_maybe_none('cash'),
              'shares': self.field_maybe_none('shares'),
-             'margin_violation': self.field_maybe_none('margin_violation'),
+             'periods_until_auto_buy': self.field_maybe_none('periods_until_auto_buy'),
+             'periods_until_auto_sell': self.field_maybe_none('periods_until_auto_sell'),
              'shares_transacted': self.field_maybe_none('shares_transacted'),
              'trans_cost': self.field_maybe_none('trans_cost'),
              'cash_after_trade': self.field_maybe_none('cash_after_trade'),
@@ -149,7 +155,90 @@ class Player(BasePlayer):
         self.dividend_earned = d.get('dividend_earned')
         self.interest_earned = d.get('interest_earned')
         self.cash_result = d.get('cash_result')
-        self.margin_violation = d.get('margin_violation')
+        self.periods_until_auto_buy = d.get('periods_until_auto_buy')
+        self.periods_until_auto_sell = d.get('periods_until_auto_sell')
+
+    def get_personal_stock_margin(self, price):
+        stock_pos_value = self.shares * price
+        if self.cash == 0:
+            personal_stock_margin = 0
+        else:
+            personal_stock_margin = abs(float(stock_pos_value) / float(self.cash))
+        return personal_stock_margin
+
+    def get_personal_cash_margin(self, price):
+        stock_pos_value = self.shares * price
+        if stock_pos_value == 0:
+            personal_cash_margin = 0
+        else:
+            personal_cash_margin = abs(float(self.cash) / float(stock_pos_value))
+        return personal_cash_margin
+
+    def is_short(self):
+        return self.shares < 0
+
+    def is_debt(self):
+        return self.cash < 0
+
+    def is_bankrupt(self):
+        return self.shares < 0 and self.cash < 0
+
+    def in_round_or_null(self, round_number):
+        try:
+            return self.in_round(round_number)
+        except InvalidRoundError:
+            return None
+
+    def is_short_margin_violation(self):
+        if self.is_bankrupt():
+            return False
+
+        price = self.group.price
+        margin_ratio = scf.get_margin_ratio(self)
+        return self.is_short() and self.get_personal_stock_margin(price) >= margin_ratio
+
+    def is_debt_margin_violation(self):
+        if self.is_bankrupt():
+            return False
+
+        price = self.group.price
+        margin_ratio = scf.get_margin_ratio(self)
+        return self.is_debt() and self.get_personal_cash_margin(price) >= margin_ratio
+
+    @staticmethod
+    def calculate_delay(current_delay, base):
+        if current_delay is None:
+            return base
+        return max(current_delay - 1, 0)
+
+    def determine_auto_trans_status(self):
+        next_player = self.in_round_or_null(self.round_number + 1)
+        # skip if there is no next player
+        # Usually this happens in the last round.
+        if not next_player:
+            return
+
+        auto_trans_delay = scf.get_auto_trans_delay(self)
+        short_mv = self.is_short_margin_violation()
+        debt_mv = self.is_debt_margin_violation()
+
+        # Skip out for bankrupt players
+        if self.is_bankrupt():
+            next_player.periods_until_auto_buy = None
+            next_player.periods_until_auto_sell = None
+            return
+
+        # Short buy-in status / delay
+        if short_mv:
+            next_player.periods_until_auto_buy = self.calculate_delay(self.periods_until_auto_buy, auto_trans_delay)
+        else:
+            next_player.periods_until_auto_buy = None
+
+        # debt buy-in status / delay
+        if debt_mv:
+            next_player.periods_until_auto_sell = self.calculate_delay(self.periods_until_auto_sell, auto_trans_delay)
+        else:
+            next_player.periods_until_auto_sell = None
 
 
 class Order(ExtraModel):

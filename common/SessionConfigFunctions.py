@@ -17,6 +17,7 @@ SK_INITIAL_PRICE = 'initial_price'
 SK_SESSION_NAME = 'name'
 SK_RANDOMIZE_HISTORY = 'random_hist'
 SK_BONUS_CAP = 'bonus_cap'
+SK_AUTO_TRANS_DELAY = 'auto_trans_delay'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -159,3 +160,8 @@ def is_random_hist(obj):
 def get_bonus_cap(obj):
     config = ensure_config(obj)
     return get_item_as_currency(config, SK_BONUS_CAP)
+
+
+def get_auto_trans_delay(obj):
+    config = ensure_config(obj)
+    return get_item_as_int(config, SK_AUTO_TRANS_DELAY)
