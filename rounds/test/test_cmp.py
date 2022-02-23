@@ -107,7 +107,6 @@ class TestCallMarketPrice(unittest.TestCase):
         csq = get_cxq(4, [], OrderType.OFFER)
         self.assertEqual(csq, 0)
 
-    @unittest.expectedFailure
     def test_get_mev_more_than_one(self):
         mp = MarketPrice(None, None)
 
@@ -115,7 +114,6 @@ class TestCallMarketPrice(unittest.TestCase):
         mp.price_df = pd.DataFrame(dict(market_price=[True, False, True, False], mev=[1, 2, 4, 8]))
         self.assertRaises(ValueError, mp.get_mev)
 
-    @unittest.expectedFailure
     def test_get_mev_zero(self):
         mp = MarketPrice(None, None)
 
@@ -166,7 +164,6 @@ class TestCallMarketPrice(unittest.TestCase):
         self.assertEqual(list(mp.price_df), ['price', 'mev', 'market_price'])
         self.assertEqual(list(mp.price_df.market_price), list(mp.candidate_prices))
 
-    @unittest.expectedFailure
     def test_finalize_more_than_one(self):
         # Set up
         mp = MarketPrice(None, None)
@@ -180,7 +177,6 @@ class TestCallMarketPrice(unittest.TestCase):
         # Execute / Test
         self.assertRaises(ValueError, mp.finalize_and_get_result)
 
-    @unittest.expectedFailure
     def test_finalize_zero(self):
         # Set up
         mp = MarketPrice(None, None)
