@@ -242,7 +242,7 @@ class TestPlayerMethods(unittest.TestCase):
         # Run / Assert
         self.assertFalse(p.is_bankrupt())
 
-    def test_in_round_or_null_exepct(self):
+    def test_in_round_or_null_except(self):
         # Setup
         p = Player()
         p.in_round = MagicMock(side_effect=InvalidRoundError)
@@ -491,6 +491,82 @@ class TestPlayerMethods(unittest.TestCase):
         # Assert
         for prop in test_values:
             self.assertEqual(getattr(p, prop), test_values.get(prop), msg=f"testing {prop}")
+
+
+class TestGroupMethods(unittest.TestCase):
+
+    def test_in_round_or_none_bad_round(self):
+        g = Group()
+        g.round_number = 5
+        g.in_round = MagicMock(side_effect=InvalidRoundError)
+
+        # Test / Assert
+        self.assertIsNone(g.in_round_or_none(7))
+
+    def test_in_round_or_null_valid(self):
+        # Setup
+        g = Group()
+        g2 = Group()
+        g2.id_in_group = 34
+        g2.round_number = 56
+
+        g.in_round = MagicMock(return_value=g2)
+
+        # Test / Assert
+        self.assertEqual(g.in_round_or_none(56), g2)
+
+    def test_get_last_period_price_bad_round_init_value(self):
+        # Set-up
+        group = Group()
+        config = {scf.SK_INITIAL_PRICE: 800}
+        session = Session()
+        session.config = config
+        group.session = session
+        group.in_round = MagicMock(side_effect=InvalidRoundError)
+        group.round_number = 1
+
+        # Execute
+        last_price = group.get_last_period_price()
+
+        # Assert
+        self.assertEqual(last_price, 800)
+        group.in_round.assert_called_with(0)
+
+    def test_get_last_period_price_bad_round_fund_val(self):
+        # Set-up
+        group = Group()
+        config = dict(div_dist='0.5 0.5',
+                      div_amount='40 100',
+                      interest_rate=.05)
+        session = Session()
+        session.config = config
+        group.session = session
+        group.in_round = MagicMock(side_effect=InvalidRoundError)
+        group.round_number = 1
+
+        # Execute
+        last_price = group.get_last_period_price()
+
+        # Assert
+        self.assertEqual(last_price, 1400)
+        group.in_round.assert_called_with(0)
+
+    def test_get_last_period_price_has_prev(self):
+        # Set-up
+        group = Group()
+        group.round_number = 2
+
+        last_round_group = Group()
+        last_round_group.round_number = 1
+        last_round_group.price = 801.1
+        group.in_round = MagicMock(return_value=last_round_group)
+
+        # Execute
+        last_price = group.get_last_period_price()
+
+        # Assert
+        self.assertEqual(last_price, 801)
+        group.in_round.assert_called_with(1)
 
 
 if __name__ == '__main__':

@@ -66,21 +66,25 @@ class Group(BaseGroup):
     float = models.IntegerField()
     short = models.IntegerField()
 
+    def in_round_or_none(self, round_number):
+        try:
+            return self.in_round(round_number)
+        except InvalidRoundError:
+            return None
+
     def get_last_period_price(self):
         # Get the market Price of the last period
         round_number = self.round_number
-        if round_number == 1:
-            raw_value = scf.get_init_price(self)
-            if raw_value:
-                return raw_value
-            else:
-                last_price = scf.get_fundamental_value(self)
-        else:
-            # Look up call price from last period
-            last_round_group = self.in_round(round_number - 1)
-            last_price = last_round_group.price
+        last_group = self.in_round_or_none(round_number - 1)
 
-        return round(last_price)  # Round to the nearest integer (up or down)
+        if last_group:
+            return round(last_group.price)
+        else:
+            init_price = scf.get_init_price(self)
+            if init_price:
+                return init_price
+            else:
+                return scf.get_fundamental_value(self)
 
 
 class Player(BasePlayer):

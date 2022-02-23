@@ -3,11 +3,10 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 from rounds.call_market import CallMarket
 from rounds.models import *
-import common.SessionConfigFunctions as scf
 
+NUM_ROUNDS = 5
 BID = OrderType.BID.value
 OFFER = OrderType.OFFER.value
-NUM_ROUNDS = 5
 R = .1
 MARGIN_RATIO: float = .6
 MARGIN_PREM: float = .25
@@ -51,6 +50,7 @@ o_06_07 = get_order(order_type=OFFER, price=6, quantity=7)
 all_orders = [b_10_05, b_10_06, b_11_05, b_11_06, o_05_05, o_05_06, o_06_05, o_06_07]
 
 
+# noinspection PyUnresolvedReferences
 class TestCallMarket(unittest.TestCase):
 
     @staticmethod
@@ -64,36 +64,32 @@ class TestCallMarket(unittest.TestCase):
 
         return group
 
-    def basic_setup(self, orders=all_orders):
-        with patch.object(CallMarket, 'get_last_period_price', return_value=47):
-            with patch.object(Order, 'filter', return_value=orders):
-                Order.filter = MagicMock(return_value=orders)
-                group = self.basic_group()
-                cm = CallMarket(group, NUM_ROUNDS)
+    def basic_setup(self, orders=None):
+        if not orders:
+            orders = all_orders
+
+        with patch.object(Order, 'filter', return_value=orders):
+            Order.filter = MagicMock(return_value=orders)
+            group = self.basic_group()
+            group.get_last_period_price = MagicMock(return_value=47)
+            cm = CallMarket(group)
         return cm
 
     def test_init(self):
         # Set up and
-        with patch.object(CallMarket, 'get_last_period_price', return_value=47):
-            with patch.object(Order, 'filter', return_value=all_orders):
-                group = self.basic_group()
+        with patch.object(Order, 'filter', return_value=all_orders):
+            group = self.basic_group()
+            group.get_last_period_price = MagicMock(return_value=47)
 
-                # Execute
-                cm = CallMarket(group, NUM_ROUNDS)
+            # Execute
+            cm = CallMarket(group)
 
-                # assert
-                self.assertEqual(cm.num_rounds, NUM_ROUNDS)
-                self.assertEqual(cm.group, group)
-                self.assertEqual(cm.session, group.session)
-                self.assertEqual(cm.bids, [b_10_05, b_10_06, b_11_05, b_11_06])
-                self.assertEqual(cm.offers, [o_05_05, o_05_06, o_06_05, o_06_07])
-                Order.filter.assert_called_with(group=group)
-                self.assertEqual(cm.last_price, 47)
-                CallMarket.get_last_period_price.assert_called_with()
-                self.assertEqual(cm.interest_rate, R)
-                self.assertEqual(cm.margin_ratio, MARGIN_RATIO)
-                self.assertEqual(cm.margin_premium, MARGIN_PREM)
-                self.assertEqual(cm.margin_target_ratio, MARGIN_TARGET)
+            # assert
+            self.assertEqual(cm.group, group)
+            self.assertEqual(cm.bids, [b_10_05, b_10_06, b_11_05, b_11_06])
+            self.assertEqual(cm.offers, [o_05_05, o_05_06, o_06_05, o_06_07])
+            Order.filter.assert_called_with(group=group)
+            self.assertEqual(cm.last_price, 47)
 
     def test_get_orders_for_group(self):
         with patch.object(Order, 'filter', return_value=all_orders):
@@ -127,7 +123,6 @@ class TestCallMarket(unittest.TestCase):
         with patch.object(Order, 'filter', return_value=orders):
             # Set-up
             cm = self.basic_setup(orders=orders)
-            cm.group
 
             # Execute
             bids, offers = cm.get_orders_for_group()
@@ -137,53 +132,17 @@ class TestCallMarket(unittest.TestCase):
             self.assertEqual(offers, [o_05_05, o_05_06, o_06_05, o_06_07])
             Order.filter.assert_called_with(group=cm.group)
 
-    def test_get_last_period_price_round_1(self):
-        # Set-up
-        cm = self.basic_setup()
-        group = cm.group
-        group.round_number = 1
-        cm.get_fundamental_value = MagicMock(return_value=800)
-        group.in_round = MagicMock(return_value=None)
-
-        # Execute
-        last_price = cm.get_last_period_price()
-
-        # Assert
-        self.assertEqual(last_price, 800)
-        cm.get_fundamental_value.assert_called_with()
-        group.in_round.assert_not_called()
-
-    def test_get_last_period_price_round_2(self):
-        # Set-up
-        cm = self.basic_setup()
-        group = cm.group
-        group.round_number = 2
-
-        cm.get_fundamental_value = MagicMock(return_value=800)
-        last_round_group = self.basic_group()
-        last_round_group.round_number = 1
-        last_round_group.price = 801.1
-        group.in_round = MagicMock(return_value=last_round_group)
-
-        # Execute
-        last_price = cm.get_last_period_price()
-
-        # Assert
-        self.assertEqual(last_price, 801)
-        cm.get_fundamental_value.assert_not_called()
-        group.in_round.assert_called_with(1)
-
     def test_set_up_future_player_last_round(self):
         # Set-up
         cm = self.basic_setup()
         player = get_player(round_number=NUM_ROUNDS)
-        player.in_round = MagicMock(return_value=None)
+        player.in_round = MagicMock(side_effect=InvalidRoundError)
 
         # Execute
         cm.set_up_future_player(player)
 
         # Assert
-        player.in_round.assert_not_called()
+        player.in_round.assert_called_with(6)
 
     def test_set_up_future_player_penultimate_round(self):
         # Set-up
@@ -214,54 +173,12 @@ class TestCallMarket(unittest.TestCase):
 
         # Execute
         reps = 100000
-        s = sum((cm.get_dividend() for i in range(reps)))
+        s = sum((cm.get_dividend() for _ in range(reps)))
         avg = s / reps
 
         # Assert
         self.assertTrue(abs(avg - 70) < 0.2,
-                        msg="Expecting the avgerage dividend to be around 70, instead it was: {}".format(avg))
-
-    def test_get_fundamental_value_r0(self):
-        # Set-up
-        cm = self.basic_setup()
-        group = cm.group
-        group.session.config.update(dict(div_dist='0.5 0.5',
-                                         div_amount='40 100',
-                                         interest_rate=0))
-
-        # Execute
-        f = cm.get_fundamental_value()
-
-        # Assert
-        self.assertEqual(f, 0)
-
-    def test_get_fundamental_value(self):
-        # Set-up
-        cm = self.basic_setup()
-        group = cm.group
-        group.session.config.update(dict(div_dist='0.5 0.5',
-                                         div_amount='0 100',
-                                         interest_rate=0.1))
-
-        # Execute
-        f = cm.get_fundamental_value()
-
-        # Assert
-        self.assertEqual(f, 500)
-
-    def test_get_fundamental_value_exp_relevant(self):
-        # Set-up
-        cm = self.basic_setup()
-        group = cm.group
-        group.session.config.update(dict(div_dist='0.5 0.5',
-                                         div_amount='40 100',
-                                         interest_rate=0.05))
-
-        # Execute
-        f = cm.get_fundamental_value()
-
-        # Assert
-        self.assertEqual(f, 1400)
+                        msg="Expecting the average dividend to be around 70, instead it was: {}".format(avg))
 
     # def test_market_case(self):
     #     # Set up

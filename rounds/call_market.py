@@ -6,7 +6,7 @@ import common.SessionConfigFunctions as scf
 
 class CallMarket:
 
-    def __init__(self, group: Group, num_rounds):
+    def __init__(self, group: Group):
         self.group = group
         self.bids, self.offers = self.get_orders_for_group()
         self.last_price = group.get_last_period_price()
