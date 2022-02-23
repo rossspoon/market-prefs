@@ -42,7 +42,7 @@ def get_cxq(price, orders, otype):
                     tuples of price/ quantity pairs.
         otype (OrderType): This controls how the list of orders are compared to the
                     reference price.  If the otype == OrderType.BID then consider
-                    prices greater or equal to the reference price.   Less then or
+                    prices greater or equal to the reference price.   Less than or
                     equal to the reference price for otype == OrderType.OFFER
 
     Returns:
@@ -91,7 +91,7 @@ class MarketPrice:
                         of (price/quantity) tuples
         has_bids, has_offers:  True if the bids or offers (respectively) are non_null and
                             non-empty.
-        price_df:  The pandas DataFrame that is use to process the price.  Accessing this
+        price_df:  The pandas DataFrame that is used to process the price.  Accessing this
                     is useful for debugging since is contains a history of the algorithm's
                     progress
         final_principle:  The last Principle that the algorithm attempted to apply
@@ -127,16 +127,20 @@ class MarketPrice:
         mevs = self.price_df[self.price_df.market_price].mev.values
 
         if len(mevs) != 1:
-            raise ArgumentError("Found {} market prices, there should be exactly 1".format(len(mevs)))
+            raise ValueError("Found {} market prices, there should be exactly 1".format(len(mevs)))
 
         return int(mevs[0])
 
+    def get_candidate_price_count(self):
+        return sum(self.candidate_prices)
+
     def only_one_candidate_price(self):
-        return sum(self.candidate_prices) == 1
+        return self.get_candidate_price_count() == 1
 
     def finalize_and_get_result(self):
         if not self.only_one_candidate_price():
-            raise ArgumentError("Found {} market prices, there should be exactly 1".format(len(mevs)))
+            price_cnt = self.get_candidate_price_count()
+            raise ValueError(f"Found {price_cnt} market prices, there should be exactly 1")
 
         market_price = self.price_df[self.candidate_prices].price.values[0]
 
@@ -176,7 +180,7 @@ class MarketPrice:
         self.price_df.loc[self.candidate_prices, 'buy_pressure'] = (self.price_df.cbq >= self.price_df.csq).astype(int)
         self.price_df['pressure_cand'] = False
 
-        # 4.1.a If the minimum residual process produced prices where CBQ >= CSQ
+        # 4.1.a:  If the minimum residual process produced prices where CBQ >= CSQ
         # then take the max of such a price
         # This is a candidate price
         buy_press_mask = self.price_df.buy_pressure == 1
@@ -184,7 +188,7 @@ class MarketPrice:
             max_buy_price = max(self.price_df[buy_press_mask].price)
             self.price_df.loc[self.price_df.price == max_buy_price, 'pressure_cand'] = True
 
-        # 4.1.b If the minimum residual process produced prices where CBQ < CSQ
+        # 4.1.b: If the minimum residual process produced prices where CBQ < CSQ
         # then take the min of such a price
         # This is a candidate price
         sell_press_mask = self.price_df.buy_pressure == 0
@@ -229,7 +233,7 @@ class MarketPrice:
                 market_price (number): The resulting market price
                 volume (number):  the Market Exchange Volume
                 principle (Principle):  Enum representing the final principle applied
-                                        to the determine the price.  Useful for testing
+                                        to determine the price.  Useful for testing
                 df (DataFrame):  Pandas DataFrame containing the results of each principle.
                                 This is useful for debugging.
         """
@@ -371,7 +375,8 @@ class OrderFill:
     def fill_orders(self, market_price):
         """
         Determine which orders to fill. Sets the 'quantity_final' on all transacted orders.
-        Note most 'quantity_final's will be the same as the order quantity.  A few might be different to
+        Note most 'quantity_final's will be the same as the order quantity.
+        A few orders might have different values for quantity_final and quantity to
         ensure the market volume is met.
         """
 
