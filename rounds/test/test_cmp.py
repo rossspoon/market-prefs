@@ -1,5 +1,4 @@
 import unittest
-from argparse import ArgumentError
 
 import numpy as np
 import pandas as pd
@@ -114,7 +113,7 @@ class TestCallMarketPrice(unittest.TestCase):
 
         # More than one market_price indicated
         mp.price_df = pd.DataFrame(dict(market_price=[True, False, True, False], mev=[1, 2, 4, 8]))
-        self.assertRaises(ArgumentError, mp.get_mev)
+        self.assertRaises(ValueError, mp.get_mev)
 
     @unittest.expectedFailure
     def test_get_mev_zero(self):
@@ -122,7 +121,7 @@ class TestCallMarketPrice(unittest.TestCase):
 
         # Zero market_price indicated
         mp.price_df = pd.DataFrame(dict(market_price=[False, False, False, False], mev=[1, 2, 4, 8]))
-        self.assertRaises(ArgumentError, mp.get_mev)
+        self.assertRaises(ValueError, mp.get_mev)
 
     def test_get_mev_pass(self):
         mp = MarketPrice(None, None)
@@ -179,7 +178,7 @@ class TestCallMarketPrice(unittest.TestCase):
         mp.candidate_prices = [True, True, False, False]
 
         # Execute / Test
-        self.assertRaises(ArgumentError, mp.finalize_and_get_result)
+        self.assertRaises(ValueError, mp.finalize_and_get_result)
 
     @unittest.expectedFailure
     def test_finalize_zero(self):
@@ -193,7 +192,7 @@ class TestCallMarketPrice(unittest.TestCase):
         mp.candidate_prices = [False, False, False, False]
 
         # Execute / Test
-        self.assertRaises(ArgumentError, mp.finalize_and_get_result)
+        self.assertRaises(ValueError, mp.finalize_and_get_result)
 
     def test_apply_max_vol(self):
         b_vol = [(1, 1), (2, 2)]
