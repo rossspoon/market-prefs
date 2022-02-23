@@ -361,6 +361,7 @@ class TestPlayerMethods(unittest.TestCase):
         self.assertIsNone(np.periods_until_auto_sell)
 
     def test_trans_status_mv_short_base(self):
+        # noinspection PyTypeChecker
         np, p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=None)
 
         # Test
@@ -401,6 +402,7 @@ class TestPlayerMethods(unittest.TestCase):
         self.assertIsNone(np.periods_until_auto_sell)
 
     def test_trans_status_mv_debt_base(self):
+        # noinspection PyTypeChecker
         np, p = set_up_trans_status_tests(price=1000, shares=5, cash=-2000, delay=7, sell_period=None)
 
         # Test
@@ -488,7 +490,7 @@ class TestPlayerMethods(unittest.TestCase):
 
         # Assert
         for prop in test_values:
-            self.assertEqual(getattr(p, prop), test_values.get(prop) , msg=f"testing {prop}")
+            self.assertEqual(getattr(p, prop), test_values.get(prop), msg=f"testing {prop}")
 
 
 if __name__ == '__main__':
