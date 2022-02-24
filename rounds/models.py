@@ -234,13 +234,15 @@ class Player(BasePlayer):
 
         # Short buy-in status / delay
         if short_mv:
-            next_player.periods_until_auto_buy = self.calculate_delay(self.periods_until_auto_buy, auto_trans_delay)
+            auto_buy_periods = self.field_maybe_none('periods_until_auto_buy')
+            next_player.periods_until_auto_buy = self.calculate_delay(auto_buy_periods, auto_trans_delay)
         else:
             next_player.periods_until_auto_buy = None
 
         # debt buy-in status / delay
         if debt_mv:
-            next_player.periods_until_auto_sell = self.calculate_delay(self.periods_until_auto_sell, auto_trans_delay)
+            auto_sell_periods = self.field_maybe_none('periods_until_auto_sell')
+            next_player.periods_until_auto_sell = self.calculate_delay(auto_sell_periods, auto_trans_delay)
         else:
             next_player.periods_until_auto_sell = None
 

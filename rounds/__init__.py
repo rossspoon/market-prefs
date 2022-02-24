@@ -176,13 +176,13 @@ def get_orders_for_player_live(player):
 
 
 def get_orders_for_player(player):
-    p_id = player.id_in_group
     return Order.filter(player=player)
 
 
 def delete_order(player, oid):
     obs = Order.filter(player=player, id=oid)
-    [Order.delete(o) for o in obs]
+    for o in obs:
+        Order.delete(o)
 
 
 def market_page_live_method(player, d):
@@ -264,7 +264,7 @@ def get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin):
                     of the value of you STOCK holdings. 
                     You are advised to sell  shares of the STOCK to lower this proportion.
                     An automatic sell-off will be generated at the end of the this period if your proportion
-                    is still over <splan class="bold-text">{margin_ratio:.0%}</span>.""")
+                    is still over <span class="bold-text">{margin_ratio:.0%}</span>.""")
         )
 
     return ret
@@ -296,7 +296,7 @@ def get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin)
                     of your cash holdings. 
                     You are advised to buy back shares of the STOCK to lower this proportion.
                     An automatic buy-in will be generated at the end of this period if your proportion
-                    is still over <splan class="bold-text">{margin_ratio:.0%}</span>.""")
+                    is still over <span class="bold-text">{margin_ratio:.0%}</span>.""")
         )
 
     return ret
@@ -325,7 +325,6 @@ def vars_for_round_results_template(player: Player):
     ret = standard_vars_for_template(player)
 
     filled_amount = abs(player.shares_transacted)
-    price = player.group.price
     orders = get_orders_for_player(player)
 
     # All transaction types should be the same for a given player
@@ -360,7 +359,7 @@ def set_margin_violation_for_next_period(group: Group):
 #######################################
 # CALCULATE MARKET
 def calculate_market(group: Group):
-    cm = CallMarket(group, Constants.num_rounds)
+    cm = CallMarket(group)
     cm.calculate_market()
 
     # Process current round forecasts

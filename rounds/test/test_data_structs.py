@@ -195,7 +195,6 @@ class TestDataForPlayer(unittest.TestCase):
         d4p = DataForPlayer(p)
         d4p.shares_result = -10
         d4p.cash_result = 1000
-        # Order.create = MagicMock(return_value = Order())
 
         # Execute
         o = d4p.generate_buy_in_order(60, MARGIN_PREM, MARGIN_TARGET)
@@ -204,7 +203,7 @@ class TestDataForPlayer(unittest.TestCase):
         self.assertTrue(o.is_buy_in)
         self.assertEqual(o.order_type, BID)
         self.assertEqual(o.price, 75)
-        self.assertEqual(o.quantity, 4)
+        self.assertEqual(o.quantity, 6)
 
 
 class TestDataForOrder(unittest.TestCase):
