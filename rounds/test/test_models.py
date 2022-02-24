@@ -75,8 +75,12 @@ def setup_margin_violation_tests(ratio=None, price=None, shares=None, cash=None,
     session = Session()
     session.config = config
     group = Group()
-    group.price = price
+    group.round_number = 5
+    group.session = session
+    group.get_last_period_price = MagicMock(return_value=price)
+
     p = Player()
+    p.round_number = 5
     p.session = session
     p.group = group
     p.shares = shares
@@ -86,17 +90,16 @@ def setup_margin_violation_tests(ratio=None, price=None, shares=None, cash=None,
 
 def set_up_trans_status_tests(ratio=.4, delay=2, price=None, shares=None, cash=None, sell_period=1, buy_period=1):
     # Setup
-    np = Player()
-    np.round_number = 8
-    np.periods_until_auto_sell = -1  # set these to a nonsensical value
-    np.periods_until_auto_buy = -1  # that these get modified
+    last_p = Player()
+    last_p.round_number = 6
+    last_p.periods_until_auto_buy = buy_period
+    last_p.periods_until_auto_sell = sell_period
 
     p = setup_margin_violation_tests(ratio=ratio, atd=delay, price=price, shares=shares, cash=cash)
     p.round_number = 7
-    p.periods_until_auto_buy = buy_period
-    p.periods_until_auto_sell = sell_period
-    p.in_round_or_null = MagicMock(return_value=np)
-    return np, p
+
+    p.in_round_or_null = MagicMock(return_value=last_p)
+    return p
 
 
 class TestPlayerMethods(unittest.TestCase):
@@ -327,110 +330,98 @@ class TestPlayerMethods(unittest.TestCase):
         self.assertEqual(p.calculate_delay(-1, 7), 0)
 
     # BEGIN determine_auto_trans_status TESTS
-    def test_determine_auto_trans_status_no_next(self):
-        # Setup
-        np, p = set_up_trans_status_tests()
-        p.in_round_or_null = MagicMock(return_value=None)
-
-        # Test
-        p.determine_auto_trans_status()
-
-        # Assert
-        self.assertEqual(np.periods_until_auto_buy, -1)
-        self.assertEqual(np.periods_until_auto_sell, -1)
-
     def test_determine_auto_trans_status_bankrupt(self):
         # Setup
-        np, p = set_up_trans_status_tests(shares=-1, cash=-1)
+        p = set_up_trans_status_tests(shares=-1, cash=-1)
 
         # Test
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertIsNone(np.periods_until_auto_buy)
-        self.assertIsNone(np.periods_until_auto_sell)
+        self.assertIsNone(p.periods_until_auto_buy)
+        self.assertIsNone(p.periods_until_auto_sell)
 
     def test_trans_status_no_mv_short_reset(self):
-        np, p = set_up_trans_status_tests(price=1000, shares=-2, cash=5001)
+        p = set_up_trans_status_tests(price=1000, shares=-2, cash=5001)
 
         # Test
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertIsNone(np.periods_until_auto_buy)
-        self.assertIsNone(np.periods_until_auto_sell)
+        self.assertIsNone(p.periods_until_auto_buy)
+        self.assertIsNone(p.periods_until_auto_sell)
 
     def test_trans_status_mv_short_base(self):
         # noinspection PyTypeChecker
-        np, p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=None)
+        p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=None)
 
         # Test
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertEqual(np.periods_until_auto_buy, 7)
-        self.assertIsNone(np.periods_until_auto_sell)
+        self.assertEqual(p.periods_until_auto_buy, 7)
+        self.assertIsNone(p.periods_until_auto_sell)
 
     def test_trans_status_mv_short_dec(self):
-        np, p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=4)
+        p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=4)
 
         # Test
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertEqual(np.periods_until_auto_buy, 3)
-        self.assertIsNone(np.periods_until_auto_sell)
+        self.assertEqual(p.periods_until_auto_buy, 3)
+        self.assertIsNone(p.periods_until_auto_sell)
 
     def test_trans_status_mv_short_floor(self):
-        np, p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=0)
+        p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=0)
 
         # Test
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertEqual(np.periods_until_auto_buy, 0)
-        self.assertIsNone(np.periods_until_auto_sell)
+        self.assertEqual(p.periods_until_auto_buy, 0)
+        self.assertIsNone(p.periods_until_auto_sell)
 
     def test_trans_status_no_mv_debt_reset(self):
-        np, p = set_up_trans_status_tests(price=1000, shares=5, cash=-1999)
+        p = set_up_trans_status_tests(price=1000, shares=5, cash=-1999)
 
         # Test
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertIsNone(np.periods_until_auto_buy)
-        self.assertIsNone(np.periods_until_auto_sell)
+        self.assertIsNone(p.periods_until_auto_buy)
+        self.assertIsNone(p.periods_until_auto_sell)
 
     def test_trans_status_mv_debt_base(self):
         # noinspection PyTypeChecker
-        np, p = set_up_trans_status_tests(price=1000, shares=5, cash=-2000, delay=7, sell_period=None)
+        p = set_up_trans_status_tests(price=1000, shares=5, cash=-2000, delay=7, sell_period=None)
 
         # Test
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertIsNone(np.periods_until_auto_buy)
-        self.assertEqual(np.periods_until_auto_sell, 7)
+        self.assertIsNone(p.periods_until_auto_buy)
+        self.assertEqual(p.periods_until_auto_sell, 7)
 
     def test_trans_status_mv_debt_dec(self):
-        np, p = set_up_trans_status_tests(price=1000, shares=5, cash=-2000, delay=7, sell_period=4)
+        p = set_up_trans_status_tests(price=1000, shares=5, cash=-2000, delay=7, sell_period=4)
 
         # Test
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertIsNone(np.periods_until_auto_buy)
-        self.assertEqual(np.periods_until_auto_sell, 3)
+        self.assertIsNone(p.periods_until_auto_buy)
+        self.assertEqual(p.periods_until_auto_sell, 3)
 
     def test_trans_status_mv_debt_floor(self):
-        np, p = set_up_trans_status_tests(price=1000, shares=5, cash=-2000, delay=7, sell_period=0)
+        p = set_up_trans_status_tests(price=1000, shares=5, cash=-2000, delay=7, sell_period=0)
 
         # Test
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertIsNone(np.periods_until_auto_buy)
-        self.assertEqual(np.periods_until_auto_sell, 0)
+        self.assertIsNone(p.periods_until_auto_buy)
+        self.assertEqual(p.periods_until_auto_sell, 0)
 
     # END determine_auto_trans_status TESTS
 
@@ -594,36 +585,36 @@ class TestGroupMethods(unittest.TestCase):
         self.assertEqual(last_price, 801)
         group.in_round.assert_called_with(1)
 
-    def test_set_up_future_player_last_round(self):
+    def test_copy_results_from_previous_round_first(self):
         # Set-up
         player = Player()
-        player.round_number = 5
+        player.round_number = 1
         player.in_round = MagicMock(side_effect=InvalidRoundError)
 
         # Execute
-        player.setup_future_player()
+        player.copy_results_from_previous_round()
 
         # Assert
-        player.in_round.assert_called_with(6)
+        player.in_round.assert_called_with(0)
 
-    def test_set_up_future_player_penultimate_round(self):
+    def test_copy_results_from_previous_round_second_round(self):
         # Set-up
         p = Player()
         p.round_number = 4
-        p.cash_result = 123
-        p.shares_result = 456
 
-        np = Player()
-        np.round_number = 5
-        p.in_round = MagicMock(return_value=np)
+        last_p = Player()
+        last_p.round_number = 3
+        last_p.cash_result = 123
+        last_p.shares_result = 456
+        p.in_round = MagicMock(return_value=last_p)
 
         # Execute
-        p.setup_future_player()
+        p.copy_results_from_previous_round()
 
         # Assert
-        p.in_round.assert_called_with(5)
-        self.assertEqual(np.cash, 123)
-        self.assertEqual(np.shares, 456)
+        p.in_round.assert_called_with(3)
+        self.assertEqual(p.cash, 123)
+        self.assertEqual(p.shares, 456)
 
 
 if __name__ == '__main__':

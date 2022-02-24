@@ -18,12 +18,10 @@ class Constants(BaseConstants):
 # assign treatments
 def creating_session(subsession):
     generate_participant_ids(subsession)
-
+    session = subsession.session
     # only set up endowments in the first round
     if subsession.round_number != 1:
         return
-
-    session = subsession.session
 
     # Assemble config params regarding endowments
     cash_control = session.config['cash_endowment_control']
@@ -345,10 +343,19 @@ def vars_for_round_results_template(player: Player):
     return ret
 
 
-def set_float_and_short(group: Group):
+def pre_round_tasks(group: Group):
     # Calculate float the total shorts
-    group.float = sum((p.shares for p in group.get_players()))
-    group.short = sum((abs(p.shares) for p in group.get_players() if p.shares < 0))
+    group.float = sum(p.shares for p in group.get_players())
+    group.short = abs(sum(p.shares for p in group.get_players() if p.shares < 0))
+
+    # Determine auto transaction statuses
+    # And copy previous round results to the current player object
+    for p in group.get_players():
+        # Copy results from the previous player
+        p.copy_results_from_previous_round()
+
+        # update margin violations
+        p.determine_auto_trans_status()
 
 
 def set_margin_violation_for_next_period(group: Group):
@@ -365,12 +372,6 @@ def calculate_market(group: Group):
     for p in group.get_players():
         # Process current round forecasts
         p.determine_forecast_reward(group.price)
-
-        # Copy results to the next player
-        p.setup_future_player()
-
-        # update margin violations
-        p.determine_auto_trans_status()
 
 
 #######################################
@@ -425,7 +426,7 @@ class PreMarketWait(WaitPage):
     body_text = "Waiting for the experiment to begin"
     pass
 
-    after_all_players_arrive = set_float_and_short
+    after_all_players_arrive = pre_round_tasks
 
 
 class Market(Page):

@@ -169,10 +169,14 @@ class TestDataForPlayer(unittest.TestCase):
 
     def test_get_buy_in_players(self):
         # Set-up
-        p1 = Player(margin_violation=False)
-        p2 = Player(margin_violation=False)
-        p3 = Player(margin_violation=True)
-        p4 = Player(margin_violation=True)
+        p1 = Player()
+        p1.periods_until_auto_buy = 1
+        p2 = Player()
+        p2.periods_until_auto_buy = None
+        p3 = Player()
+        p3.periods_until_auto_buy = 0
+        p4 = Player()
+        p4.periods_until_auto_buy = 0
 
         d1 = DataForPlayer(p1)
         d1.margin_violation_future = False

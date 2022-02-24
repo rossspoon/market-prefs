@@ -99,7 +99,7 @@ class DataForPlayer:
         self.margin_violation_future = b1 and b2
 
     def is_buy_in_required(self):
-        return self.player.margin_violation and self.margin_violation_future
+        return self.player.field_maybe_none('periods_until_auto_buy') == 0 and self.margin_violation_future
 
     def generate_buy_in_order(self, market_price, margin_premium, margin_target_ratio):
         """

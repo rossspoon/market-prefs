@@ -197,7 +197,7 @@ class Player(BasePlayer):
         if self.is_bankrupt():
             return False
 
-        price = self.group.price
+        price = self.group.get_last_period_price()
         margin_ratio = scf.get_margin_ratio(self)
         return self.is_short() and self.get_personal_stock_margin(price) >= margin_ratio
 
@@ -205,16 +205,16 @@ class Player(BasePlayer):
         if self.is_bankrupt():
             return False
 
-        price = self.group.price
+        price = self.group.get_last_period_price()
         margin_ratio = scf.get_margin_ratio(self)
         return self.is_debt() and self.get_personal_cash_margin(price) >= margin_ratio
 
-    def setup_future_player(self):
+    def copy_results_from_previous_round(self):
         r_num = self.round_number
-        future_player = self.in_round_or_null(r_num + 1)
-        if future_player:
-            future_player.cash = self.cash_result
-            future_player.shares = self.shares_result
+        past_player = self.in_round_or_null(r_num - 1)
+        if past_player:
+            self.cash = past_player.cash_result
+            self.shares = past_player.shares_result
 
     def determine_forecast_reward(self, price):
         f0 = self.field_maybe_none('f0')
@@ -233,35 +233,38 @@ class Player(BasePlayer):
         return max(current_delay - 1, 0)
 
     def determine_auto_trans_status(self):
-        next_player = self.in_round_or_null(self.round_number + 1)
-        # skip if there is no next player
-        # Usually this happens in the last round.
-        if not next_player:
-            return
-
+        prev_player = self.in_round_or_null(self.round_number - 1)
         auto_trans_delay = scf.get_auto_trans_delay(self)
+
+        if not prev_player:
+            buy_delay = auto_trans_delay
+            sell_delay = auto_trans_delay
+        else:
+            prev_delay = prev_player.field_maybe_none('periods_until_auto_buy')
+            buy_delay = self.calculate_delay(prev_delay, auto_trans_delay)
+            prev_delay = prev_player.field_maybe_none('periods_until_auto_sell')
+            sell_delay = self.calculate_delay(prev_delay, auto_trans_delay)
+
         short_mv = self.is_short_margin_violation()
         debt_mv = self.is_debt_margin_violation()
 
         # Skip out for bankrupt players
         if self.is_bankrupt():
-            next_player.periods_until_auto_buy = None
-            next_player.periods_until_auto_sell = None
+            self.periods_until_auto_buy = None
+            self.periods_until_auto_sell = None
             return
 
         # Short buy-in status / delay
         if short_mv:
-            auto_buy_periods = self.field_maybe_none('periods_until_auto_buy')
-            next_player.periods_until_auto_buy = self.calculate_delay(auto_buy_periods, auto_trans_delay)
+            self.periods_until_auto_buy = buy_delay
         else:
-            next_player.periods_until_auto_buy = None
+            self.periods_until_auto_buy = None
 
         # debt buy-in status / delay
         if debt_mv:
-            auto_sell_periods = self.field_maybe_none('periods_until_auto_sell')
-            next_player.periods_until_auto_sell = self.calculate_delay(auto_sell_periods, auto_trans_delay)
+            self.periods_until_auto_sell = sell_delay
         else:
-            next_player.periods_until_auto_sell = None
+            self.periods_until_auto_sell = None
 
 
 class Order(ExtraModel):
