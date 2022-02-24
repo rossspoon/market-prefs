@@ -123,7 +123,7 @@ class Player(BasePlayer):
     f1 = models.CurrencyField()
     f2 = models.CurrencyField()
     forecast_error = models.CurrencyField()
-    forecast_reward = models.CurrencyField()
+    forecast_reward = models.CurrencyField(initial=0)
 
     # Per-round Survey
     # emotion = models.IntegerField(
@@ -208,6 +208,23 @@ class Player(BasePlayer):
         price = self.group.price
         margin_ratio = scf.get_margin_ratio(self)
         return self.is_debt() and self.get_personal_cash_margin(price) >= margin_ratio
+
+    def setup_future_player(self):
+        r_num = self.round_number
+        future_player = self.in_round_or_null(r_num + 1)
+        if future_player:
+            future_player.cash = self.cash_result
+            future_player.shares = self.shares_result
+
+    def determine_forecast_reward(self, price):
+        f0 = self.field_maybe_none('f0')
+        if f0 is not None:
+            forecast_error = abs(price - self.f0)
+            #TODO: session config for 500 & 250
+            forecast_reward = 500 if forecast_error <= 250 else 0
+            self.forecast_error = forecast_error
+            self.forecast_reward = forecast_reward
+            self.cash_result += forecast_reward
 
     @staticmethod
     def calculate_delay(current_delay, base):

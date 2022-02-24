@@ -132,39 +132,6 @@ class TestCallMarket(unittest.TestCase):
             self.assertEqual(offers, [o_05_05, o_05_06, o_06_05, o_06_07])
             Order.filter.assert_called_with(group=cm.group)
 
-    def test_set_up_future_player_last_round(self):
-        # Set-up
-        cm = self.basic_setup()
-        player = get_player(round_number=NUM_ROUNDS)
-        player.in_round = MagicMock(side_effect=InvalidRoundError)
-
-        # Execute
-        cm.set_up_future_player(player)
-
-        # Assert
-        player.in_round.assert_called_with(6)
-
-    def test_set_up_future_player_penultimate_round(self):
-        # Set-up
-        cm = self.basic_setup()
-
-        player = get_player(round_number=NUM_ROUNDS - 1,
-                            cash_result=123,
-                            shares_result=456,
-                            margin_violation=True
-                            )
-        next_player = get_player(round_number=NUM_ROUNDS)
-        player.in_round = MagicMock(return_value=next_player)
-
-        # Execute
-        cm.set_up_future_player(player, margin_violation=True)
-
-        # Assert
-        player.in_round.assert_called_with(NUM_ROUNDS)
-        self.assertEqual(next_player.cash, 123)
-        self.assertEqual(next_player.shares, 456)
-        self.assertTrue(next_player.margin_violation)
-
     def test_get_dividend(self):
         # Set-up
         cm = self.basic_setup()
@@ -177,8 +144,8 @@ class TestCallMarket(unittest.TestCase):
         avg = s / reps
 
         # Assert
-        self.assertTrue(abs(avg - 70) < 0.2,
-                        msg="Expecting the average dividend to be around 70, instead it was: {}".format(avg))
+        self.assertAlmostEqual(avg, 70, delta=.3,
+                               msg=f"Expecting the average dividend to be around 70, instead it was: {avg}")
 
     # def test_market_case(self):
     #     # Set up

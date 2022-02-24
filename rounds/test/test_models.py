@@ -492,9 +492,35 @@ class TestPlayerMethods(unittest.TestCase):
         for prop in test_values:
             self.assertEqual(getattr(p, prop), test_values.get(prop), msg=f"testing {prop}")
 
+    def assert_equal_or_none(self, exp, actual):
+        if actual is not None:
+            self.assertEqual(exp, actual)
+        else:
+            self.assertIsNone(actual)
+
+    def generic_forecast_test(self, f0=None, price=None, reward=None, error=None):
+        # Setup
+        p = Player()
+        p.f0 = f0
+        p.cash_result = 0
+        p.forecast_reward = 0
+
+        # Test
+        p.determine_forecast_reward(price)
+
+        # Assert
+        self.assert_equal_or_none(p.forecast_reward, reward)
+        self.assert_equal_or_none(p.forecast_error, error)
+        self.assert_equal_or_none(p.cash_result, reward)
+
+    def test_forecasts(self):
+        self.generic_forecast_test(f0=1000, price=750, reward=500, error=250)
+        self.generic_forecast_test(f0=1001, price=750, reward=0, error=251)
+        self.generic_forecast_test(f0=500, price=750, reward=500, error=250)
+        self.generic_forecast_test(f0=499, price=750, reward=0, error=251)
+
 
 class TestGroupMethods(unittest.TestCase):
-
     def test_in_round_or_none_bad_round(self):
         g = Group()
         g.round_number = 5
@@ -567,6 +593,37 @@ class TestGroupMethods(unittest.TestCase):
         # Assert
         self.assertEqual(last_price, 801)
         group.in_round.assert_called_with(1)
+
+    def test_set_up_future_player_last_round(self):
+        # Set-up
+        player = Player()
+        player.round_number = 5
+        player.in_round = MagicMock(side_effect=InvalidRoundError)
+
+        # Execute
+        player.setup_future_player()
+
+        # Assert
+        player.in_round.assert_called_with(6)
+
+    def test_set_up_future_player_penultimate_round(self):
+        # Set-up
+        p = Player()
+        p.round_number = 4
+        p.cash_result = 123
+        p.shares_result = 456
+
+        np = Player()
+        np.round_number = 5
+        p.in_round = MagicMock(return_value=np)
+
+        # Execute
+        p.setup_future_player()
+
+        # Assert
+        p.in_round.assert_called_with(5)
+        self.assertEqual(np.cash, 123)
+        self.assertEqual(np.shares, 456)
 
 
 if __name__ == '__main__':

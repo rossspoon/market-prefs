@@ -17,16 +17,6 @@ class CallMarket:
         offers = [o for o in group_orders if OrderType(o.order_type) == OrderType.OFFER]
         return bids, offers
 
-    # Change this to fields of the participant
-    #TODO:  Move this to the Player class
-    def set_up_future_player(self, player, margin_violation=False):
-        r_num = player.round_number
-        future_player = player.in_round_or_null(r_num + 1)
-        if future_player:
-            future_player.cash = player.cash_result
-            future_player.shares = player.shares_result
-            future_player.margin_violation = margin_violation
-
     def get_dividend(self):
         div_probabilities = scf.get_dividend_probabilities(self.group)
         div_amts = scf.get_dividend_amounts(self.group)
@@ -89,11 +79,11 @@ class CallMarket:
         # Final Updates
         for p_data in iteration.players:
             p_data.update_player()
-            # Propagate certain data to the next round.
-            self.set_up_future_player(p_data.player, margin_violation=p_data.margin_violation_future)
+
         # update orders
         for o in iteration.get_all_orders():
             o.update_order()
+
         # Update the group
         self.group.price = int(iteration.market_price)
         self.group.volume = int(iteration.market_volume)

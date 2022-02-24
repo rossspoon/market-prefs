@@ -362,18 +362,15 @@ def calculate_market(group: Group):
     cm = CallMarket(group)
     cm.calculate_market()
 
-    # Process current round forecasts
     for p in group.get_players():
-        f0 = p.field_maybe_none('f0')
-        if f0 is not None:
-            forecast_error = abs(group.price - p.f0)
-            forecast_reward = 500 if forecast_error <= 250 else 0
-            p.forecast_error = forecast_error
-            p.forecast_reward = forecast_reward
-            p.cash_result += forecast_reward
+        # Process current round forecasts
+        p.determine_forecast_reward(group.price)
 
-    # update margin violations
-    set_margin_violation_for_next_period(group)
+        # Copy results to the next player
+        p.setup_future_player()
+
+        # update margin violations
+        p.determine_auto_trans_status()
 
 
 #######################################
