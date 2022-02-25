@@ -19,6 +19,9 @@ class Constants(BaseConstants):
 def creating_session(subsession):
     generate_participant_ids(subsession)
     session = subsession.session
+
+    # TODO: Figure out why this is setting endowments on all players in all rounds
+
     # only set up endowments in the first round
     if subsession.round_number != 1:
         return
@@ -216,6 +219,7 @@ def get_messages(player: Player):
     price = player.group.get_last_period_price()
     personal_stock_margin = player.get_personal_stock_margin(price)
     personal_cash_margin = player.get_personal_cash_margin(price)
+    round_number = player.round_number
 
     # Current Market Price:
     ret.append(dict(class_attr="",
@@ -223,11 +227,13 @@ def get_messages(player: Player):
 
     # Messages / Warning for short position
     if is_short and not is_bankrupt:
-        ret += get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin)
+        delay = player.field_maybe_none('periods_until_auto_buy')
+        ret += get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin, delay, round_number)
 
     # Messages / Warning for negative cash holding
     if is_debt and not is_bankrupt:
-        ret += get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin)
+        delay = player.field_maybe_none('periods_until_auto_sell')
+        ret += get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin, delay, round_number)
 
     # Bankrupt
     if is_bankrupt:
@@ -237,7 +243,7 @@ def get_messages(player: Player):
     return ret
 
 
-def get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin):
+def get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin, delay, round_number):
     ret: list[dict[str]] = []
     # Determine margin buy messages
     if personal_cash_margin < margin_target_ratio:
@@ -255,20 +261,29 @@ def get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin):
                         on your behalf.""")
         )
     elif personal_cash_margin >= margin_ratio:
+        # Skip if last period and buy is next period
+        if round_number == Constants.num_rounds and delay > 0:
+            return
+
+        if delay == 0:
+            which = 'this period'
+        elif delay == 1:
+            which = f'next period (Period {round_number + 1})'
+
         ret.append(
             dict(class_attr="alert-danger",
                  msg=f"""Warning:  The debt that you hold is
-                    <span class="bold-text"> {personal_cash_margin:.0%} </span>
-                    of the value of you STOCK holdings. 
-                    You are advised to sell  shares of the STOCK to lower this proportion.
-                    An automatic sell-off will be generated at the end of the this period if your proportion
-                    is still over <span class="bold-text">{margin_ratio:.0%}</span>.""")
+                        <span class="bold-text"> {personal_cash_margin:.0%} </span>
+                        of the value of you STOCK holdings. 
+                        You are advised to sell  shares of the STOCK to lower this proportion.
+                        An automatic sell-off will be generated at the end of the {which} if your proportion
+                        is still over <span class="bold-text">{margin_ratio:.0%}</span>.""")
         )
 
     return ret
 
 
-def get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin):
+def get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin, delay, round_number):
     ret = []
     # Determine short position messages
     # Normal condition
@@ -287,13 +302,22 @@ def get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin)
                         on your behalf.""")
         )
     elif personal_stock_margin >= margin_ratio:
+        # Skip if last period and buy is next period
+        if round_number == Constants.num_rounds and delay > 0:
+            return
+
+        if delay == 0:
+            which = 'this period'
+        elif delay == 1:
+            which = f'next period (Period {round_number + 1})'
+
         ret.append(
             dict(class_attr="alert-danger",
                  msg=f"""Warning:  The value of the shares that you have shorted is
                     <span class="bold-text"> {personal_stock_margin:.0%} </span>
                     of your cash holdings. 
                     You are advised to buy back shares of the STOCK to lower this proportion.
-                    An automatic buy-in will be generated at the end of this period if your proportion
+                    An automatic buy-in will be generated at the end of {which}  if your proportion
                     is still over <span class="bold-text">{margin_ratio:.0%}</span>.""")
         )
 
