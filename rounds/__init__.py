@@ -17,14 +17,12 @@ class Constants(BaseConstants):
 
 # assign treatments
 def creating_session(subsession):
-    generate_participant_ids(subsession)
-    session = subsession.session
-
-    # TODO: Figure out why this is setting endowments on all players in all rounds
-
     # only set up endowments in the first round
     if subsession.round_number != 1:
         return
+
+    generate_participant_ids(subsession)
+    session = subsession.session
 
     # Assemble config params regarding endowments
     cash_control = session.config['cash_endowment_control']
