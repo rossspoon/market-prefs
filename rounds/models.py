@@ -88,8 +88,8 @@ class Group(BaseGroup):
 
 
 class Player(BasePlayer):
-    cash = models.CurrencyField()
-    shares = models.IntegerField()
+    cash = models.CurrencyField(initial=1000)
+    shares = models.IntegerField(initial=50)
 
     #  These items just exist to drive the form on the page.
     # The actual price and quantity are stored in the Order model
