@@ -11,6 +11,19 @@ P_TYPE_BUYER = 1
 P_TYPE_SELLER = 2
 
 
+def run_unit_tests():
+    suite = unittest.defaultTestLoader.discover('rounds/test')
+    print("\n===========================\nRUNNING UNIT TESTS")
+    # for s in suite:
+    #    for t in s:
+    #        for i in t:
+    #            print("TEST", i, "\n")
+
+    ttr = unittest.TextTestRunner(stream=sys.stdout)
+    ttr.run(suite)
+    print("\n FINISHED UNIT TESTS\n===========================\n\n")
+
+
 class ScriptedBot(Bot):
     p_type = -1
 
@@ -31,26 +44,16 @@ class ScriptedBot(Bot):
     lock = Lock()
     unit_tests_run = False
 
-    def run_unit_tests(self):
-        suite = unittest.defaultTestLoader.discover('rounds/test')
-        print("\n===========================\nRUNNING UNIT TESTS")
-        # for s in suite:
-        #    for t in s:
-        #        for i in t:
-        #            print("TEST", i, "\n")
-
-        ttr = unittest.TextTestRunner(stream=sys.stdout)
-        ttr.run(suite)
-        print("\n FINISHED UNIT TESTS\n===========================\n\n")
-
     def init_tests(self):
+        self.session.vars['EXIT_ROUND'] = 5
+
         """ Run Unit tests and first-round player tests """
         # Only run the unit tests once
         if not ScriptedBot.unit_tests_run:
             self.lock.acquire()
             if not ScriptedBot.unit_tests_run:
                 ScriptedBot.unit_tests_run = True
-                self.run_unit_tests()
+                run_unit_tests()
                 database.db.rollback()
             self.lock.release()
 
@@ -145,11 +148,14 @@ class ScriptedBot(Bot):
             expect(o.quantity, 5)
 
     def play_round(self):
+        if self.round_number > 5:
+            return None
+
         pid = self.player.id_in_group
         print("\n==================\nRound Number:", self.round_number, "  Player:", pid)
 
         # overhead
-        if self.player.round_number == 1:
+        if self.round_number == 1:
             self.init_tests()
 
         # Market Page Tests
