@@ -17,6 +17,8 @@ SESSION_CONFIGS = [
         margin_ratio=.5,
         margin_premium=0.1,
         margin_target_ratio=.3,
+        auto_trans_delay=0,
+        initial_price=0,
 
         treated_ids='1 0 0',
         cash_endowment_control=500,

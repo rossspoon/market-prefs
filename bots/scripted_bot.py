@@ -2,6 +2,8 @@ import sys
 import unittest
 from threading import Lock
 
+from otree import database
+
 from rounds import *
 
 P_TYPE_TREATMENT = 0
@@ -49,6 +51,7 @@ class ScriptedBot(Bot):
             if not ScriptedBot.unit_tests_run:
                 ScriptedBot.unit_tests_run = True
                 self.run_unit_tests()
+                database.db.rollback()
             self.lock.release()
 
         # test treatment assignments
@@ -81,35 +84,35 @@ class ScriptedBot(Bot):
         elif r_num == 3:
             expect(self.group.short, 10)
         elif r_num == 4:
-            expect(self.group.short, 6)
+            expect(self.group.short, 5)
         elif r_num == 5:
-            expect(self.group.short, 6)
+            expect(self.group.short, 5)
 
         # Player-level tests
         if r_num == 2 and self.p_type == P_TYPE_BUYER:
             expect(self.player.cash, 0)
             expect(self.player.shares, 20)
-            expect(self.player.margin_violation, False)
+            expect(self.player.is_auto_buy(), False)
 
         elif r_num == 2 and self.p_type == P_TYPE_SELLER:
             expect(self.player.cash, 1000)
             expect(self.player.shares, 0)
-            expect(self.player.margin_violation, False)
+            expect(self.player.is_auto_buy(), False)
 
         elif r_num == 2 and self.p_type == P_TYPE_TREATMENT:
             expect(self.player.cash, 1000)
             expect(self.player.shares, -10)
-            expect(self.player.margin_violation, True)
+            expect(self.player.is_auto_buy(), True)
 
         elif r_num == 4 and self.p_type == P_TYPE_TREATMENT:
-            expect(self.player.cash, 800)
-            expect(self.player.shares, -6)
-            expect(self.player.margin_violation, False)
+            expect(self.player.cash, 750)
+            expect(self.player.shares, -5)
+            expect(self.player.is_auto_buy(), False)
 
         elif r_num == 4 and self.p_type == P_TYPE_BUYER:
-            expect(self.player.cash, 200)
-            expect(self.player.shares, 16)
-            expect(self.player.margin_violation, False)
+            expect(self.player.cash, 250)
+            expect(self.player.shares, 15)
+            expect(self.player.is_auto_buy(), False)
 
     def after_market_page_tests(self):
         r_num = self.round_number
@@ -128,7 +131,7 @@ class ScriptedBot(Bot):
 
         if r_num == 3:
             expect(self.group.price, 50)
-            expect(self.group.volume, 4)
+            expect(self.group.volume, 5)
 
         # Round 2 & 3 Tests for Treatment player
         # immediately after the close of the round-2 market
@@ -139,7 +142,7 @@ class ScriptedBot(Bot):
             o = orders[0]
             expect(o.order_type, -1)
             expect(o.price, 55)
-            expect(o.quantity, 4)
+            expect(o.quantity, 5)
 
     def play_round(self):
         pid = self.player.id_in_group
@@ -213,12 +216,12 @@ def round_1_live_tests(method, kwargs):
     test_place_order(method, 2, '2', '-1', 'a', valid=False, code_expect=25)
 
     #######
-    ##  Now create the actual orders used in round one.
+    # Now create the actual orders used in round one.
     # valid orders
-    test_place_order(method, 2, '-1', '50', '10')
+    test_place_order(method, 2, '-1', '50', '10')  # buy
     test_get_orders_for_player(method, 2, 1)
 
-    test_place_order(method, 3, '1', '50', '10')
+    test_place_order(method, 3, '1', '50', '10')   # sell
     test_get_orders_for_player(method, 3, 1)
 
 

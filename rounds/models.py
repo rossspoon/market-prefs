@@ -87,6 +87,9 @@ class Group(BaseGroup):
                 return scf.get_fundamental_value(self)
 
 
+NO_AUTO_TRANS = -99
+
+
 class Player(BasePlayer):
     cash = models.CurrencyField()
     shares = models.IntegerField()
@@ -103,9 +106,8 @@ class Player(BasePlayer):
     price = models.IntegerField(blank=True)
     quantity = models.IntegerField(blank=True)
 
-    margin_violation = models.BooleanField(initial=False)  # Margin Warning this round?
-    periods_until_auto_buy = models.IntegerField()
-    periods_until_auto_sell = models.IntegerField()
+    periods_until_auto_buy = models.IntegerField(initial=NO_AUTO_TRANS)
+    periods_until_auto_sell = models.IntegerField(initial=NO_AUTO_TRANS)
 
     # Market Movement
     shares_transacted = models.IntegerField(initial=0)
@@ -220,7 +222,7 @@ class Player(BasePlayer):
         f0 = self.field_maybe_none('f0')
         if f0 is not None:
             forecast_error = abs(price - self.f0)
-            #TODO: session config for 500 & 250
+            # TODO: session config for 500 & 250
             forecast_reward = 500 if forecast_error <= 250 else 0
             self.forecast_error = forecast_error
             self.forecast_reward = forecast_reward
@@ -228,7 +230,7 @@ class Player(BasePlayer):
 
     @staticmethod
     def calculate_delay(current_delay, base):
-        if current_delay is None:
+        if current_delay == NO_AUTO_TRANS:
             return base
         return max(current_delay - 1, 0)
 
@@ -250,21 +252,27 @@ class Player(BasePlayer):
 
         # Skip out for bankrupt players
         if self.is_bankrupt():
-            self.periods_until_auto_buy = None
-            self.periods_until_auto_sell = None
+            self.periods_until_auto_buy = NO_AUTO_TRANS
+            self.periods_until_auto_sell = NO_AUTO_TRANS
             return
 
         # Short buy-in status / delay
         if short_mv:
             self.periods_until_auto_buy = buy_delay
         else:
-            self.periods_until_auto_buy = None
+            self.periods_until_auto_buy = NO_AUTO_TRANS
 
         # debt buy-in status / delay
         if debt_mv:
             self.periods_until_auto_sell = sell_delay
         else:
-            self.periods_until_auto_sell = None
+            self.periods_until_auto_sell = NO_AUTO_TRANS
+
+    def is_auto_buy(self):
+        return self.periods_until_auto_buy == 0
+
+    def is_auto_sell(self):
+        return self.periods_until_auto_sell == 0
 
 
 class Order(ExtraModel):

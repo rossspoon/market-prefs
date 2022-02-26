@@ -324,7 +324,7 @@ class TestPlayerMethods(unittest.TestCase):
     def test_calculate_delay(self):
         p = Player
 
-        self.assertEqual(p.calculate_delay(None, 7), 7)
+        self.assertEqual(p.calculate_delay(NO_AUTO_TRANS, 7), 7)
         self.assertEqual(p.calculate_delay(1, 7), 0)
         self.assertEqual(p.calculate_delay(0, 7), 0)
         self.assertEqual(p.calculate_delay(-1, 7), 0)
@@ -338,8 +338,8 @@ class TestPlayerMethods(unittest.TestCase):
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertIsNone(p.periods_until_auto_buy)
-        self.assertIsNone(p.periods_until_auto_sell)
+        self.assertEqual(p.periods_until_auto_buy, NO_AUTO_TRANS)
+        self.assertEqual(p.periods_until_auto_sell, NO_AUTO_TRANS)
 
     def test_trans_status_no_mv_short_reset(self):
         p = set_up_trans_status_tests(price=1000, shares=-2, cash=5001)
@@ -348,19 +348,19 @@ class TestPlayerMethods(unittest.TestCase):
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertIsNone(p.periods_until_auto_buy)
-        self.assertIsNone(p.periods_until_auto_sell)
+        self.assertEqual(p.periods_until_auto_buy, NO_AUTO_TRANS)
+        self.assertEqual(p.periods_until_auto_sell, NO_AUTO_TRANS)
 
     def test_trans_status_mv_short_base(self):
         # noinspection PyTypeChecker
-        p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=None)
+        p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=NO_AUTO_TRANS)
 
         # Test
         p.determine_auto_trans_status()
 
         # Assert
         self.assertEqual(p.periods_until_auto_buy, 7)
-        self.assertIsNone(p.periods_until_auto_sell)
+        self.assertEqual(p.periods_until_auto_sell, NO_AUTO_TRANS)
 
     def test_trans_status_mv_short_dec(self):
         p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=4)
@@ -370,7 +370,7 @@ class TestPlayerMethods(unittest.TestCase):
 
         # Assert
         self.assertEqual(p.periods_until_auto_buy, 3)
-        self.assertIsNone(p.periods_until_auto_sell)
+        self.assertEqual(p.periods_until_auto_sell, NO_AUTO_TRANS)
 
     def test_trans_status_mv_short_floor(self):
         p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=0)
@@ -380,7 +380,7 @@ class TestPlayerMethods(unittest.TestCase):
 
         # Assert
         self.assertEqual(p.periods_until_auto_buy, 0)
-        self.assertIsNone(p.periods_until_auto_sell)
+        self.assertEqual(p.periods_until_auto_sell, NO_AUTO_TRANS)
 
     def test_trans_status_no_mv_debt_reset(self):
         p = set_up_trans_status_tests(price=1000, shares=5, cash=-1999)
@@ -389,18 +389,18 @@ class TestPlayerMethods(unittest.TestCase):
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertIsNone(p.periods_until_auto_buy)
-        self.assertIsNone(p.periods_until_auto_sell)
+        self.assertEqual(p.periods_until_auto_buy, NO_AUTO_TRANS)
+        self.assertEqual(p.periods_until_auto_sell, NO_AUTO_TRANS)
 
     def test_trans_status_mv_debt_base(self):
         # noinspection PyTypeChecker
-        p = set_up_trans_status_tests(price=1000, shares=5, cash=-2000, delay=7, sell_period=None)
+        p = set_up_trans_status_tests(price=1000, shares=5, cash=-2000, delay=7, sell_period=NO_AUTO_TRANS)
 
         # Test
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertIsNone(p.periods_until_auto_buy)
+        self.assertEqual(p.periods_until_auto_buy, NO_AUTO_TRANS)
         self.assertEqual(p.periods_until_auto_sell, 7)
 
     def test_trans_status_mv_debt_dec(self):
@@ -410,7 +410,7 @@ class TestPlayerMethods(unittest.TestCase):
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertIsNone(p.periods_until_auto_buy)
+        self.assertEqual(p.periods_until_auto_buy, NO_AUTO_TRANS)
         self.assertEqual(p.periods_until_auto_sell, 3)
 
     def test_trans_status_mv_debt_floor(self):
@@ -420,7 +420,7 @@ class TestPlayerMethods(unittest.TestCase):
         p.determine_auto_trans_status()
 
         # Assert
-        self.assertIsNone(p.periods_until_auto_buy)
+        self.assertEqual(p.periods_until_auto_buy, NO_AUTO_TRANS)
         self.assertEqual(p.periods_until_auto_sell, 0)
 
     # END determine_auto_trans_status TESTS

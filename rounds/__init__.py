@@ -71,6 +71,7 @@ def get_js_vars(player: Player, include_current=True):
     # Price History
     group = player.group
     if include_current:
+        # TODO: Try doing this with player.round_number
         groups = list(filter(lambda g: g.field_maybe_none('price') is not None, group.in_all_rounds()))
     else:
         groups = group.in_previous_rounds()
@@ -225,12 +226,12 @@ def get_messages(player: Player):
 
     # Messages / Warning for short position
     if is_short and not is_bankrupt:
-        delay = player.field_maybe_none('periods_until_auto_buy')
+        delay = player.periods_until_auto_buy
         ret += get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin, delay, round_number)
 
     # Messages / Warning for negative cash holding
     if is_debt and not is_bankrupt:
-        delay = player.field_maybe_none('periods_until_auto_sell')
+        delay = player.periods_until_auto_sell
         ret += get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin, delay, round_number)
 
     # Bankrupt
@@ -243,7 +244,7 @@ def get_messages(player: Player):
 
 def get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin, delay, round_number):
     ret: list[dict[str]] = []
-    # Determine margin buy messages
+    # Determine margin sell messages
     if personal_cash_margin < margin_target_ratio:
         ret.append(
             dict(class_attr="",
@@ -259,7 +260,7 @@ def get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin, d
                         on your behalf.""")
         )
     elif personal_cash_margin >= margin_ratio:
-        # Skip if last period and buy is next period
+        # Skip if last period and sell is next period
         if round_number == Constants.num_rounds and delay > 0:
             return
 
@@ -366,10 +367,6 @@ def vars_for_round_results_template(player: Player):
 
 
 def pre_round_tasks(group: Group):
-    # Calculate float the total shorts
-    group.float = sum(p.shares for p in group.get_players())
-    group.short = abs(sum(p.shares for p in group.get_players() if p.shares < 0))
-
     # Determine auto transaction statuses
     # And copy previous round results to the current player object
     for p in group.get_players():
@@ -378,6 +375,10 @@ def pre_round_tasks(group: Group):
 
         # update margin violations
         p.determine_auto_trans_status()
+
+    # Calculate float the total shorts
+    group.float = sum(p.shares for p in group.get_players())
+    group.short = abs(sum(p.shares for p in group.get_players() if p.shares < 0))
 
 
 def set_margin_violation_for_next_period(group: Group):

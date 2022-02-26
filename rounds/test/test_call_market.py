@@ -24,19 +24,6 @@ def get_order(**kwargs):
     return o
 
 
-def get_player(**kwargs):
-    p = Player()
-    p.group = kwargs.get('group')
-    p.round_number = kwargs.get('round_number')
-    p.cash = kwargs.get('cash')
-    p.shares = kwargs.get('shares')
-    p.cash_result = kwargs.get('cash_result')
-    p.shares_result = kwargs.get('shares_result')
-    p.margin_violation = bool(kwargs.get('margin_violation'))
-
-    return p
-
-
 b_10_05 = get_order(order_type=BID, price=10, quantity=5)
 b_10_06 = get_order(order_type=BID, price=10, quantity=6)
 b_11_05 = get_order(order_type=BID, price=11, quantity=5)
