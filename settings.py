@@ -5,7 +5,7 @@ SESSION_CONFIGS = [
         name='rounds',
         app_sequence=['rounds'],
         num_demo_participants=2,
-        random_hist=True
+        random_hist=False
     )
     , dict(
         name='rounds_test',
@@ -84,7 +84,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     margin_ratio=.5,
     margin_premium=0.1,
     margin_target_ratio=.3,
-    auto_trans_delay=1,
+    auto_trans_delay=0,
 
     fraction_of_short_starts=.5,
     cash_endowment_control=5000,

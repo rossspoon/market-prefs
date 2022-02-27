@@ -1,5 +1,6 @@
 import numpy as np
 
+from common import SessionConfigFunctions as scf
 from rounds.models import Order, Player, OrderType
 import math
 from otree.api import *
@@ -76,7 +77,8 @@ class DataForPlayer:
         self.dividend_earned = None
         self.interest_earned = None
         self.cash_result = None
-        self.margin_violation_future = False
+        self.mv_short_future = False
+        self.mv_debt_future = False
 
     def get_new_player_position(self, orders, dividend, interest_rate, market_price):
         # calculate players positions
@@ -93,27 +95,27 @@ class DataForPlayer:
         self.interest_earned = int(self.cash_after_trade * interest_rate)
         self.cash_result = int(self.player.cash + self.interest_earned + self.trans_cost + self.dividend_earned)
 
-    def set_mv_future(self, margin_ratio, market_price):
+    def set_mv_short_future(self, margin_ratio, market_price):
         b1 = self.shares_result < 0
         b2 = margin_ratio * self.cash_result <= abs(market_price * self.shares_result)
-        self.margin_violation_future = b1 and b2
+        self.mv_short_future = b1 and b2
 
     def is_buy_in_required(self):
-        return self.player.field_maybe_none('periods_until_auto_buy') == 0 and self.margin_violation_future
+        return self.player.is_auto_buy() and self.mv_short_future
 
-    def generate_buy_in_order(self, market_price, margin_premium, margin_target_ratio):
+    def generate_buy_in_order(self, market_price):
         """
         Generate a buy-in order.
         @param market_price: The market price
-        @param margin_premium: The premium charged over the existing market price
-        @param margin_target_ratio: After calculating the new order price, buy enough shares to meet this margin ratio
         @return: DataForOrder
         """
+        margin_premium = scf.get_margin_premium(self.player)
+        target_ratio = scf.get_margin_target_ratio(self.player)
         price_multiplier = 1 + margin_premium
         buy_in_price = int(round(market_price * price_multiplier))  # premium of current market price
         current_value_of_position = abs(self.shares_result * buy_in_price)
         cash_position = self.cash_result
-        target_value = math.floor(cash_position * margin_target_ratio)  # value of shares to be in compliance
+        target_value = math.floor(cash_position * target_ratio)  # value of shares to be in compliance
         difference = current_value_of_position - target_value
         number_of_shares = int(math.ceil(difference / buy_in_price))
 
@@ -122,6 +124,38 @@ class DataForPlayer:
                             group=player.group,
                             order_type=OrderType.BID.value,
                             price=cu(buy_in_price),
+                            quantity=number_of_shares,
+                            is_buy_in=True)
+
+    def set_mv_debt_future(self, margin_ratio, market_price):
+        b1 = self.cash_result < 0
+        b2 = margin_ratio * abs(market_price * self.shares_result) <= self.cash_result
+        self.mv_short_future = b1 and b2
+
+    def is_sell_off_required(self):
+        return self.player.is_auto_sell() and self.mv_debt_future
+
+    def generate_sell_off_order(self, market_price):
+        """
+        Generate a sell-off order.
+        @param market_price: The market price
+         @return: DataForOrder
+        """
+        margin_premium = scf.get_margin_premium(self.player)
+        target_ratio = scf.get_margin_target_ratio(self.player)
+        price_multiplier = 1 - margin_premium
+        sell_off_price = int(round(market_price * price_multiplier))  # premium of current market price
+        stock_value = abs(self.shares_result * sell_off_price)
+        cash_position = self.cash_result
+        target_value = math.floor(stock_value * target_ratio)  # value of shares to be in compliance
+        difference = cash_position + target_value
+        number_of_shares = int(math.ceil(difference / sell_off_price))
+
+        player = self.player
+        return DataForOrder(player=player,
+                            group=player.group,
+                            order_type=OrderType.OFFER.value,
+                            price=cu(sell_off_price),
                             quantity=number_of_shares,
                             is_buy_in=True)
 
@@ -146,7 +180,8 @@ class DataForPlayer:
             eq_with_none(self.dividend_earned, other.dividend_earned),
             eq_with_none(self.interest_earned, other.interest_earned),
             eq_with_none(self.cash_result, other.cash_result),
-            eq_with_none(self.margin_violation_future, other.margin_violation_future)
+            eq_with_none(self.mv_short_future, other.mv_short_future),
+            eq_with_none(self.mv_debt_future, other.mv_debt_future)
         ))
 
 

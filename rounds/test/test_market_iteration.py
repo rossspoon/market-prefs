@@ -111,7 +111,7 @@ class TestMarketIteration(unittest.TestCase):
 
         orders = [p1_b_10_05, p2_b_10_06, p1_b_11_05, p2_b_11_06, p2_o_05_05, p1_o_05_06, p2_o_06_05,
                   p1_o_06_07]
-        cm = self
+        self
 
         # Execute
         d = get_orders_by_player(orders)
@@ -203,7 +203,7 @@ class TestMarketIteration(unittest.TestCase):
         # Set up
         d4p = DataForPlayer(p1)
         d4p.get_new_player_position = MagicMock()
-        d4p.set_mv_future = MagicMock()
+        d4p.set_mv_short_future = MagicMock()
         d4p.is_buy_in_required = MagicMock(return_value=False)
         d4p.generate_buy_in_order = MagicMock(return_value=buy_in_p1)
 
@@ -215,7 +215,7 @@ class TestMarketIteration(unittest.TestCase):
         # Assert
         self.assertIsNone(bi)
         d4p.get_new_player_position.assert_called_with([], 4, .1, 44)
-        d4p.set_mv_future.assert_called_with(.2, 44)
+        d4p.set_mv_short_future.assert_called_with(.2, 44)
         d4p.is_buy_in_required.assert_called_once()
         d4p.generate_buy_in_order.assert_not_called()
 
@@ -223,7 +223,7 @@ class TestMarketIteration(unittest.TestCase):
         # Set up
         d4p = DataForPlayer(p1)
         d4p.get_new_player_position = MagicMock()
-        d4p.set_mv_future = MagicMock()
+        d4p.set_mv_short_future = MagicMock()
         d4p.is_buy_in_required = MagicMock(return_value=True)
         d4p.generate_buy_in_order = MagicMock(return_value=buy_in_p1)
 
@@ -235,9 +235,9 @@ class TestMarketIteration(unittest.TestCase):
         # Assert
         self.assertEqual(bi, buy_in_p1)
         d4p.get_new_player_position.assert_called_with([], 4, .1, 44)
-        d4p.set_mv_future.assert_called_with(.2, 44)
+        d4p.set_mv_short_future.assert_called_with(.2, 44)
         d4p.is_buy_in_required.assert_called_once()
-        d4p.generate_buy_in_order.assert_called_with(44, .3, .4)
+        d4p.generate_buy_in_order.assert_called_with(44)
 
     def test_run_iteration(self):
         # Set up

@@ -36,13 +36,13 @@ class MarketIteration:
         self.fill_orders(market_price)
 
         # Compute new player positions
-        itr_buy_ins = []
+        auto_transes = []
         for data_for_player in self.players:
-            buy_in_order = self.compute_player_position(data_for_player, market_price)
-            if buy_in_order:
-                itr_buy_ins.append(buy_in_order)
+            auto_trans = self.compute_player_position(data_for_player, market_price)
+            if auto_trans:
+                auto_transes.append(auto_trans)
 
-        return itr_buy_ins
+        return auto_transes
 
     def fill_orders(self, market_price):
         of = OrderFill(concat_or_null([self.bids, self.offers, self.buy_ins]))
@@ -59,14 +59,16 @@ class MarketIteration:
     def compute_player_position(self, data_for_player, market_price):
         orders = self.orders_by_player[data_for_player.player]
         data_for_player.get_new_player_position(orders, self.dividend, self.interest_rate, market_price)
-        data_for_player.set_mv_future(self.margin_ratio, market_price)
+        data_for_player.set_mv_short_future(self.margin_ratio, market_price)
         # determine buy-in orders
         # add them to the proper lists
         if data_for_player.is_buy_in_required():
-            premium = self.margin_premium
-            buy_in_order = data_for_player.generate_buy_in_order(market_price, premium,
-                                                                 self.margin_target_ratio)
+            buy_in_order = data_for_player.generate_buy_in_order(market_price)
             return buy_in_order
+
+        if data_for_player.is_sell_off_required():
+            sell_off_order = data_for_player.generate_sell_off_order(market_price)
+            return sell_off_order
 
         return None
 

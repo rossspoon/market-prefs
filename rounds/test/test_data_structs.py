@@ -1,5 +1,7 @@
 import unittest
 
+from otree.models import Session
+
 from rounds.call_market import CallMarket
 from rounds.data_structs import DataForPlayer, DataForOrder
 from rounds.models import *
@@ -24,8 +26,22 @@ o_06_07 = Order(order_type=OFFER, price=6, quantity=7)
 
 all_orders = [b_10_05, b_10_06, b_11_05, b_11_06, o_05_05, o_05_06, o_06_05, o_06_07]
 
+
+def get_session():
+    session = Session()
+    config = {scf.SK_MARGIN_RATIO: MARGIN_RATIO,
+              scf.SK_MARGIN_TARGET_RATIO: MARGIN_TARGET,
+              scf.SK_MARGIN_PREMIUM: MARGIN_PREM}
+    session.config = config
+    return session
+
+
 def basic_player():
-    return Player(shares=100, cash=200)
+    player = Player()
+    player.shares = 100
+    player.cash = 200
+    player.session = get_session()
+    return player
 
 
 class TestDataForPlayer(unittest.TestCase):
@@ -46,7 +62,7 @@ class TestDataForPlayer(unittest.TestCase):
         self.assertIsNone(d4p.dividend_earned)
         self.assertIsNone(d4p.interest_earned)
         self.assertIsNone(d4p.cash_result)
-        self.assertFalse(d4p.margin_violation_future)
+        self.assertFalse(d4p.mv_short_future)
 
     def test_get_new_player_pos_net_buy(self):
         # Set-up
@@ -123,10 +139,10 @@ class TestDataForPlayer(unittest.TestCase):
         d4p.shares_result = 0
 
         # Execute
-        d4p.set_mv_future(MARGIN_RATIO, 60)
+        d4p.set_mv_short_future(MARGIN_RATIO, 60)
 
         # Assert
-        self.assertFalse(d4p.margin_violation_future)
+        self.assertFalse(d4p.mv_short_future)
 
     def test_is_margin_violation_pos_shares(self):
         # Set-up
@@ -136,10 +152,10 @@ class TestDataForPlayer(unittest.TestCase):
         d4p.shares_result = 1
 
         # Execute
-        d4p.set_mv_future(MARGIN_RATIO, 60)
+        d4p.set_mv_short_future(MARGIN_RATIO, 60)
 
         # Assert
-        self.assertFalse(d4p.margin_violation_future)
+        self.assertFalse(d4p.mv_short_future)
 
     def test_is_margin_violation_neg_shares_under(self):
         # Set-up
@@ -149,10 +165,10 @@ class TestDataForPlayer(unittest.TestCase):
         d4p.shares_result = -1
 
         # Execute
-        d4p.set_mv_future(MARGIN_RATIO, 49)
+        d4p.set_mv_short_future(MARGIN_RATIO, 49)
 
         # Assert
-        self.assertFalse(d4p.margin_violation_future)
+        self.assertFalse(d4p.mv_short_future)
 
     def test_is_margin_violation_neg_shares_over(self):
         # Set-up
@@ -162,10 +178,10 @@ class TestDataForPlayer(unittest.TestCase):
         d4p.shares_result = -1
 
         # Execute
-        d4p.set_mv_future(MARGIN_RATIO, 50)
+        d4p.set_mv_short_future(MARGIN_RATIO, 50)
 
         # Assert
-        self.assertFalse(d4p.margin_violation_future)
+        self.assertFalse(d4p.mv_short_future)
 
     def test_get_buy_in_players(self):
         # Set-up
@@ -179,13 +195,13 @@ class TestDataForPlayer(unittest.TestCase):
         p4.periods_until_auto_buy = 0
 
         d1 = DataForPlayer(p1)
-        d1.margin_violation_future = False
+        d1.mv_short_future = False
         d2 = DataForPlayer(p2)
-        d2.margin_violation_future = True
+        d2.mv_short_future = True
         d3 = DataForPlayer(p3)
-        d3.margin_violation_future = False
+        d3.mv_short_future = False
         d4 = DataForPlayer(p4)
-        d4.margin_violation_future = True
+        d4.mv_short_future = True
 
         # Execute / Assert
         self.assertFalse(d1.is_buy_in_required())
@@ -201,7 +217,7 @@ class TestDataForPlayer(unittest.TestCase):
         d4p.cash_result = 1000
 
         # Execute
-        o = d4p.generate_buy_in_order(60, MARGIN_PREM, MARGIN_TARGET)
+        o = d4p.generate_buy_in_order(60)
 
         # Assert
         self.assertTrue(o.is_buy_in)
