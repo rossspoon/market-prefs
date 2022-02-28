@@ -64,6 +64,8 @@ class DataForOrder:
             eq_with_none(self.is_buy_in, other.is_buy_in)
         ))
 
+    def is_sell(self):
+        return self.order_type == OrderType.OFFER.value
 
 class DataForPlayer:
     def __init__(self, player: Player):
@@ -129,8 +131,8 @@ class DataForPlayer:
 
     def set_mv_debt_future(self, margin_ratio, market_price):
         b1 = self.cash_result < 0
-        b2 = margin_ratio * abs(market_price * self.shares_result) <= self.cash_result
-        self.mv_short_future = b1 and b2
+        b2 = abs(self.cash_result) >= margin_ratio * market_price * self.shares_result
+        self.mv_debt_future = b1 and b2
 
     def is_sell_off_required(self):
         return self.player.is_auto_sell() and self.mv_debt_future
@@ -148,7 +150,7 @@ class DataForPlayer:
         stock_value = abs(self.shares_result * sell_off_price)
         cash_position = self.cash_result
         target_value = math.floor(stock_value * target_ratio)  # value of shares to be in compliance
-        difference = cash_position + target_value
+        difference = abs(cash_position + target_value)
         number_of_shares = int(math.ceil(difference / sell_off_price))
 
         player = self.player

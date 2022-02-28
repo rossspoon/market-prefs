@@ -8,12 +8,12 @@ import common.SessionConfigFunctions as scf
 
 class MarketIteration:
 
-    def __init__(self, bids, offers, players, session_config, dividend, last_price, buy_ins=None):
+    def __init__(self, bids, offers, players, session_config, dividend, last_price, buy_ins=None, sell_offs=None):
         self.bids = ensure_order_data(bids)
         self.offers = ensure_order_data(offers)
         self.buy_ins = ensure_order_data(buy_ins)
-        all_orders = concat_or_null([self.bids, self.offers, self.buy_ins])
-        self.orders_by_player = get_orders_by_player(all_orders)
+        self.sell_offs = ensure_order_data(sell_offs)
+        self.orders_by_player = get_orders_by_player(self.get_all_orders())
         self.players = ensure_player_data(players)
         self.dividend = dividend
         self.last_price = last_price
@@ -36,23 +36,27 @@ class MarketIteration:
         self.fill_orders(market_price)
 
         # Compute new player positions
-        auto_transes = []
+        auto_buys = []
+        auto_sells = []
         for data_for_player in self.players:
-            auto_trans = self.compute_player_position(data_for_player, market_price)
-            if auto_trans:
-                auto_transes.append(auto_trans)
+            buy, sell = self.compute_player_position(data_for_player, market_price)
+            if buy:
+                auto_buys.append(buy)
+            elif sell:
+                auto_sells.append(sell)
 
-        return auto_transes
+        return auto_buys, auto_sells
 
     def fill_orders(self, market_price):
-        of = OrderFill(concat_or_null([self.bids, self.offers, self.buy_ins]))
+        of = OrderFill(concat_or_null([self.bids, self.offers, self.buy_ins, self.sell_offs]))
         of.fill_orders(market_price)
 
     def get_market_price(self):
         # Assemble all bids including buy-ins
         all_buys = concat_or_null([self.bids, self.buy_ins])
+        all_sells = concat_or_null([self.offers, self.sell_offs])
         # Calculate the Market Price
-        mp = MarketPrice(all_buys, self.offers)
+        mp = MarketPrice(all_buys, all_sells)
         market_price, market_volume = mp.get_market_price(last_price=self.last_price)
         return market_price, market_volume
 
@@ -60,23 +64,22 @@ class MarketIteration:
         orders = self.orders_by_player[data_for_player.player]
         data_for_player.get_new_player_position(orders, self.dividend, self.interest_rate, market_price)
         data_for_player.set_mv_short_future(self.margin_ratio, market_price)
+        data_for_player.set_mv_debt_future(self.margin_ratio, market_price)
+
         # determine buy-in orders
         # add them to the proper lists
+        buy_in_order = None
         if data_for_player.is_buy_in_required():
             buy_in_order = data_for_player.generate_buy_in_order(market_price)
-            return buy_in_order
 
+        sell_off_order = None
         if data_for_player.is_sell_off_required():
             sell_off_order = data_for_player.generate_sell_off_order(market_price)
-            return sell_off_order
 
-        return None
+        return buy_in_order, sell_off_order
 
     def get_all_orders(self):
-        if self.buy_ins is None:
-            return self.bids + self.offers
-        else:
-            return self.bids + self.offers + self.buy_ins
+        return concat_or_null([self.bids, self.offers, self.buy_ins, self.sell_offs])
 
 
 def get_orders_by_player(orders):

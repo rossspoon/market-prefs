@@ -213,10 +213,12 @@ def test_object_attribute(obj, actions, attr):
 
         try:
             expect(actual, expected)
+        # TODO: Handle this in a collective way
         except ExpectError as err:
             if type(obj) is Group:
-                raise ExpectError(f"In round {actions.round_number}: {err}")
-
+                raise ExpectError(f"In round {actions.round_number}: Testing {attr}: {err}")
+            if type(obj) is Player:
+                raise ExpectError(f"In round {actions.round_number}: Testing {attr}: {err}")
 
 #############################################################################################################
 class ScriptedBot(Bot):
@@ -240,23 +242,25 @@ class ScriptedBot(Bot):
             first_time_in_round = True
             ScriptedBot.last_round_tested = round_number
 
-        if first_time_in_round:
-            print(f"===========\n\tROUND {round_number}")
-
         player = self.player
         actor_name = market.get_actor_name(player)
-        print(f"Player: {actor_name}")
         this_round: ActorRound = market.for_player_and_round(player, round_number)
         last_round: ActorRound = market.for_player_and_round(player, round_number - 1)
 
         # last round tests are usually to test market results
         if last_round:
+            print(f"Player Tests: {actor_name}")
             self.last_round_tests(last_round)
 
         # market level tests
         last_round_market: MarketRound = market.for_round(round_number - 1)
         if last_round_market and first_time_in_round:
+            print(f"Market-level Tests")
             self.last_round_market_tests(last_round_market)
+
+        # display the round number after finishing off the last round
+        if first_time_in_round:
+            print(f"===========\n\tROUND {round_number}")
 
         # Set up Player for round
         if this_round and this_round.do_set():
@@ -334,27 +338,50 @@ def call_live_method(method, **kwargs):
 #############################################################################################################
 market = MarketTests().round(1) \
     .expect(price=500, volume=1) \
-        .actor("Buyer", lambda ar: ar.set(1000, 5)
-               .buy(1, at=500)
-               .expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
-        .actor("Seller", lambda ar: ar.set(1000, 5)
-               .sell(1, at=500)
-               .expect(cash=1500, shares=4, periods_until_auto_buy=-99)) \
-        .actor("Treated", lambda ar: ar.set(2000, -2)
-               .expect(cash=2000, shares=-2, periods_until_auto_buy=0)) \
-        .finish() \
+    .actor("Buyer", lambda ar: ar.set(1000, 5)
+           .buy(1, at=500)
+           .expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
+    .actor("Seller", lambda ar: ar.set(1000, 5)
+           .sell(1, at=500)
+           .expect(cash=1500, shares=4, periods_until_auto_buy=-99)) \
+    .actor("Treated", lambda ar: ar.set(2000, -2)
+           .expect(cash=2000, shares=-2, periods_until_auto_buy=0)) \
+    .finish() \
     .round(2) \
-        .expect(price=500, volume=0) \
-        .actor("Buyer", lambda ar: ar.expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
-        .actor("Seller", lambda ar: ar.expect(cash=1500, shares=4, periods_until_auto_buy=-99,
-                                              interest_earned=0, dividend_earned=0)) \
-        .actor("Treated", lambda ar: ar.expect(cash=2000, shares=-2, periods_until_auto_buy=0)) \
-        .finish() \
+    .expect(price=500, volume=0) \
+    .actor("Buyer", lambda ar: ar.expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
+    .actor("Seller", lambda ar: ar.expect(cash=1500, shares=4, periods_until_auto_buy=-99,
+                                          interest_earned=None, dividend_earned=None)) \
+    .actor("Treated", lambda ar: ar.expect(cash=2000, shares=-2, periods_until_auto_buy=0)) \
+    .finish() \
     .round(3) \
-        .expect(price=550, volume=1) \
-        .actor("Buyer", lambda ar: ar.expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
-        .actor("Seller", lambda ar: ar.sell(1, at=500)
-               .expect(cash=2050, shares=3, periods_until_auto_buy=-99,
-                       interest_earned=0, dividend_earned=0)) \
-        .actor("Treated", lambda ar: ar.expect(cash=1450, shares=-1, periods_until_auto_buy=None)) \
-        .finish()
+    .expect(price=550, volume=1) \
+    .actor("Buyer", lambda ar: ar.expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
+    .actor("Seller", lambda ar: ar.sell(1, at=500)
+           .expect(cash=2050, shares=3, periods_until_auto_buy=-99)) \
+    .actor("Treated", lambda ar: ar.expect(cash=1450, shares=-1, periods_until_auto_buy=-99)) \
+    .finish() \
+    .round(4) \
+    .expect(price=500, volume=1) \
+    .actor("Buyer", lambda ar: ar.set(2000, 5)
+           .buy(1, at=500)
+           .expect(cash=1500, shares=6, periods_until_auto_sell=-99)) \
+    .actor("Seller", lambda ar: ar.set(1000, 5)
+           .sell(1, at=500)
+           .expect(cash=1500, shares=4, periods_until_auto_sell=-99)) \
+    .actor("Treated", lambda ar: ar.set(-1000, 4)
+           .expect(cash=-1000, shares=4, periods_until_auto_sell=0, periods_until_auto_buy=-99)) \
+    .finish() \
+    .round(5) \
+    .expect(price=500, volume=0) \
+    .actor("Buyer", lambda ar: ar.expect(cash=1500, shares=6, periods_until_auto_buy=-99)) \
+    .actor("Seller", lambda ar: ar.expect(cash=1500, shares=4, periods_until_auto_buy=-99)) \
+    .actor("Treated", lambda ar: ar.expect(cash=-1000, shares=4, periods_until_auto_sell=0)) \
+    .finish() \
+    .round(6) \
+    .expect(price=450, volume=2) \
+    .actor("Buyer", lambda ar: ar.buy(4, at=450)
+           .expect(cash=600, shares=8, periods_until_auto_sell=-99)) \
+    .actor("Seller", lambda ar: ar.expect(cash=1500, shares=4, periods_until_auto_sell=-99)) \
+    .actor("Treated", lambda ar: ar.expect(cash=-100, shares=2, periods_until_auto_sell=-99)) \
+    .finish()
