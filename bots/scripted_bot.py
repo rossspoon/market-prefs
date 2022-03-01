@@ -219,6 +219,8 @@ def test_object_attribute(obj, actions, attr):
                 raise ExpectError(f"In round {actions.round_number}: Testing {attr}: {err}")
             if type(obj) is Player:
                 raise ExpectError(f"In round {actions.round_number}: Testing {attr}: {err}")
+                # print(f"In round {actions.round_number}: Testing {attr}: {err}")
+
 
 #############################################################################################################
 class ScriptedBot(Bot):
@@ -296,7 +298,7 @@ class ScriptedBot(Bot):
 
 
 # LIVE METHOD TESTS
-def test_place_order(method, id_, type_, price, quant, valid=True, code_expect=0):
+def test_place_order(method, id_, type_, price, quant, valid=True, code_expect=None):
     _price = str(price)
     _quant = str(quant)
     _type = str(type_)
