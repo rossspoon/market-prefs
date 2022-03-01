@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch, call
 
-from rounds import Order, Player, OrderType
+from rounds import Order, Player, OrderType, Group
 from rounds.call_market_price import MarketPrice, OrderFill
 from rounds.data_structs import DataForOrder, DataForPlayer
 from rounds.market_iteration import MarketIteration
@@ -242,7 +242,10 @@ class TestMarketIteration(unittest.TestCase):
     def test_run_iteration(self):
         # Set up
         buy_in_data = DataForOrder(buy_in_p1)
-        mi = MarketIteration(None, None, [p1, p2], sess_config, 4, -98)
+        group = Group()
+        group.get_players = MagicMock(return_value=[p1, p2])
+        group.get_last_period_price = MagicMock(return_value=-98)
+        mi = MarketIteration(None, None, group, 4)
         mi.get_market_price = MagicMock(return_value=(200, 100))
         mi.fill_orders = MagicMock(return_value=([], []))
         mi.compute_player_position = MagicMock()

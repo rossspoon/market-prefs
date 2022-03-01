@@ -8,6 +8,18 @@ SESSION_CONFIGS = [
         random_hist=False
     )
     , dict(
+        name='rounds_sell_off',
+        app_sequence=['rounds', 'survey'],
+        num_demo_participants=2,
+        random_hist=False,
+        treated_ids='1 0',
+        cash_endowment_control=10000,
+        shares_endowment_control=10,
+        cash_endowment_treatment=-10000,
+        shares_endowment_treatment=10,
+        initial_price=2000
+    )
+    , dict(
         name='rounds_test',
         app_sequence=['rounds'],
         num_demo_participants=3,
