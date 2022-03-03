@@ -205,27 +205,11 @@ class MarketRound:
         return key in self.expect_values
 
 
-def test_object_attribute(obj, actions, attr):
-    if actions.expects(attr):
-        print(f"in round {actions.round_number}: testing: ", attr)
-        actual = obj.field_maybe_none(attr)
-        expected = actions.expect_values.get(attr)
-
-        try:
-            expect(actual, expected)
-        # TODO: Handle this in a collective way
-        except ExpectError as err:
-            if type(obj) is Group:
-                raise ExpectError(f"In round {actions.round_number}: Testing {attr}: {err}")
-            if type(obj) is Player:
-                raise ExpectError(f"In round {actions.round_number}: Testing {attr}: {err}")
-                # print(f"In round {actions.round_number}: Testing {attr}: {err}")
-
-
 #############################################################################################################
 class ScriptedBot(Bot):
     first_time = True
-    last_round_tested = 0
+    number_of_bots_in_round = defaultdict(int)
+    errors_by_round = defaultdict(list)
 
     def play_round(self):
         # The first time we get here, we need to assign players to all the actor objects
@@ -239,10 +223,10 @@ class ScriptedBot(Bot):
         if round_number > market.get_num_defined_rounds() + 1:
             return
 
-        first_time_in_round = False
-        if ScriptedBot.last_round_tested < round_number:
-            first_time_in_round = True
-            ScriptedBot.last_round_tested = round_number
+        ScriptedBot.number_of_bots_in_round[round_number] += 1
+        number_of_bots = len(self.group.get_players())
+        num_bots_already_in_round = ScriptedBot.number_of_bots_in_round[round_number]
+        last_bot_in_round = number_of_bots == num_bots_already_in_round
 
         player = self.player
         actor_name = market.get_actor_name(player)
@@ -255,13 +239,15 @@ class ScriptedBot(Bot):
             self.last_round_tests(last_round)
 
         # market level tests
+        # and present all test errors for that round
         last_round_market: MarketRound = market.for_round(round_number - 1)
-        if last_round_market and first_time_in_round:
+        if last_round_market and last_bot_in_round:
             print(f"Market-level Tests")
             self.last_round_market_tests(last_round_market)
+            self.show_errors()
 
         # display the round number after finishing off the last round
-        if first_time_in_round:
+        if last_bot_in_round:
             print(f"===========\n\tROUND {round_number}")
 
         # Set up Player for round
@@ -279,7 +265,7 @@ class ScriptedBot(Bot):
 
         player = self.player
         for var in vars(player):
-            test_object_attribute(player, actions, var)
+            self.test_object_attribute(player, actions, var)
 
     def after_market_page_tests(self, actor, actions):
         pass
@@ -294,7 +280,36 @@ class ScriptedBot(Bot):
         if self.round_number > 1:
             group = self.group.in_round(self.round_number - 1)
             for var in vars(group):
-                test_object_attribute(group, last_round_market, var)
+                self.test_object_attribute(group, last_round_market, var)
+
+    def test_object_attribute(self, obj, actions, attr):
+        if not actions.expects(attr):
+            return
+
+        print(f"in round {actions.round_number}: testing: ", attr)
+        actual = obj.field_maybe_none(attr)
+        expected = actions.expect_values.get(attr)
+
+        # Collect error for this attribute and save it on the object
+        error = None
+        try:
+            expect(actual, expected)
+        except ExpectError as err:
+            if type(obj) is Group:
+                error = f"In round {actions.round_number}: Testing {attr}: {err}"
+            if type(obj) is Player:
+                actor_name = market.get_actor_name(obj)
+                error = f"Round {actions.round_number}: Actor {actor_name}: Testing {attr}: {err}"
+
+        # Save away the error
+        if error:
+            ScriptedBot.errors_by_round[self.round_number].append(error)
+
+    def show_errors(self):
+        errors = ScriptedBot.errors_by_round[self.round_number]
+        if errors:
+            msg = "\n".join(errors)
+            raise ExpectError(msg)
 
 
 # LIVE METHOD TESTS
@@ -346,15 +361,15 @@ market = MarketTests().round(1) \
     .actor("Seller", lambda ar: ar.set(1000, 5)
            .sell(1, at=500)
            .expect(cash=1500, shares=4, periods_until_auto_buy=-99)) \
-    .actor("Treated", lambda ar: ar.set(2000, -2)
-           .expect(cash=2000, shares=-2, periods_until_auto_buy=0)) \
+    .actor("Treated", lambda ar: ar.set(2000, -8)
+           .expect(cash=2000, shares=-8, periods_until_auto_buy=0)) \
     .finish() \
     .round(2) \
     .expect(price=500, volume=0) \
     .actor("Buyer", lambda ar: ar.expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
     .actor("Seller", lambda ar: ar.expect(cash=1500, shares=4, periods_until_auto_buy=-99,
                                           interest_earned=None, dividend_earned=None)) \
-    .actor("Treated", lambda ar: ar.expect(cash=2000, shares=-2, periods_until_auto_buy=0)) \
+    .actor("Treated", lambda ar: ar.expect(cash=2000, shares=-8, periods_until_auto_buy=0)) \
     .finish() \
     .round(3) \
     .expect(price=550, volume=1) \
