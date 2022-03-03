@@ -46,7 +46,7 @@ class CallMarket:
 
         # If the loop exited because of a lack of supply
         # Run the market one last time with the last set of buy ins
-        if not iteration.enough_demand() and not iteration.enough_supply():
+        if not iteration.enough_demand() or not iteration.enough_supply():
             iteration = MarketIteration(self.bids, self.offers, self.group, dividend,
                                         buy_ins=buy_ins, sell_offs=sell_offs)
             iteration.run_iteration()
