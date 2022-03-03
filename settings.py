@@ -15,7 +15,7 @@ SESSION_CONFIGS = [
         treated_ids='1 0',
         cash_endowment_control=10000,
         shares_endowment_control=10,
-        cash_endowment_treatment=-10000,
+        cash_endowment_treatment=-10100,
         shares_endowment_treatment=10,
         initial_price=2000
     )
@@ -96,7 +96,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     margin_ratio=.5,
     margin_premium=0.1,
     margin_target_ratio=.3,
-    auto_trans_delay=0,
+    auto_trans_delay=1,
 
     fraction_of_short_starts=.5,
     cash_endowment_control=5000,

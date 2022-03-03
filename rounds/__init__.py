@@ -438,7 +438,7 @@ def f2_choices(player: Player):
 
 
 def only_show_for_rounds_app(player: Player):
-    return scf.get_session_name(player) == 'rounds'
+    return scf.get_session_name(player) in ['rounds', 'rounds_sell_off']
 
 
 ############
@@ -485,11 +485,20 @@ class MarketWaitPage(WaitPage):
     after_all_players_arrive = calculate_market
 
 
+# TODO: Make this page say something about bankruptcy.
 class RoundResultsPage(Page):
     form_model = 'player'
     is_displayed = only_show_for_rounds_app
     js_vars = get_js_vars
     vars_for_template = vars_for_round_results_template
+
+    @staticmethod
+    def app_after_this_page(player: Player, upcoming_apps):
+        if not upcoming_apps or len(upcoming_apps) == 0:
+            return None
+
+        if player.cash_result < 0 and player.shares_result < 0:
+            return upcoming_apps[0]
 
 
 page_sequence = [PreMarketWait, Market, ForecastPage, MarketWaitPage, RoundResultsPage]
