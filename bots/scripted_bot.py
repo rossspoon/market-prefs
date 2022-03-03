@@ -361,15 +361,15 @@ market = MarketTests().round(1) \
     .actor("Seller", lambda ar: ar.set(1000, 5)
            .sell(1, at=500)
            .expect(cash=1500, shares=4, periods_until_auto_buy=-99)) \
-    .actor("Treated", lambda ar: ar.set(2000, -8)
-           .expect(cash=2000, shares=-8, periods_until_auto_buy=0)) \
+    .actor("Treated", lambda ar: ar.set(2000, -2)
+           .expect(cash=2000, shares=-2, periods_until_auto_buy=0)) \
     .finish() \
     .round(2) \
     .expect(price=500, volume=0) \
     .actor("Buyer", lambda ar: ar.expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
     .actor("Seller", lambda ar: ar.expect(cash=1500, shares=4, periods_until_auto_buy=-99,
                                           interest_earned=None, dividend_earned=None)) \
-    .actor("Treated", lambda ar: ar.expect(cash=2000, shares=-8, periods_until_auto_buy=0)) \
+    .actor("Treated", lambda ar: ar.expect(cash=2000, shares=-2, periods_until_auto_buy=0)) \
     .finish() \
     .round(3) \
     .expect(price=550, volume=1) \
