@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import MagicMock, patch, call
 
+from otree.models import Session
+
 from rounds import Order, Player, OrderType, Group
 from rounds.call_market_price import MarketPrice, OrderFill
 from rounds.data_structs import DataForOrder, DataForPlayer
@@ -25,6 +27,7 @@ o_06_05 = Order(order_type=OFFER, price=6, quantity=5)
 o_06_07 = Order(order_type=OFFER, price=6, quantity=7)
 
 buy_in_p1 = Order(player=p1, order_type=BID, price=8, quantity=1)
+sell_off_p1 = Order(player=p1, order_type=OFFER, price=8, quantity=1)
 
 all_bids = [b_10_05, b_10_06, b_11_05, b_11_06]
 all_offers = [o_05_05, o_05_06, o_06_05, o_06_07]
@@ -35,11 +38,21 @@ sess_config = dict(interest_rate=.1,
                    margin_target_ratio=.4)
 
 
+def get_group(players=[], market_price=98):
+    group = Group()
+    group.get_players = MagicMock(return_value=players)
+    group.get_last_period_price = MagicMock(return_value=market_price)
+    group.session = Session()
+    group.session.config = sess_config
+    return group
+
+
 class TestMarketIteration(unittest.TestCase):
 
     def test_init(self):
         # Execute
-        mi = MarketIteration(all_bids, all_offers, all_players, sess_config, 4, -99)
+        group = get_group(players=all_players, market_price=-99)
+        mi = MarketIteration(all_bids, all_offers, group, 4)
 
         # Assert
         self.assertEqual(len(mi.bids), 4)
@@ -78,9 +91,10 @@ class TestMarketIteration(unittest.TestCase):
         # Set-up
         buy_ins = [buy_in_p1]
         buy_in_data = ensure_order_data(buy_ins)
+        group = get_group(players=all_players, market_price=-99)
 
         # Execute
-        mi = MarketIteration(None, None, all_players, sess_config, 4, -99, buy_ins=buy_ins)
+        mi = MarketIteration(None, None, group, 4, buy_ins=buy_ins)
 
         # Assert
         self.assertEqual(mi.dividend, 4)
@@ -142,7 +156,9 @@ class TestMarketIteration(unittest.TestCase):
                 # Set up
                 bids_data = ensure_order_data(all_bids)
                 offer_data = ensure_order_data(all_offers)
-                mi = MarketIteration(all_bids, all_offers, all_players, sess_config, 4, -99)
+                group = get_group(players=all_players, market_price=-99)
+
+                mi = MarketIteration(all_bids, all_offers, group, 4)
 
                 # Execute
                 price, volume = mi.get_market_price()
@@ -159,7 +175,8 @@ class TestMarketIteration(unittest.TestCase):
                 # Set up
                 bids_data = ensure_order_data(all_bids + [buy_in_p1])
                 offer_data = ensure_order_data(all_offers)
-                mi = MarketIteration(all_bids, all_offers, all_players, sess_config, 4, -98, buy_ins=[buy_in_p1])
+                group = get_group(players=all_players, market_price=-98)
+                mi = MarketIteration(all_bids, all_offers, group, 4, buy_ins=[buy_in_p1])
 
                 # Execute
                 price, volume = mi.get_market_price()
@@ -175,7 +192,9 @@ class TestMarketIteration(unittest.TestCase):
             with patch.object(OrderFill, 'fill_orders', return_value=([], [])) as mock_gmp:
                 bids_data = ensure_order_data(all_bids)
                 offer_data = ensure_order_data(all_offers)
-                mi = MarketIteration(all_bids, all_offers, all_players, sess_config, 4, -98)
+                group = get_group(players=all_players, market_price=-98)
+
+                mi = MarketIteration(all_bids, all_offers, group, 4)
 
                 # Execute
                 mi.fill_orders(-78)
@@ -190,7 +209,9 @@ class TestMarketIteration(unittest.TestCase):
                 bids_data = ensure_order_data(all_bids)
                 offer_data = ensure_order_data(all_offers)
                 buy_in_data = ensure_order_data([buy_in_p1])
-                mi = MarketIteration(all_bids, all_offers, all_players, sess_config, 4, -98, buy_ins=[buy_in_p1])
+                group = get_group(players=all_players, market_price=-98)
+
+                mi = MarketIteration(all_bids, all_offers, group, 4, buy_ins=[buy_in_p1])
 
                 # Execute
                 mi.fill_orders(-78)
@@ -204,58 +225,69 @@ class TestMarketIteration(unittest.TestCase):
         d4p = DataForPlayer(p1)
         d4p.get_new_player_position = MagicMock()
         d4p.set_mv_short_future = MagicMock()
+        d4p.set_mv_debt_future = MagicMock()
         d4p.is_buy_in_required = MagicMock(return_value=False)
         d4p.generate_buy_in_order = MagicMock(return_value=buy_in_p1)
+        group = get_group()
 
-        mi = MarketIteration(None, None, None, sess_config, 4, -98)
+        mi = MarketIteration(None, None, group, 4)
 
         # Execute
-        bi = mi.compute_player_position(d4p, 44)
+        buy_in_order, sell_off_order = mi.compute_player_position(d4p, 44)
 
         # Assert
-        self.assertIsNone(bi)
+        self.assertIsNone(buy_in_order)
+        self.assertIsNone(sell_off_order)
         d4p.get_new_player_position.assert_called_with([], 4, .1, 44)
         d4p.set_mv_short_future.assert_called_with(.2, 44)
         d4p.is_buy_in_required.assert_called_once()
         d4p.generate_buy_in_order.assert_not_called()
+        group.get_players.assert_called_once()
+        group.get_last_period_price.assert_called_once()
+        self.assertEqual(mi.last_price, 98)
 
     def test_compute_player_pos_with_buy_in(self):
         # Set up
         d4p = DataForPlayer(p1)
         d4p.get_new_player_position = MagicMock()
         d4p.set_mv_short_future = MagicMock()
+        d4p.set_mv_debt_future = MagicMock()
         d4p.is_buy_in_required = MagicMock(return_value=True)
         d4p.generate_buy_in_order = MagicMock(return_value=buy_in_p1)
+        group = get_group()
 
-        mi = MarketIteration(None, None, None, sess_config, 4, -98)
+        mi = MarketIteration(None, None, group, 4)
 
         # Execute
-        bi = mi.compute_player_position(d4p, 44)
+        buy_order, sell_order = mi.compute_player_position(d4p, 44)
 
         # Assert
-        self.assertEqual(bi, buy_in_p1)
+        self.assertEqual(buy_order, buy_in_p1)
+        self.assertIsNone(sell_order)
         d4p.get_new_player_position.assert_called_with([], 4, .1, 44)
         d4p.set_mv_short_future.assert_called_with(.2, 44)
         d4p.is_buy_in_required.assert_called_once()
         d4p.generate_buy_in_order.assert_called_with(44)
+        group.get_players.assert_called_once()
+        group.get_last_period_price.assert_called_once()
+        self.assertEqual(mi.last_price, 98)
 
     def test_run_iteration(self):
         # Set up
         buy_in_data = DataForOrder(buy_in_p1)
-        group = Group()
-        group.get_players = MagicMock(return_value=[p1, p2])
-        group.get_last_period_price = MagicMock(return_value=-98)
+        group = get_group(players=[p1, p2])
         mi = MarketIteration(None, None, group, 4)
         mi.get_market_price = MagicMock(return_value=(200, 100))
         mi.fill_orders = MagicMock(return_value=([], []))
-        mi.compute_player_position = MagicMock()
-        mi.compute_player_position.side_effect = [buy_in_data, None]
+        mi.compute_player_position = MagicMock(return_value=(buy_in_data, None))
+        mi.compute_player_position.side_effect = [(buy_in_data, None), (None, None)]
 
         # Execute
-        buy_ins = mi.run_iteration()
+        buy_ins, sell_offs = mi.run_iteration()
 
         # Assert
         self.assertEqual(buy_ins, ensure_order_data([buy_in_p1]))
+        self.assertEqual(sell_offs, [])
         mi.get_market_price.assert_called_once()
         mi.fill_orders.assert_called_with(200)
         self.assertEqual(mi.compute_player_position.call_count, 2)
@@ -264,7 +296,9 @@ class TestMarketIteration(unittest.TestCase):
         mi.compute_player_position.assert_has_calls(calls, any_order=True)
 
     def test_get_all_orders_with_buy_in(self):
-        mi = MarketIteration(all_bids, all_offers, [p1, p2], sess_config, 4, -98, buy_ins=[buy_in_p1])
+        group = get_group(players=[p1, p2], market_price=-98)
+
+        mi = MarketIteration(all_bids, all_offers, group, 4, buy_ins=[buy_in_p1])
 
         # Execute
         o = mi.get_all_orders()
@@ -274,7 +308,9 @@ class TestMarketIteration(unittest.TestCase):
         self.assertEqual(o, o_data)
 
     def test_get_all_orders_no_buy_in(self):
-        mi = MarketIteration(all_bids, all_offers, [p1, p2], sess_config, 4, -98)
+        group = get_group(players=[p1, p2], market_price=-98)
+
+        mi = MarketIteration(all_bids, all_offers, group, 4)
 
         # Execute
         o = mi.get_all_orders()

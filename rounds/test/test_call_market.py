@@ -76,7 +76,6 @@ class TestCallMarket(unittest.TestCase):
             self.assertEqual(cm.bids, [b_10_05, b_10_06, b_11_05, b_11_06])
             self.assertEqual(cm.offers, [o_05_05, o_05_06, o_06_05, o_06_07])
             Order.filter.assert_called_with(group=group)
-            self.assertEqual(cm.last_price, 47)
 
     def test_get_orders_for_group(self):
         with patch.object(Order, 'filter', return_value=all_orders):
