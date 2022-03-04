@@ -28,7 +28,7 @@ SESSION_CONFIGS = [
         div_dist='.5 .5',
         margin_ratio=.5,
         margin_premium=0.1,
-        margin_target_ratio=.3,
+        margin_target_ratio=.6,
         auto_trans_delay=0,
         initial_price=0,
 
@@ -47,7 +47,7 @@ SESSION_CONFIGS = [
         div_dist='.5 .5',
         margin_ratio=.5,
         margin_premium=0.1,
-        margin_target_ratio=.3,
+        margin_target_ratio=.6,
 
         treated_ids='1 0 0',
         cash_endowment_control=5000,

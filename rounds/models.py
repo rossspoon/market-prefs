@@ -165,19 +165,22 @@ class Player(BasePlayer):
         self.periods_until_auto_sell = d.get('periods_until_auto_sell')
 
     def get_personal_stock_margin(self, price):
-        stock_pos_value = self.shares * price
-        if self.cash == 0:
+        # ABS te short value to make the formula work
+        stock_pos_value = abs(float(self.shares * price))
+        if stock_pos_value == 0:
             personal_stock_margin = 0
         else:
-            personal_stock_margin = abs(float(stock_pos_value) / float(self.cash))
+            cash_float = float(self.cash)
+            personal_stock_margin = abs((cash_float - stock_pos_value)/stock_pos_value)
         return personal_stock_margin
 
     def get_personal_cash_margin(self, price):
-        stock_pos_value = self.shares * price
-        if stock_pos_value == 0:
+        stock_pos_value = abs(self.shares * price)
+        if self.cash == 0:
             personal_cash_margin = 0
         else:
-            personal_cash_margin = abs(float(self.cash) / float(stock_pos_value))
+            cash_float = abs(self.cash)
+            personal_cash_margin = abs((stock_pos_value-cash_float)/cash_float)
         return personal_cash_margin
 
     def is_short(self):
@@ -201,7 +204,7 @@ class Player(BasePlayer):
 
         price = self.group.get_last_period_price()
         margin_ratio = scf.get_margin_ratio(self)
-        return self.is_short() and self.get_personal_stock_margin(price) >= margin_ratio
+        return self.is_short() and self.get_personal_stock_margin(price) <= margin_ratio
 
     def is_debt_margin_violation(self):
         if self.is_bankrupt():
@@ -209,7 +212,7 @@ class Player(BasePlayer):
 
         price = self.group.get_last_period_price()
         margin_ratio = scf.get_margin_ratio(self)
-        return self.is_debt() and self.get_personal_cash_margin(price) >= margin_ratio
+        return self.is_debt() and self.get_personal_cash_margin(price) <= margin_ratio
 
     def copy_results_from_previous_round(self):
         r_num = self.round_number

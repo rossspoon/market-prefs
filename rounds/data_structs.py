@@ -67,6 +67,7 @@ class DataForOrder:
     def is_sell(self):
         return self.order_type == OrderType.OFFER.value
 
+
 class DataForPlayer:
     def __init__(self, player: Player):
         self.player = player
@@ -98,9 +99,14 @@ class DataForPlayer:
         self.cash_result = int(self.player.cash + self.interest_earned + self.trans_cost + self.dividend_earned)
 
     def set_mv_short_future(self, margin_ratio, market_price):
-        b1 = self.shares_result < 0
-        b2 = margin_ratio * self.cash_result <= abs(market_price * self.shares_result)
-        self.mv_short_future = b1 and b2
+        if self.shares_result >= 0:
+            self.mv_short_future = False
+            return
+
+        share_value = abs(market_price * self.shares_result)
+
+        b2 = (self.cash_result - share_value) / share_value <= margin_ratio
+        self.mv_short_future = b2
 
     def is_buy_in_required(self):
         return self.player.is_auto_buy() and self.mv_short_future
@@ -112,27 +118,29 @@ class DataForPlayer:
         @return: DataForOrder
         """
         margin_premium = scf.get_margin_premium(self.player)
-        target_ratio = scf.get_margin_target_ratio(self.player)
-        price_multiplier = 1 + margin_premium
-        buy_in_price = int(round(market_price * price_multiplier))  # premium of current market price
-        current_value_of_position = abs(self.shares_result * buy_in_price)
-        cash_position = self.cash_result
-        target_value = math.floor(cash_position * target_ratio)  # value of shares to be in compliance
-        difference = current_value_of_position - target_value
-        number_of_shares = int(math.ceil(difference / buy_in_price))
+        p = int(round(market_price * (1 + margin_premium)))  # premium of current market price
+        tr = scf.get_margin_target_ratio(self.player)
+        c = abs(self.cash_result)
+        s = abs(self.shares_result)
+
+        number_of_shares = math.ceil(((1 + tr)*s*p - c) / (tr * p))
 
         player = self.player
         return DataForOrder(player=player,
                             group=player.group,
                             order_type=OrderType.BID.value,
-                            price=cu(buy_in_price),
+                            price=cu(p),
                             quantity=number_of_shares,
                             is_buy_in=True)
 
     def set_mv_debt_future(self, margin_ratio, market_price):
-        b1 = self.cash_result < 0
-        b2 = abs(self.cash_result) >= margin_ratio * market_price * self.shares_result
-        self.mv_debt_future = b1 and b2
+        if self.cash_result >= 0:
+            self.mv_debt_future = False
+            return
+
+        cash = abs(self.cash_result)
+        b2 = abs(self.shares_result * market_price - cash) / cash <= margin_ratio
+        self.mv_debt_future = b2
 
     def is_sell_off_required(self):
         return self.player.is_auto_sell() and self.mv_debt_future
@@ -144,20 +152,18 @@ class DataForPlayer:
          @return: DataForOrder
         """
         margin_premium = scf.get_margin_premium(self.player)
-        target_ratio = scf.get_margin_target_ratio(self.player)
-        price_multiplier = 1 - margin_premium
-        sell_off_price = int(round(market_price * price_multiplier))  # premium of current market price
-        stock_value = abs(self.shares_result * sell_off_price)
-        cash_position = self.cash_result
-        target_value = math.floor(stock_value * target_ratio)  # value of shares to be in compliance
-        difference = abs(cash_position + target_value)
-        number_of_shares = int(math.ceil(difference / sell_off_price))
+        p = int(round(market_price * (1 - margin_premium)))  # premium of current market price
+        tr = scf.get_margin_target_ratio(self.player)
+        s = abs(self.shares_result)
+        c = abs(self.cash_result)
+
+        number_of_shares = int(math.ceil(((1 + tr)*c - s*p) / (tr*p)))
 
         player = self.player
         return DataForOrder(player=player,
                             group=player.group,
                             order_type=OrderType.OFFER.value,
-                            price=cu(sell_off_price),
+                            price=cu(p),
                             quantity=number_of_shares,
                             is_buy_in=True)
 

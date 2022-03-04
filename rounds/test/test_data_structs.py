@@ -12,7 +12,7 @@ NUM_ROUNDS = 5
 R = .1
 MARGIN_RATIO = .6
 MARGIN_PREM = .25
-MARGIN_TARGET = .3
+MARGIN_TARGET = .7
 
 b_10_05 = Order(order_type=BID, price=10, quantity=5)
 b_10_06 = Order(order_type=BID, price=10, quantity=6)
@@ -226,8 +226,10 @@ class TestDataForPlayer(unittest.TestCase):
         self.assertEqual(o.quantity, 6)
 
 
+# noinspection DuplicatedCode
 class TestDataForOrder(unittest.TestCase):
-    def basic_setup(self):
+    @staticmethod
+    def basic_setup():
         g = Group()
         p = basic_player()
         p.group = g

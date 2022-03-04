@@ -106,8 +106,8 @@ class TestPlayerMethods(unittest.TestCase):
     def test_personal_stock_margin_0(self):
         # Setup
         p = Player()
-        p.cash = 0
-        p.shares = 1
+        p.cash = 1500
+        p.shares = 0
 
         # Run
         pm = p.get_personal_stock_margin(1000)
@@ -118,7 +118,7 @@ class TestPlayerMethods(unittest.TestCase):
     def test_personal_stock_margin_neg_shares(self):
         # Setup
         p = Player()
-        p.cash = 2000
+        p.cash = 1500
         p.shares = -1
 
         # Run
@@ -130,20 +130,20 @@ class TestPlayerMethods(unittest.TestCase):
     def test_personal_stock_margin_pos_shares(self):
         # Setup
         p = Player()
-        p.cash = 2000
+        p.cash = 1500
         p.shares = 1
 
         # Run
         pm = p.get_personal_stock_margin(1000)
 
         # Assert
-        self.assertEqual(0.5, pm)
+        self.assertEqual(.5, pm)
 
     def test_personal_cash_margin_0(self):
         # Setup
         p = Player()
-        p.cash = 1000
-        p.shares = 0
+        p.cash = 0
+        p.shares = 1000
 
         # Run
         pm = p.get_personal_cash_margin(2000)
@@ -154,11 +154,11 @@ class TestPlayerMethods(unittest.TestCase):
     def test_personal_cash_margin_neg_cash(self):
         # Setup
         p = Player()
-        p.cash = 1000
+        p.cash = -1000
         p.shares = 1
 
         # Run
-        pm = p.get_personal_cash_margin(2000)
+        pm = p.get_personal_cash_margin(1500)
 
         # Assert
         self.assertEqual(0.5, pm)
@@ -170,7 +170,7 @@ class TestPlayerMethods(unittest.TestCase):
         p.shares = 1
 
         # Run
-        pm = p.get_personal_cash_margin(2000)
+        pm = p.get_personal_cash_margin(1500)
 
         # Assert
         self.assertEqual(0.5, pm)
@@ -267,7 +267,7 @@ class TestPlayerMethods(unittest.TestCase):
 
     # Short Margin Violation Tests
     def test_is_short_margin_violation(self):
-        p = setup_margin_violation_tests(.4, 4000, -1, 10000)
+        p = setup_margin_violation_tests(.4, 5000, -2, 14000)
         # Test / Assert
         self.assertTrue(p.is_short_margin_violation())
 
@@ -295,22 +295,22 @@ class TestPlayerMethods(unittest.TestCase):
 
     # Cash Margin Violation Tests
     def test_is_debt_margin_violation(self):
-        p = setup_margin_violation_tests(.4, 4000, 2, -4000)
+        p = setup_margin_violation_tests(.4, 7000, 2, -10000)
         # Test / Assert
         self.assertTrue(p.is_debt_margin_violation())
 
     def test_is_debt_margin_violation_not_debt(self):
-        p = setup_margin_violation_tests(.4, 4000, 2, 4000)
+        p = setup_margin_violation_tests(.4, 7000, 2, 10000)
         # Test / Assert
         self.assertFalse(p.is_debt_margin_violation())
 
     def test_is_debt_margin_violation_not_mv(self):
-        p = setup_margin_violation_tests(.4, 4001, -2, 4000)
+        p = setup_margin_violation_tests(.4, 7001, -2, -10000)
         # Test / Assert
         self.assertFalse(p.is_debt_margin_violation())
 
     def test_is_debt_margin_violation_not_mv2(self):
-        p = setup_margin_violation_tests(.4, 4000, -2, 3999)
+        p = setup_margin_violation_tests(.4, 7000, -2, -10001)
         # Test / Assert
         self.assertFalse(p.is_debt_margin_violation())
 
@@ -342,7 +342,7 @@ class TestPlayerMethods(unittest.TestCase):
         self.assertEqual(p.periods_until_auto_sell, NO_AUTO_TRANS)
 
     def test_trans_status_no_mv_short_reset(self):
-        p = set_up_trans_status_tests(price=1000, shares=-2, cash=5001)
+        p = set_up_trans_status_tests(price=1000, shares=-2, cash=2801)
 
         # Test
         p.determine_auto_trans_status()
@@ -353,7 +353,7 @@ class TestPlayerMethods(unittest.TestCase):
 
     def test_trans_status_mv_short_base(self):
         # noinspection PyTypeChecker
-        p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=NO_AUTO_TRANS)
+        p = set_up_trans_status_tests(price=1000, shares=-2, cash=2800, delay=7, buy_period=NO_AUTO_TRANS)
 
         # Test
         p.determine_auto_trans_status()
@@ -363,7 +363,7 @@ class TestPlayerMethods(unittest.TestCase):
         self.assertEqual(p.periods_until_auto_sell, NO_AUTO_TRANS)
 
     def test_trans_status_mv_short_dec(self):
-        p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=4)
+        p = set_up_trans_status_tests(price=1000, shares=-2, cash=2800, delay=7, buy_period=4)
 
         # Test
         p.determine_auto_trans_status()
@@ -373,7 +373,7 @@ class TestPlayerMethods(unittest.TestCase):
         self.assertEqual(p.periods_until_auto_sell, NO_AUTO_TRANS)
 
     def test_trans_status_mv_short_floor(self):
-        p = set_up_trans_status_tests(price=1000, shares=-2, cash=5000, delay=7, buy_period=0)
+        p = set_up_trans_status_tests(price=1000, shares=-2, cash=2800, delay=7, buy_period=0)
 
         # Test
         p.determine_auto_trans_status()
@@ -383,7 +383,7 @@ class TestPlayerMethods(unittest.TestCase):
         self.assertEqual(p.periods_until_auto_sell, NO_AUTO_TRANS)
 
     def test_trans_status_no_mv_debt_reset(self):
-        p = set_up_trans_status_tests(price=1000, shares=5, cash=-1999)
+        p = set_up_trans_status_tests(price=1400, shares=2, cash=-1999)
 
         # Test
         p.determine_auto_trans_status()
@@ -394,7 +394,7 @@ class TestPlayerMethods(unittest.TestCase):
 
     def test_trans_status_mv_debt_base(self):
         # noinspection PyTypeChecker
-        p = set_up_trans_status_tests(price=1000, shares=5, cash=-2000, delay=7, sell_period=NO_AUTO_TRANS)
+        p = set_up_trans_status_tests(price=1400, shares=2, cash=-2000, delay=7, sell_period=NO_AUTO_TRANS)
 
         # Test
         p.determine_auto_trans_status()
@@ -404,7 +404,7 @@ class TestPlayerMethods(unittest.TestCase):
         self.assertEqual(p.periods_until_auto_sell, 7)
 
     def test_trans_status_mv_debt_dec(self):
-        p = set_up_trans_status_tests(price=1000, shares=5, cash=-2000, delay=7, sell_period=4)
+        p = set_up_trans_status_tests(price=1400, shares=2, cash=-2000, delay=7, sell_period=4)
 
         # Test
         p.determine_auto_trans_status()
@@ -414,7 +414,7 @@ class TestPlayerMethods(unittest.TestCase):
         self.assertEqual(p.periods_until_auto_sell, 3)
 
     def test_trans_status_mv_debt_floor(self):
-        p = set_up_trans_status_tests(price=1000, shares=5, cash=-2000, delay=7, sell_period=0)
+        p = set_up_trans_status_tests(price=1400, shares=2, cash=-2000, delay=7, sell_period=0)
 
         # Test
         p.determine_auto_trans_status()

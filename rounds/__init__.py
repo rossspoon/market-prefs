@@ -179,6 +179,7 @@ def get_orders_for_player(player):
     return Order.filter(player=player)
 
 
+# noinspection PyUnresolvedReferences
 def delete_order(player, oid):
     obs = Order.filter(player=player, id=oid)
     for o in obs:
@@ -227,12 +228,18 @@ def get_messages(player: Player):
     # Messages / Warning for short position
     if is_short and not is_bankrupt:
         delay = player.periods_until_auto_buy
-        ret += get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin, delay, round_number)
+        class_attr, msg = get_short_message(margin_ratio, margin_target_ratio,
+                                            personal_stock_margin, delay, round_number)
+        if not msg:
+            ret.append(dict(class_attr=class_attr, msg=msg))
 
     # Messages / Warning for negative cash holding
     if is_debt and not is_bankrupt:
         delay = player.periods_until_auto_sell
-        ret += get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin, delay, round_number)
+        class_attr, msg = get_debt_message(margin_ratio, margin_target_ratio,
+                                           personal_cash_margin, delay, round_number)
+        if not msg:
+            ret.append(dict(class_attr=class_attr, msg=msg))
 
     # Bankrupt
     if is_bankrupt:
@@ -242,85 +249,86 @@ def get_messages(player: Player):
     return ret
 
 
-def get_debt_messages(margin_ratio, margin_target_ratio, personal_cash_margin, delay, round_number):
-    ret: list[dict[str]] = []
+def get_msg_which(delay, round_number):
+    if delay == 0:
+        which = 'this period'
+    elif delay == 1:
+        which = f'next period (Period {round_number + 1})'
+    else:
+        which = "a future period"
+    return which
+
+
+# noinspection DuplicatedCode
+def get_debt_message(margin_ratio, margin_target_ratio, personal_cash_margin, delay, round_number):
     # Determine margin sell messages
-    if personal_cash_margin < margin_target_ratio:
-        ret.append(
-            dict(class_attr="",
-                 msg=f"Worth of debt relative to worth of stock: {personal_cash_margin:.0%}")
-        )
-    elif margin_target_ratio <= personal_cash_margin < margin_ratio:
-        ret.append(
-            dict(class_attr="alert-warning",
-                 msg=f"""Warning:  The value of the debt you hold is
-                        <span class="bold-text"> {personal_cash_margin:.0%} </span>
-                        of the value of stock holdings.  If that increases to {margin_ratio:.0%},
-                        we will submit a sell order
-                        on your behalf.""")
-        )
-    elif personal_cash_margin >= margin_ratio:
+    msg = None
+    class_attr = None
+
+    if personal_cash_margin > margin_target_ratio:
+        class_attr = ""
+        msg = f"""CASH Margin: <span class="bold-text">{personal_cash_margin:.0%}</span>"""
+
+    elif margin_ratio < personal_cash_margin <= margin_target_ratio:
+        class_attr = "alert-warning"
+        msg = f"""<p>Warning:  CASH Margin: <span class="bold-text"> {personal_cash_margin:.0%} </span></p>
+                        <p> Your CASH margin is getting close to the minimum requirement of {margin_ratio:.0%}.
+                        This most likely happened because the value of you STOCK has decrease.  If your
+                        CASH margin becomes {margin_ratio:.0%} or lower, the system will sell off your STOCK to
+                        satisfy the margin requirement.</p>
+                        """
+
+    elif personal_cash_margin <= margin_ratio:
         # Skip if last period and sell is next period
         if round_number == Constants.num_rounds and delay > 0:
-            return
+            return None, None
 
-        if delay == 0:
-            which = 'this period'
-        elif delay == 1:
-            which = f'next period (Period {round_number + 1})'
+        which = get_msg_which(delay, round_number)
+        class_attr = "alert-danger"
+        msg = f"""<p>Warning:  CASH Margin: <span class="bold-text"> {personal_cash_margin:.0%} </span></p>
+                        <p>You are advised to sell some of your STOCK to raise this margin in order to avoid an
+                         automatic sell off.</p>                     
+                        <p>An automatic sell-off will be generated at the end of {which} if your CASH margin
+                         is still less than or equal to <span class="bold-text">{margin_ratio:.0%}</span></p>"""
 
-        ret.append(
-            dict(class_attr="alert-danger",
-                 msg=f"""Warning:  The debt that you hold is
-                        <span class="bold-text"> {personal_cash_margin:.0%} </span>
-                        of the value of you STOCK holdings. 
-                        You are advised to sell  shares of the STOCK to lower this proportion.
-                        An automatic sell-off will be generated at the end of the {which} if your proportion
-                        is still over <span class="bold-text">{margin_ratio:.0%}</span>.""")
-        )
-
-    return ret
+    return class_attr, msg
 
 
-def get_short_messages(margin_ratio, margin_target_ratio, personal_stock_margin, delay, round_number):
-    ret = []
+# noinspection DuplicatedCode
+def get_short_message(margin_ratio, margin_target_ratio, personal_stock_margin, delay, round_number):
+    msg = None
+    class_attr = None
+
     # Determine short position messages
     # Normal condition
-    if personal_stock_margin < margin_target_ratio:
-        ret.append(
-            dict(class_attr="",
-                 msg=f"Worth of short relative to cash holdings: {personal_stock_margin:.0%}")
-        )
-    elif margin_target_ratio <= personal_stock_margin < margin_ratio:
-        ret.append(
-            dict(class_attr="alert-warning",
-                 msg=f"""Warning:  The value of the shares that you have shorted is
-                        <span class="bold-text"> {personal_stock_margin:.0%} </span>
-                        of your cash holdings.  If that increases to {margin_ratio:.0%},
-                        we will submit a buy order
-                        on your behalf.""")
-        )
-    elif personal_stock_margin >= margin_ratio:
+    if personal_stock_margin > margin_target_ratio:
+        class_attr = ""
+        msg = f"""STOCK Margin: <span class="bold-text">{personal_stock_margin:.0%}</span>"""
+
+    elif margin_ratio < personal_stock_margin <= margin_target_ratio:
+        class_attr = "alert-warning"
+        msg = f"""<p>Warning:  STOCK Margin: <span class="bold-text"> {personal_stock_margin:.0%} </span></p>
+                            <p> Your STOCK margin is getting close to the minimum requirement of {margin_ratio:.0%}.
+                            This most likely happened because the value of your shorted STOCK has increased.  If your
+                            STOCK margin becomes {margin_ratio:.0%} or lower, the system will purchase STOCK on your
+                            behalf to satisfy the margin requirement.</p>
+                            """
+
+    elif personal_stock_margin <= margin_ratio:
         # Skip if last period and buy is next period
         if round_number == Constants.num_rounds and delay > 0:
-            return
+            return None, None
 
-        if delay == 0:
-            which = 'this period'
-        elif delay == 1:
-            which = f'next period (Period {round_number + 1})'
+        which = get_msg_which(delay, round_number)
+        class_attr = "alert-danger"
+        msg = f"""<p>Warning: STOCK Margin: <span class="bold-text"> {personal_stock_margin:.0%} </span></p>
+                        <p>You are advised to purchase STOCK to raise this margin in order to avoid an
+                         automatic buy-in.</p>                     
+                        <p>An automatic purchase will be made on your behalf at the end of {which} if your 
+                        STOCK margin is still less than or equal to 
+                        <span class="bold-text">{margin_ratio:.0%}</span></p>"""
 
-        ret.append(
-            dict(class_attr="alert-danger",
-                 msg=f"""Warning:  The value of the shares that you have shorted is
-                    <span class="bold-text"> {personal_stock_margin:.0%} </span>
-                    of your cash holdings. 
-                    You are advised to buy back shares of the STOCK to lower this proportion.
-                    An automatic buy-in will be generated at the end of {which}  if your proportion
-                    is still over <span class="bold-text">{margin_ratio:.0%}</span>.""")
-        )
-
-    return ret
+    return class_attr, msg
 
 
 def vars_for_market_template(player: Player):

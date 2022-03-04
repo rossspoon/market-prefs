@@ -84,7 +84,9 @@ class ActorRound:
         self.orders = []
         self.cash = None
         self.shares = None
-        self.expect_values = {}
+        self.expected_values = {}
+        self.expected_orders = []
+        self.order_count = -1  # Setting to zero signals to expect exactly zero orders.
 
     # Configure Interface
     def set(self, cash, shares):
@@ -101,18 +103,39 @@ class ActorRound:
         return self
 
     def expect(self, **kwargs):
-        self.expect_values.update(kwargs)
+        self.expected_values.update(kwargs)
         return self
 
-    # Round Interface
+    def expect_num_orders(self, count):
+        self.order_count = count
+        return self
+
+    def expect_order(self,
+                     price=None,
+                     quant=None,
+                     otype=None,
+                     is_auto=False):
+        # Try to parse order information
+        if not (price and quant and otype):
+            print("Incomplete Order specification:  Skipping")
+            return self
+
+        self.expected_orders.append(dict(price=price, quant=quant, otype=otype, is_auto=is_auto))
+        self.order_count = 1 if self.order_count < 1 else self.order_count + 1
+        return self
+
+    # Bot Interface
     def do_set(self):
         return self.cash is not None and self.shares is not None
 
     def expects_any(self):
-        return len(self.expect_values.keys()) > 0
+        return len(self.expected_values.keys()) > 0
 
     def expects(self, key):
-        return key in self.expect_values
+        return key in self.expected_values
+
+    def expects_orders(self):
+        return len(self.expected_orders) > 0
 
     # Helpers
     def _store_order(self, otype, shares, price):
@@ -176,14 +199,20 @@ class MarketRound:
         self.tests = tests
         self.round_number = round_number
         self.player_actions = {}  # ActionRounds  - The player actions for a particular round
-        self.expect_values = {}
+        self.expected_values = {}
 
     # Configuration Interface
     def expect(self, **kwargs):
-        self.expect_values.update(kwargs)
+        self.expected_values.update(kwargs)
         return self
 
     def actor(self, name: str, setup):
+        """
+        Registers a new Actor in the test.
+        @param name: The Actor's name for ID purposes
+        @param setup: Callable statement to register ActorRound Actions
+        @return: This MarketRound object
+        """
         ar = ActorRound(self.round_number)
         # tell the MarketTest object about this
         self.tests.actor_names.add(name)
@@ -199,10 +228,10 @@ class MarketRound:
         return self.player_actions.get(name)
 
     def expects_any(self):
-        return len(self.expect_values.keys()) > 0
+        return len(self.expected_values.keys()) > 0
 
     def expects(self, key):
-        return key in self.expect_values
+        return key in self.expected_values
 
 
 #############################################################################################################
@@ -260,12 +289,50 @@ class ScriptedBot(Bot):
             self.after_market_page_tests(actor_name, this_round)
 
     def last_round_tests(self, actions):
-        if not actions.expects_any():
+        player = self.player
+        last_player = player.in_round_or_null(actions.round_number)
+
+        # Player Tests
+        if actions.expects_any():
+            for var in vars(player):
+                self.test_object_attribute(player, actions, var)
+
+        # Order Tests
+        # This is a last-round test, so we need the last-round player
+        if not last_player:
             return
 
-        player = self.player
-        for var in vars(player):
-            self.test_object_attribute(player, actions, var)
+        actor_name = market.get_actor_name(last_player)
+        orders = Order.filter(player=last_player)
+        if actions.order_count >= 0:
+            print(f"Round {actions.round_number}: Testing expected number of orders")
+            try:
+                expect(len(orders), actions.order_count)
+            except ExpectError as err:
+                error = f"Round {self.round_number}: Actor {actor_name}: Testing Order Count: {err}"
+                ScriptedBot.errors_by_round[actions.round_number].append(error)
+
+        # Compare actual orders with expected orders
+        if actions.expects_orders():
+            order_keys = set(self.order_key_order(o) for o in orders)
+            added_order_keys = False
+            for exp_key in [self.order_key_expects(o) for o in actions.expected_orders]:
+                if not order_keys.__contains__(exp_key):
+                    if not added_order_keys:
+                        order_key_msg = f"Round {actions.round_number}: Actor {actor_name}:" \
+                                        f" Found Orders Keys:{order_keys}"
+                        ScriptedBot.errors_by_round[actions.round_number].append(order_key_msg)
+
+                    error = f"Round {actions.round_number}: Actor {actor_name}: Did not find order {exp_key}"
+                    ScriptedBot.errors_by_round[actions.round_number].append(error)
+
+    @staticmethod
+    def order_key_order(o):
+        return f"p:{int(o.price)}:::q:{o.quantity}:::t:{o.order_type}:::a:{o.is_buy_in}"
+
+    @staticmethod
+    def order_key_expects(o):
+        return f"p:{o['price']}:::q:{o['quant']}:::t:{o['otype']}:::a:{o['is_auto']}"
 
     def after_market_page_tests(self, actor, actions):
         pass
@@ -288,7 +355,7 @@ class ScriptedBot(Bot):
 
         print(f"in round {actions.round_number}: testing: ", attr)
         actual = obj.field_maybe_none(attr)
-        expected = actions.expect_values.get(attr)
+        expected = actions.expected_values.get(attr)
 
         # Collect error for this attribute and save it on the object
         error = None
@@ -306,7 +373,7 @@ class ScriptedBot(Bot):
             ScriptedBot.errors_by_round[self.round_number].append(error)
 
     def show_errors(self):
-        errors = ScriptedBot.errors_by_round[self.round_number]
+        errors = ScriptedBot.errors_by_round[self.round_number - 1]
         if errors:
             msg = "\n".join(errors)
             raise ExpectError(msg)
@@ -361,22 +428,25 @@ market = MarketTests().round(1) \
     .actor("Seller", lambda ar: ar.set(1000, 5)
            .sell(1, at=500)
            .expect(cash=1500, shares=4, periods_until_auto_buy=-99)) \
-    .actor("Treated", lambda ar: ar.set(2000, -2)
-           .expect(cash=2000, shares=-2, periods_until_auto_buy=0)) \
+    .actor("Treated", lambda ar: ar.set(1500, -2)
+           .expect(cash=1500, shares=-2, periods_until_auto_buy=0)
+           .expect_num_orders(0)) \
     .finish() \
     .round(2) \
     .expect(price=500, volume=0) \
     .actor("Buyer", lambda ar: ar.expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
     .actor("Seller", lambda ar: ar.expect(cash=1500, shares=4, periods_until_auto_buy=-99,
                                           interest_earned=None, dividend_earned=None)) \
-    .actor("Treated", lambda ar: ar.expect(cash=2000, shares=-2, periods_until_auto_buy=0)) \
+    .actor("Treated", lambda ar: ar.expect(cash=1500, shares=-2, periods_until_auto_buy=0)
+           .expect_order(price=550, quant=1, otype=BUY, is_auto=True).expect_num_orders(1)) \
     .finish() \
     .round(3) \
     .expect(price=550, volume=1) \
     .actor("Buyer", lambda ar: ar.expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
     .actor("Seller", lambda ar: ar.sell(1, at=500)
            .expect(cash=2050, shares=3, periods_until_auto_buy=-99)) \
-    .actor("Treated", lambda ar: ar.expect(cash=1450, shares=-1, periods_until_auto_buy=-99)) \
+    .actor("Treated", lambda ar: ar.expect(cash=950, shares=-1, periods_until_auto_buy=-99)
+           .expect_order(price=550, quant=1, otype=BUY, is_auto=True).expect_num_orders(1)) \
     .finish() \
     .round(4) \
     .expect(price=500, volume=1) \
@@ -386,19 +456,22 @@ market = MarketTests().round(1) \
     .actor("Seller", lambda ar: ar.set(1000, 5)
            .sell(1, at=500)
            .expect(cash=1500, shares=4, periods_until_auto_sell=-99)) \
-    .actor("Treated", lambda ar: ar.set(-1000, 4)
-           .expect(cash=-1000, shares=4, periods_until_auto_sell=0, periods_until_auto_buy=-99)) \
+    .actor("Treated", lambda ar: ar.set(-1000, 3)
+           .expect(cash=-1000, shares=3, periods_until_auto_sell=0, periods_until_auto_buy=-99)
+           .expect_num_orders(0)) \
     .finish() \
     .round(5) \
     .expect(price=500, volume=0) \
     .actor("Buyer", lambda ar: ar.expect(cash=1500, shares=6, periods_until_auto_buy=-99)) \
     .actor("Seller", lambda ar: ar.expect(cash=1500, shares=4, periods_until_auto_buy=-99)) \
-    .actor("Treated", lambda ar: ar.expect(cash=-1000, shares=4, periods_until_auto_sell=0)) \
+    .actor("Treated", lambda ar: ar.expect(cash=-1000, shares=3, periods_until_auto_sell=0)
+           .expect_order(price=450, quant=1, otype=SELL, is_auto=True).expect_num_orders(1)) \
     .finish() \
     .round(6) \
-    .expect(price=450, volume=2) \
+    .expect(price=450, volume=1) \
     .actor("Buyer", lambda ar: ar.buy(4, at=450)
-           .expect(cash=600, shares=8, periods_until_auto_sell=-99)) \
+           .expect(cash=1050, shares=7, periods_until_auto_sell=-99)) \
     .actor("Seller", lambda ar: ar.expect(cash=1500, shares=4, periods_until_auto_sell=-99)) \
-    .actor("Treated", lambda ar: ar.expect(cash=-100, shares=2, periods_until_auto_sell=-99)) \
+    .actor("Treated", lambda ar: ar.expect(cash=-550, shares=2, periods_until_auto_sell=-99)
+           .expect_order(price=450, quant=1, otype=SELL, is_auto=True).expect_num_orders(1)) \
     .finish()
