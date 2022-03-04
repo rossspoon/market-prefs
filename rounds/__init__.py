@@ -230,7 +230,7 @@ def get_messages(player: Player):
         delay = player.periods_until_auto_buy
         class_attr, msg = get_short_message(margin_ratio, margin_target_ratio,
                                             personal_stock_margin, delay, round_number)
-        if not msg:
+        if msg:
             ret.append(dict(class_attr=class_attr, msg=msg))
 
     # Messages / Warning for negative cash holding
@@ -238,7 +238,7 @@ def get_messages(player: Player):
         delay = player.periods_until_auto_sell
         class_attr, msg = get_debt_message(margin_ratio, margin_target_ratio,
                                            personal_cash_margin, delay, round_number)
-        if not msg:
+        if msg:
             ret.append(dict(class_attr=class_attr, msg=msg))
 
     # Bankrupt
