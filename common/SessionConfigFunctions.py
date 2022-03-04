@@ -63,20 +63,6 @@ def get_item_as_bool(config, key):
         return False
 
 
-def get_fundamental_value(obj):
-    config = ensure_config(obj)
-
-    dist = np.array([float(x) for x in config[SK_DIV_DIST].split()])
-    div_amounts = np.array([int(x) for x in config[SK_DIV_AMOUNT].split()])
-    exp = dist.dot(div_amounts)
-    r = config[SK_INTEREST_RATE]
-
-    if r == 0:
-        return 0
-
-    return int(exp / r)
-
-
 def get_init_price(obj):
     config = ensure_config(obj)
     return get_item_as_int(config, SK_INITIAL_PRICE)
