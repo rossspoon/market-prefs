@@ -179,7 +179,7 @@ class Player(BasePlayer):
         if self.cash == 0:
             personal_cash_margin = 0
         else:
-            cash_float = abs(self.cash)
+            cash_float = abs(float(self.cash))
             personal_cash_margin = abs((stock_pos_value-cash_float)/cash_float)
         return personal_cash_margin
 
