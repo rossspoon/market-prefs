@@ -59,6 +59,8 @@ class Subsession(BaseSubsession):
 
 
 class Group(BaseGroup):
+    NO_SHORT_LIMIT = -199
+
     price = models.CurrencyField()
     volume = models.IntegerField()
     dividend = models.IntegerField(initial=0)
@@ -85,6 +87,21 @@ class Group(BaseGroup):
                 return init_price
             else:
                 return scf.get_fundamental_value(self)
+
+    def get_short_limit(self):
+        """
+        Determine the number of shorted shares allowed this round.  This is the limit of the
+        combined number of shares this round.   All sell order made this round that will be a
+        short sale for the player, when combined must be equal to or below this amounts.
+        @return: int number of shares.
+        """
+        cap_ratio = scf.get_float_ratio_cap(self)
+        if not cap_ratio:
+            return Group.NO_SHORT_LIMIT
+
+        max_short_shares = int(cap_ratio * self.float)
+        allowable = max_short_shares - self.short
+        return max(allowable, 0)
 
 
 NO_AUTO_TRANS = -99
@@ -286,6 +303,7 @@ class Order(ExtraModel):
     price = models.CurrencyField()
     quantity = models.IntegerField()
     quantity_final = models.IntegerField(initial=0)
+    original_quantity = models.IntegerField()
     is_buy_in = models.BooleanField(initial=False)  # is this order an automatic buy-in?
 
     def to_dict(self):
@@ -295,4 +313,5 @@ class Order(ExtraModel):
             group_id=self.group.id,
             type=self.order_type,
             price=self.price,
-            quantity=self.quantity)
+            quantity=self.quantity,
+            original_quantity=self.original_quantity)

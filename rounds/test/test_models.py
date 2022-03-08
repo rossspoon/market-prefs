@@ -512,6 +512,86 @@ class TestPlayerMethods(unittest.TestCase):
 
 
 class TestGroupMethods(unittest.TestCase):
+    def test_get_short_limit(self):
+        # Set-up
+        group = Group()
+        session = Session()
+        config = {scf.SK_FLOAT_RATIO_CAP: 1.0}
+        session.config = config
+        group.session = session
+        group.short = 10
+        group.float = 12
+
+        # Test
+        limit = group.get_short_limit()
+
+        # Assert
+        self.assertEqual(limit, 2)
+
+    def test_get_short_limit_high_ratio(self):
+        # Set-up
+        group = Group()
+        session = Session()
+        config = {scf.SK_FLOAT_RATIO_CAP: 1.5}
+        session.config = config
+        group.session = session
+        group.short = 17
+        group.float = 12
+
+        # Test
+        limit = group.get_short_limit()
+
+        # Assert
+        self.assertEqual(limit, 1)
+
+    def test_get_short_limit_no_limit(self):
+        # Set-up
+        group = Group()
+        session = Session()
+        config = {}
+        session.config = config
+        group.session = session
+        group.short = 10
+        group.float = 12
+
+        # Test
+        limit = group.get_short_limit()
+
+        # Assert
+        self.assertEqual(limit, Group.NO_SHORT_LIMIT)
+
+    def test_get_short_limit_at_limit(self):
+        # Set-up
+        group = Group()
+        session = Session()
+        config = {scf.SK_FLOAT_RATIO_CAP: 1.5}
+        session.config = config
+        group.session = session
+        group.short = 18
+        group.float = 12
+
+        # Test
+        limit = group.get_short_limit()
+
+        # Assert
+        self.assertEqual(limit, 0)
+
+    def test_get_short_limit_over_limit(self):
+        # Set-up
+        group = Group()
+        session = Session()
+        config = {scf.SK_FLOAT_RATIO_CAP: 1.5}
+        session.config = config
+        group.session = session
+        group.short = 19
+        group.float = 12
+
+        # Test
+        limit = group.get_short_limit()
+
+        # Assert
+        self.assertEqual(limit, 0)
+
     def test_in_round_or_none_bad_round(self):
         g = Group()
         g.round_number = 5

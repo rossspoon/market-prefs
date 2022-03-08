@@ -3,7 +3,7 @@ from os import environ
 SESSION_CONFIGS = [
     dict(
         name='rounds',
-        app_sequence=['rounds'],
+        app_sequence=['rounds', 'survey'],
         num_demo_participants=2,
         random_hist=False
     )
@@ -15,9 +15,9 @@ SESSION_CONFIGS = [
         treated_ids='1 0',
         cash_endowment_control=10000,
         shares_endowment_control=10,
-        cash_endowment_treatment=-10100,
-        shares_endowment_treatment=10,
-        initial_price=2000
+        cash_endowment_treatment=-9375,
+        shares_endowment_treatment=15,
+        initial_price=1000
     )
     , dict(
         name='rounds_test',
@@ -95,13 +95,14 @@ SESSION_CONFIG_DEFAULTS = dict(
     div_dist='.5 .5',
     margin_ratio=.5,
     margin_premium=0.1,
-    margin_target_ratio=.3,
-    auto_trans_delay=1,
+    margin_target_ratio=.6,
+    auto_trans_delay=0,
+    float_ratio_cap=1.0,
 
     fraction_of_short_starts=.5,
     cash_endowment_control=5000,
     shares_endowment_control=12,
-    cash_endowment_treatment=10000,
+    cash_endowment_treatment=8400,
     shares_endowment_treatment=-2,
 
     initial_price=2800,

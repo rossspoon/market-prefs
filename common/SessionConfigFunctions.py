@@ -18,6 +18,7 @@ SK_SESSION_NAME = 'name'
 SK_RANDOMIZE_HISTORY = 'random_hist'
 SK_BONUS_CAP = 'bonus_cap'
 SK_AUTO_TRANS_DELAY = 'auto_trans_delay'
+SK_FLOAT_RATIO_CAP = 'float_ratio_cap'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -31,36 +32,38 @@ def ensure_config(obj):
         return obj.session.config
 
 
-def get_item_as_int(config, key):
+def get_item_as_int(config, key, default=0):
     raw_value = config.get(key)
     if raw_value:
         return int(raw_value)
     else:
-        return 0
+        return default
 
 
-def get_item_as_float(config, key):
+def get_item_as_float(config, key, default=0.0, return_none=False):
     raw_value = config.get(key)
     if raw_value:
         return float(raw_value)
+    elif raw_value is None and return_none:
+        return None
     else:
-        return 0
+        return default
 
 
-def get_item_as_currency(config, key):
+def get_item_as_currency(config, key, default=0):
     raw_value = config.get(key)
     if raw_value:
         return cu(raw_value)
     else:
-        return cu(0)
+        return cu(default)
 
 
-def get_item_as_bool(config, key):
+def get_item_as_bool(config, key, default=False):
     raw_value = config.get(key)
     if raw_value:
         return bool(raw_value)
     else:
-        return False
+        return default
 
 
 def get_init_price(obj):
@@ -151,3 +154,13 @@ def get_bonus_cap(obj):
 def get_auto_trans_delay(obj):
     config = ensure_config(obj)
     return get_item_as_int(config, SK_AUTO_TRANS_DELAY)
+
+
+def get_float_ratio_cap(obj):
+    """
+    Return the short cap ratio if set, otherwise None.
+    @param obj:
+    @return: the short cap ratio if set, otherwise None.
+    """
+    config = ensure_config(obj)
+    return get_item_as_float(config, SK_FLOAT_RATIO_CAP, return_none=True)

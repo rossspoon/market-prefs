@@ -222,8 +222,16 @@ def get_messages(player: Player):
     round_number = player.round_number
 
     # Current Market Price:
-    ret.append(dict(class_attr="",
-                    msg=f"""Current Market Price: <span class="bold-text"> {price}"""))
+    if scf.get_float_ratio_cap(player):
+        short_float_ratio = player.group.short / player.group.float
+        ret.append(dict(class_attr="",
+                        msg=f"""
+                            <span class="left-side">Current Market Price: <span class="bold-text"> {price}</span></span>
+                            <span class="right-side">Percent of Float Shorted: <span class="bold-text">{short_float_ratio}</span></span>
+                        """))
+    else:
+        ret.append(dict(class_attr="",
+                        msg=f"""Current Market Price: <span class="bold-text"> {price}"""))
 
     # Messages / Warning for short position
     if is_short and not is_bankrupt:
@@ -505,7 +513,7 @@ class RoundResultsPage(Page):
         if not upcoming_apps or len(upcoming_apps) == 0:
             return None
 
-        if player.cash_result < 0 and player.shares_result < 0:
+        if player.is_bankrupt():
             return upcoming_apps[0]
 
 
