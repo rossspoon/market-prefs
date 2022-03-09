@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch, call, PropertyMock
 
 from otree.models import Session
 
-from rounds import OrderType, Group, Player
+from rounds import OrderType, Group, Player, NO_SHORT_LIMIT
 from rounds.call_market_price import MarketPrice, OrderFill
 from rounds.data_structs import DataForOrder, DataForPlayer
 from rounds.market_iteration import MarketIteration
@@ -497,7 +497,7 @@ class TestMarketIteration(unittest.TestCase):
     def test_screen_orders_for_over_shorting_no_limit(self):
         # Set-up
         itr = basic_iteration(players=[p1, p2])
-        itr.group.get_short_limit = MagicMock(return_value=Group.NO_SHORT_LIMIT)
+        itr.group.get_short_limit = MagicMock(return_value=NO_SHORT_LIMIT)
         itr.get_shorting_players = MagicMock()
 
         # Test

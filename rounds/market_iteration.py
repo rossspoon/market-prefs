@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from rounds.call_market_price import MarketPrice, OrderFill
-from rounds.models import Player, Order, Group, OrderType
+from rounds.models import Player, Order, Group, OrderType, NO_SHORT_LIMIT
 from rounds.data_structs import DataForOrder, DataForPlayer
 import common.SessionConfigFunctions as scf
 
@@ -152,7 +152,7 @@ class MarketIteration:
         # Get the short limit for this round.
         # If there is no limit, simply return.
         round_limit = self.group.get_short_limit()
-        if round_limit == Group.NO_SHORT_LIMIT:
+        if round_limit == NO_SHORT_LIMIT:
             return
 
         # Get a list of players going short this rounds

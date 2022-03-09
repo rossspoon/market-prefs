@@ -559,7 +559,7 @@ class TestGroupMethods(unittest.TestCase):
         limit = group.get_short_limit()
 
         # Assert
-        self.assertEqual(limit, Group.NO_SHORT_LIMIT)
+        self.assertEqual(limit, NO_SHORT_LIMIT)
 
     def test_get_short_limit_at_limit(self):
         # Set-up

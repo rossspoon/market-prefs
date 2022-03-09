@@ -58,9 +58,10 @@ class Subsession(BaseSubsession):
     pass
 
 
-class Group(BaseGroup):
-    NO_SHORT_LIMIT = -199
+NO_SHORT_LIMIT = -199
 
+
+class Group(BaseGroup):
     price = models.CurrencyField()
     volume = models.IntegerField()
     dividend = models.IntegerField(initial=0)
@@ -97,7 +98,7 @@ class Group(BaseGroup):
         """
         cap_ratio = scf.get_float_ratio_cap(self)
         if not cap_ratio:
-            return Group.NO_SHORT_LIMIT
+            return NO_SHORT_LIMIT
 
         max_short_shares = int(cap_ratio * self.float)
         allowable = max_short_shares - self.short
@@ -188,7 +189,7 @@ class Player(BasePlayer):
             personal_stock_margin = 0
         else:
             cash_float = float(self.cash)
-            personal_stock_margin = abs((cash_float - stock_pos_value)/stock_pos_value)
+            personal_stock_margin = abs((cash_float - stock_pos_value) / stock_pos_value)
         return personal_stock_margin
 
     def get_personal_cash_margin(self, price):
@@ -197,7 +198,7 @@ class Player(BasePlayer):
             personal_cash_margin = 0
         else:
             cash_float = abs(float(self.cash))
-            personal_cash_margin = abs((stock_pos_value-cash_float)/cash_float)
+            personal_cash_margin = abs((stock_pos_value - cash_float) / cash_float)
         return personal_cash_margin
 
     def is_short(self):
