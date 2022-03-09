@@ -397,11 +397,6 @@ def pre_round_tasks(group: Group):
     group.short = abs(sum(p.shares for p in group.get_players() if p.shares < 0))
 
 
-def set_margin_violation_for_next_period(group: Group):
-    for player in group.get_players():
-        player.determine_auto_trans_status()
-
-
 #######################################
 # CALCULATE MARKET
 def calculate_market(group: Group):
