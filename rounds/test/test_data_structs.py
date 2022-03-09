@@ -5,6 +5,7 @@ from otree.models import Session
 from rounds.call_market import CallMarket
 from rounds.data_structs import DataForPlayer, DataForOrder
 from rounds.models import *
+from test_call_market import get_order
 
 BID = OrderType.BID.value
 OFFER = OrderType.OFFER.value
@@ -14,15 +15,15 @@ MARGIN_RATIO = .6
 MARGIN_PREM = .25
 MARGIN_TARGET = .7
 
-b_10_05 = Order(order_type=BID, price=10, quantity=5)
-b_10_06 = Order(order_type=BID, price=10, quantity=6)
-b_11_05 = Order(order_type=BID, price=11, quantity=5)
-b_11_06 = Order(order_type=BID, price=11, quantity=6)
+b_10_05 = get_order(order_type=BID, price=10, quantity=5)
+b_10_06 = get_order(order_type=BID, price=10, quantity=6)
+b_11_05 = get_order(order_type=BID, price=11, quantity=5)
+b_11_06 = get_order(order_type=BID, price=11, quantity=6)
 
-o_05_05 = Order(order_type=OFFER, price=5, quantity=5)
-o_05_06 = Order(order_type=OFFER, price=5, quantity=6)
-o_06_05 = Order(order_type=OFFER, price=6, quantity=5)
-o_06_07 = Order(order_type=OFFER, price=6, quantity=7)
+o_05_05 = get_order(order_type=OFFER, price=5, quantity=5)
+o_05_06 = get_order(order_type=OFFER, price=5, quantity=6)
+o_06_05 = get_order(order_type=OFFER, price=6, quantity=5)
+o_06_07 = get_order(order_type=OFFER, price=6, quantity=7)
 
 all_orders = [b_10_05, b_10_06, b_11_05, b_11_06, o_05_05, o_05_06, o_06_05, o_06_07]
 
@@ -44,6 +45,7 @@ def basic_player():
     return player
 
 
+# noinspection DuplicatedCode
 class TestDataForPlayer(unittest.TestCase):
 
     def test_init(self):
@@ -67,10 +69,10 @@ class TestDataForPlayer(unittest.TestCase):
     def test_get_new_player_pos_net_buy(self):
         # Set-up
         p = basic_player()
-        o1 = Order(order_type=BID, quantity_final=1)
-        o2 = Order(order_type=BID, quantity_final=2)
-        o3 = Order(order_type=OFFER, quantity_final=0)
-        o4 = Order(order_type=OFFER, quantity_final=1)
+        o1 = get_order(order_type=BID, quantity_final=1)
+        o2 = get_order(order_type=BID, quantity_final=2)
+        o3 = get_order(order_type=OFFER, quantity_final=0)
+        o4 = get_order(order_type=OFFER, quantity_final=1)
         orders = [o1, o2, o3, o4]
         for o in orders:
             o.player = p
@@ -92,10 +94,10 @@ class TestDataForPlayer(unittest.TestCase):
     def test_get_new_player_pos_net_sell(self):
         # Set-up
         p = basic_player()
-        o1 = Order(order_type=BID, quantity_final=1)
-        o2 = Order(order_type=BID, quantity_final=0)
-        o3 = Order(order_type=OFFER, quantity_final=2)
-        o4 = Order(order_type=OFFER, quantity_final=1)
+        o1 = get_order(order_type=BID, quantity_final=1)
+        o2 = get_order(order_type=BID, quantity_final=0)
+        o3 = get_order(order_type=OFFER, quantity_final=2)
+        o4 = get_order(order_type=OFFER, quantity_final=1)
         orders = [o1, o2, o3, o4]
         for o in orders:
             o.player = p
@@ -233,7 +235,7 @@ class TestDataForOrder(unittest.TestCase):
         g = Group()
         p = basic_player()
         p.group = g
-        o = Order(player=p, group=g, order_type=BID, price=10, quantity=5)
+        o = get_order(player=p, group=g, order_type=BID, price=10, quantity=5)
         o.quantity_final = 0
         o.id = -999
         return g, o, p
@@ -251,11 +253,13 @@ class TestDataForOrder(unittest.TestCase):
         self.assertIsNone(d4o.price)
         self.assertIsNone(d4o.quantity)
         self.assertEqual(d4o.quantity_final, 0)
+        self.assertIsNone(d4o.original_quantity)
         self.assertFalse(d4o.is_buy_in)
 
     def test_init_not_null(self):
         # Set up
         g, o, p = self.basic_setup()
+        o.original_quantity = 56
 
         # Execute
         d4o = DataForOrder(o=o)
@@ -268,11 +272,13 @@ class TestDataForOrder(unittest.TestCase):
         self.assertEqual(d4o.price, 10)
         self.assertEqual(d4o.quantity, 5)
         self.assertEqual(d4o.quantity_final, 0)
+        self.assertEqual(d4o.original_quantity, 56)
         self.assertFalse(d4o.is_buy_in)
 
     def test_update_order(self):
         # Set up
         g, o, p = self.basic_setup()
+        o.original_quantity = 56
         d4o = DataForOrder(o=o)
 
         # Execute
@@ -289,11 +295,12 @@ class TestDataForOrder(unittest.TestCase):
         self.assertEqual(o.quantity, 5)
         self.assertTrue(o.is_buy_in)
         self.assertEqual(o.quantity_final, -7777)
+        self.assertEqual(d4o.original_quantity, 56)
 
     def test_update_order_None(self):
         # Setup
         d4o = DataForOrder()
-        g, throw_away, p = self.basic_setup()
+        g, _ , p = self.basic_setup()
 
         d4o.player = p
         d4o.group = g
@@ -302,6 +309,7 @@ class TestDataForOrder(unittest.TestCase):
         d4o.quantity = -55
         d4o.quantity_final = -56
         d4o.is_buy_in = True
+        d4o.original_quantity = 56
 
         # Execute
         d4o.update_order()
@@ -315,6 +323,7 @@ class TestDataForOrder(unittest.TestCase):
         self.assertEqual(o.quantity, -55)
         self.assertTrue(o.is_buy_in)
         self.assertEqual(o.quantity_final, -56)
+        self.assertEqual(o.original_quantity, 56)
 
     def test_get_total_quantity(self):
         self.assertEqual(CallMarket.get_total_quantity(all_orders), 45)

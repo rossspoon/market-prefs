@@ -13,6 +13,7 @@ class DataForOrder:
                  order_type=None,
                  price=None,
                  quantity=None,
+                 original_quantity=None,
                  is_buy_in=False
                  ):
         if o is None:
@@ -24,6 +25,7 @@ class DataForOrder:
             self.price = price
             self.quantity = quantity
             self.quantity_final = 0
+            self.original_quantity = original_quantity
             self.is_buy_in = is_buy_in
             return
 
@@ -35,6 +37,7 @@ class DataForOrder:
         self.price = o.price
         self.quantity = o.quantity
         self.quantity_final = o.quantity_final
+        self.original_quantity = o.original_quantity
         self.is_buy_in = o.is_buy_in
 
     def update_order(self):
@@ -45,10 +48,13 @@ class DataForOrder:
                                       price=self.price,
                                       quantity=self.quantity,
                                       is_buy_in=self.is_buy_in,
-                                      quantity_final=self.quantity_final)
+                                      quantity_final=self.quantity_final,
+                                      original_quantity=self.original_quantity)
         else:
             o = self.order
+            o.quantity = self.quantity
             o.quantity_final = self.quantity_final
+            o.original_quantity = self.original_quantity
             o.is_buy_in = self.is_buy_in
 
     def __eq__(self, other):
@@ -61,7 +67,8 @@ class DataForOrder:
             eq_with_none(self.price, other.price),
             eq_with_none(self.quantity, other.quantity),
             eq_with_none(self.quantity_final, other.quantity_final),
-            eq_with_none(self.is_buy_in, other.is_buy_in)
+            eq_with_none(self.is_buy_in, other.is_buy_in),
+            eq_with_none(self.original_quantity, other.original_quantity)
         ))
 
     def is_sell(self):

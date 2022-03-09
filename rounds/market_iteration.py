@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from rounds.call_market_price import MarketPrice, OrderFill
-from rounds.models import Player, Order, Group
+from rounds.models import Player, Order, Group, OrderType
 from rounds.data_structs import DataForOrder, DataForPlayer
 import common.SessionConfigFunctions as scf
 
@@ -17,6 +17,7 @@ class MarketIteration:
         self.players = ensure_player_data(group.get_players())
         self.dividend = dividend
         self.last_price = group.get_last_period_price()
+        self.group = group
 
         # artifacts to communicate back to the CallMarket
         self.market_price = None
@@ -120,6 +121,78 @@ class MarketIteration:
 
         return sum((o.quantity for o in offers))
 
+    def screen_orders_for_over_shorting(self):
+        """
+        Pre-screen offers to ensure that the market does not exceed the short limit
+        This method will mutate the orders if any quantity of them is canceled.
+        """
+        # Get the short limit for this round.
+        # If there is no limit, simply return.
+        round_limit = self.group.get_short_limit()
+        if round_limit == Group.NO_SHORT_LIMIT:
+            return
+
+        # Get a list of players going short this rounds
+        # Then get the offers of the shorting players
+        shorting_players = self.get_shorting_players()
+        short_offers = self.get_orders_for_players(shorting_players)
+        total_short_supply = sum(o.quantity for o in short_offers)
+
+        # skip out if nothing to do
+        if total_short_supply <= round_limit:
+            return
+
+        # Start canceling orders - Start with the least likely to trade (the orders with the highest price)
+        overage = total_short_supply - round_limit
+        for o in sorted(short_offers, key=lambda x: x.price, reverse=True):
+            if overage <= 0:
+                break
+
+            order_supply = o.quantity
+            allowed_amount = None
+            if order_supply <= overage:
+                overage -= order_supply
+                allowed_amount = 0
+            elif order_supply > overage:
+                allowed_amount = overage
+                overage = 0
+
+            o.original_quantity = o.quantity
+            o.quantity = allowed_amount
+
+    def get_orders_for_players(self, players, order_type=OrderType.OFFER):
+        """
+        Get orders for the given iterable of players.  Players can be a single Player
+        @param players: iterable or single player
+        @param order_type: default OrderType.OFFER
+        @return: an iterable of orders for the given players
+        """
+        if order_type == OrderType.OFFER:
+            base_orders = self.offers
+        else:
+            base_orders = self.bids
+
+        try:
+            _ = iter(players)
+        except TypeError:
+            _players = {players}
+        else:
+            _players = set(players)
+
+        return list(filter(lambda o: o.player in _players, base_orders))
+
+    def get_supply_for_player(self, player):
+        orders_for_player = self.get_orders_for_players(player)
+        return sum(o.quantity for o in orders_for_player)
+
+    def get_shorting_players(self):
+        shorting_players = []
+        for p in self.group.get_players():
+            player_supply = self.get_supply_for_player(p)
+            if player_supply > 0 and player_supply > p.shares:
+                shorting_players.append(p)
+        return shorting_players
+
 
 def get_orders_by_player(orders):
     d = defaultdict(list)
@@ -137,7 +210,7 @@ def ensure_player_data(players):
 
     ret = []
     for p in players:
-        if type(p) == Player:
+        if isinstance(p, Player):
             ret.append(DataForPlayer(p))
         else:
             ret.append(p)
@@ -151,11 +224,10 @@ def ensure_order_data(orders):
 
     ret = []
     for o in orders:
-        if type(o) == Order:
+        if isinstance(o, Order):
             ret.append(DataForOrder(o))
         else:
             ret.append(o)
-
     return ret
 
 

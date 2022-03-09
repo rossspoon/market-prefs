@@ -1,33 +1,55 @@
 import unittest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch, call, PropertyMock
 
 from otree.models import Session
 
-from rounds import Order, Player, OrderType, Group
+from rounds import OrderType, Group, Player
 from rounds.call_market_price import MarketPrice, OrderFill
 from rounds.data_structs import DataForOrder, DataForPlayer
 from rounds.market_iteration import MarketIteration
 from rounds.market_iteration import get_orders_by_player, concat_or_null, ensure_order_data
+from test_call_market import get_order
+from test_call_market import basic_group
 
 BID = OrderType.BID.value
 OFFER = OrderType.OFFER.value
 
-p1 = Player(id=1234, id_in_group=1)
-p2 = Player(id=6789, id_in_group=2)
+
+def basic_player(pid=None, id_in_group=None, shares=0):
+    player = MagicMock(spec=Player)
+    player.shares = shares
+    if pid:
+        player.id = pid
+    if id_in_group:
+        player.id_in_group = id_in_group
+    return player
+
+
+def basic_iteration(offers=None, bids=None, group=None, dividend=100, players=None, last_price=1375):
+    if not group:
+        group = basic_group()
+        group.get_last_period_price = MagicMock(return_value=last_price)
+    if players:
+        group.get_players = MagicMock(return_value=players)
+    return MarketIteration(bids, offers, group, dividend)
+
+
+p1 = basic_player(pid=1234, id_in_group=1)
+p2 = basic_player(pid=6789, id_in_group=2)
 all_players = [p1, p2]
 
-b_10_05 = Order(player=p1, order_type=BID, price=10, quantity=5)
-b_10_06 = Order(player=p2, order_type=BID, price=10, quantity=6)
-b_11_05 = Order(order_type=BID, price=11, quantity=5)
-b_11_06 = Order(order_type=BID, price=11, quantity=6)
+b_10_05 = get_order(player=p1, order_type=BID, price=10, quantity=5)
+b_10_06 = get_order(player=p2, order_type=BID, price=10, quantity=6)
+b_11_05 = get_order(order_type=BID, price=11, quantity=5)
+b_11_06 = get_order(order_type=BID, price=11, quantity=6)
 
-o_05_05 = Order(player=p1, order_type=OFFER, price=5, quantity=5)
-o_05_06 = Order(order_type=OFFER, price=5, quantity=6)
-o_06_05 = Order(order_type=OFFER, price=6, quantity=5)
-o_06_07 = Order(order_type=OFFER, price=6, quantity=7)
+o_05_05 = get_order(player=p1, order_type=OFFER, price=5, quantity=5)
+o_05_06 = get_order(order_type=OFFER, price=5, quantity=6)
+o_06_05 = get_order(order_type=OFFER, price=6, quantity=5)
+o_06_07 = get_order(order_type=OFFER, price=6, quantity=7)
 
-buy_in_p1 = Order(player=p1, order_type=BID, price=8, quantity=1)
-sell_off_p1 = Order(player=p1, order_type=OFFER, price=8, quantity=1)
+buy_in_p1 = get_order(player=p1, order_type=BID, price=8, quantity=1)
+sell_off_p1 = get_order(player=p1, order_type=OFFER, price=8, quantity=1)
 
 all_bids = [b_10_05, b_10_06, b_11_05, b_11_06]
 all_offers = [o_05_05, o_05_06, o_06_05, o_06_07]
@@ -38,7 +60,7 @@ sess_config = dict(interest_rate=.1,
                    margin_target_ratio=.4)
 
 
-def get_group(players=[], market_price=98):
+def get_group(players, market_price=98):
     group = Group()
     group.get_players = MagicMock(return_value=players)
     group.get_last_period_price = MagicMock(return_value=market_price)
@@ -51,7 +73,7 @@ class TestMarketIteration(unittest.TestCase):
 
     def test_init(self):
         # Execute
-        group = get_group(players=all_players, market_price=-99)
+        group = get_group(all_players, market_price=-99)
         mi = MarketIteration(all_bids, all_offers, group, 4)
 
         # Assert
@@ -91,7 +113,7 @@ class TestMarketIteration(unittest.TestCase):
         # Set-up
         buy_ins = [buy_in_p1]
         buy_in_data = ensure_order_data(buy_ins)
-        group = get_group(players=all_players, market_price=-99)
+        group = get_group(all_players, market_price=-99)
 
         # Execute
         mi = MarketIteration(None, None, group, 4, buy_ins=buy_ins)
@@ -113,25 +135,24 @@ class TestMarketIteration(unittest.TestCase):
 
     def test_get_orders_by_player(self):
         # Set-up
-        p1_b_10_05 = Order(player=p1, order_type=BID, price=10, quantity=5)
-        p2_b_10_06 = Order(player=p2, order_type=BID, price=10, quantity=6)
-        p1_b_11_05 = Order(player=p1, order_type=BID, price=11, quantity=5)
-        p2_b_11_06 = Order(player=p2, order_type=BID, price=11, quantity=6)
+        p1_b_10_05 = get_order(player=p1, order_type=BID, price=10, quantity=5)
+        p2_b_10_06 = get_order(player=p2, order_type=BID, price=10, quantity=6)
+        p1_b_11_05 = get_order(player=p1, order_type=BID, price=11, quantity=5)
+        p2_b_11_06 = get_order(player=p2, order_type=BID, price=11, quantity=6)
 
-        p2_o_05_05 = Order(player=p2, order_type=OFFER, price=5, quantity=5)
-        p1_o_05_06 = Order(player=p1, order_type=OFFER, price=5, quantity=6)
-        p2_o_06_05 = Order(player=p2, order_type=OFFER, price=6, quantity=5)
-        p1_o_06_07 = Order(player=p1, order_type=OFFER, price=6, quantity=7)
+        p2_o_05_05 = get_order(player=p2, order_type=OFFER, price=5, quantity=5)
+        p1_o_05_06 = get_order(player=p1, order_type=OFFER, price=5, quantity=6)
+        p2_o_06_05 = get_order(player=p2, order_type=OFFER, price=6, quantity=5)
+        p1_o_06_07 = get_order(player=p1, order_type=OFFER, price=6, quantity=7)
 
         orders = [p1_b_10_05, p2_b_10_06, p1_b_11_05, p2_b_11_06, p2_o_05_05, p1_o_05_06, p2_o_06_05,
                   p1_o_06_07]
-        self
 
         # Execute
         d = get_orders_by_player(orders)
 
         # Assert
-        self.assertEqual(set(d.keys()), set([p1, p2]))
+        self.assertEqual(set(d.keys()), {p1, p2})
         self.assertEqual(d[p1], [p1_b_10_05, p1_b_11_05, p1_o_05_06, p1_o_06_07])
         self.assertEqual(d[p2], [p2_b_10_06, p2_b_11_06, p2_o_05_05, p2_o_06_05])
 
@@ -151,8 +172,8 @@ class TestMarketIteration(unittest.TestCase):
         self.assertIsNone(concat_or_null([None, None]))
 
     def test_get_market_price_no_buy_ins(self):
-        with patch.object(MarketPrice, '__init__', return_value=None) as mock_init:
-            with patch.object(MarketPrice, 'get_market_price', return_value=(5, 6)) as mock_gmp:
+        with patch.object(MarketPrice, '__init__', return_value=None):
+            with patch.object(MarketPrice, 'get_market_price', return_value=(5, 6)):
                 # Set up
                 bids_data = ensure_order_data(all_bids)
                 offer_data = ensure_order_data(all_offers)
@@ -170,8 +191,8 @@ class TestMarketIteration(unittest.TestCase):
                 MarketPrice.get_market_price.assert_called_once_with(last_price=-99)
 
     def test_get_market_price_with_buy_ins(self):
-        with patch.object(MarketPrice, '__init__', return_value=None) as mock_init:
-            with patch.object(MarketPrice, 'get_market_price', return_value=(5, 6)) as mock_gmp:
+        with patch.object(MarketPrice, '__init__', return_value=None):
+            with patch.object(MarketPrice, 'get_market_price', return_value=(5, 6)):
                 # Set up
                 bids_data = ensure_order_data(all_bids + [buy_in_p1])
                 offer_data = ensure_order_data(all_offers)
@@ -188,8 +209,8 @@ class TestMarketIteration(unittest.TestCase):
                 MarketPrice.get_market_price.assert_called_once_with(last_price=-98)
 
     def test_fill_orders_no_buy_ins(self):
-        with patch.object(OrderFill, '__init__', return_value=None) as mock_init:
-            with patch.object(OrderFill, 'fill_orders', return_value=([], [])) as mock_gmp:
+        with patch.object(OrderFill, '__init__', return_value=None):
+            with patch.object(OrderFill, 'fill_orders', return_value=([], [])):
                 bids_data = ensure_order_data(all_bids)
                 offer_data = ensure_order_data(all_offers)
                 group = get_group(players=all_players, market_price=-98)
@@ -204,8 +225,8 @@ class TestMarketIteration(unittest.TestCase):
                 OrderFill.fill_orders.assert_called_with(-78)
 
     def test_fill_orders_with_buy_ins(self):
-        with patch.object(OrderFill, '__init__', return_value=None) as mock_init:
-            with patch.object(OrderFill, 'fill_orders', return_value=([], [])) as mock_gmp:
+        with patch.object(OrderFill, '__init__', return_value=None):
+            with patch.object(OrderFill, 'fill_orders', return_value=([], [])):
                 bids_data = ensure_order_data(all_bids)
                 offer_data = ensure_order_data(all_offers)
                 buy_in_data = ensure_order_data([buy_in_p1])
@@ -228,7 +249,7 @@ class TestMarketIteration(unittest.TestCase):
         d4p.set_mv_debt_future = MagicMock()
         d4p.is_buy_in_required = MagicMock(return_value=False)
         d4p.generate_buy_in_order = MagicMock(return_value=buy_in_p1)
-        group = get_group()
+        group = get_group([])
 
         mi = MarketIteration(None, None, group, 4)
 
@@ -254,7 +275,7 @@ class TestMarketIteration(unittest.TestCase):
         d4p.set_mv_debt_future = MagicMock()
         d4p.is_buy_in_required = MagicMock(return_value=True)
         d4p.generate_buy_in_order = MagicMock(return_value=buy_in_p1)
-        group = get_group()
+        group = get_group([])
 
         mi = MarketIteration(None, None, group, 4)
 
@@ -318,3 +339,169 @@ class TestMarketIteration(unittest.TestCase):
         # Assert
         o_data = ensure_order_data(all_bids + all_offers)
         self.assertEqual(o, o_data)
+
+    def test_supply_for_player(self):
+        # Set-up
+        player1 = basic_player(shares=0)
+        player2 = basic_player(shares=2)
+
+        o1 = get_order(player=player1, quantity=1, order_type=OFFER)
+        o21 = get_order(player=player2, quantity=2, order_type=OFFER)
+        o22 = get_order(player=player2, quantity=1, order_type=OFFER)
+        o23 = get_order(player=player2, quantity=4, order_type=BID)
+
+        itr = basic_iteration(offers=[o1, o21, o22], bids=[o23], players=[player1, player2])
+
+        # Test
+        s1 = itr.get_supply_for_player(player1)
+        s2 = itr.get_supply_for_player(player2)
+
+        # Assert
+        self.assertEqual(s1, 1)
+        self.assertEqual(s2, 3)
+
+    def test_get_orders_for_players_single(self):
+        player1 = basic_player(shares=0)
+        player2 = basic_player(shares=2)
+        player3 = basic_player(shares=2)
+
+        o1 = get_order(player=player1, quantity=1, order_type=OFFER)
+        o21 = get_order(player=player2, quantity=2, order_type=OFFER)
+        o22 = get_order(player=player2, quantity=1, order_type=OFFER)
+        o23 = get_order(player=player2, quantity=4, order_type=BID)
+        o3 = get_order(player=player3, quantity=4, order_type=OFFER)
+
+        itr = basic_iteration(offers=[o1, o21, o22, o3], bids=[o23], players=[player1, player2, player3])
+
+        # Test
+        o_for_p1 = itr.get_orders_for_players(player1)
+        o_for_p2 = itr.get_orders_for_players(player2)
+        b_for_p2 = itr.get_orders_for_players(player2, order_type=OrderType.BID)
+        o_for_p1p2 = itr.get_orders_for_players([player1, player2])
+
+        # Assert
+        self.assertEqual(o_for_p1, ensure_order_data([o1]))
+        self.assertEqual(o_for_p2, ensure_order_data([o21, o22]))
+        self.assertEqual(b_for_p2, ensure_order_data([o23]))
+        self.assertEqual(o_for_p1p2, ensure_order_data([o1, o21, o22]))
+
+    def test_get_shorting_players(self):
+        # Set-up
+        player1 = basic_player(shares=10)  # not selling
+        player2 = basic_player(shares=10)  # selling all shares, not shorting
+        player3 = basic_player(shares=10)  # Shorting
+        player4 = basic_player(shares=-10)  # already short, and selling
+        player5 = basic_player(shares=-10)  # already short, but not selling
+
+        o2 = get_order(player=player2, quantity=10, order_type=OFFER)
+        o3 = get_order(player=player3, quantity=11, order_type=OFFER)
+        o4 = get_order(player=player4, quantity=1, order_type=OFFER)
+
+        itr = basic_iteration(offers=[o2, o3, o4], players=[p1, p2])
+        itr.group.get_players = MagicMock(return_value=[player1, player2, player3, player4, player5])
+
+        # Test
+        shorting = itr.get_shorting_players()
+
+        # Assert
+        self.assertEqual(set(shorting), {player3, player4})
+
+    def test_screen_orders_for_over_shorting_no_limit(self):
+        # Set-up
+        itr = basic_iteration(players=[p1, p2])
+        itr.group.get_short_limit = MagicMock(return_value=Group.NO_SHORT_LIMIT)
+        itr.get_shorting_players = MagicMock()
+
+        # Test
+        itr.screen_orders_for_over_shorting()
+
+        # Assert
+        self.assertEqual(itr.get_shorting_players.call_count, 0)
+
+    def tests_screen_orders_for_over_shorting_at_limit(self):
+        # Set-up
+        player1 = basic_player(shares=0)
+        player2 = basic_player(shares=0)
+
+        o1 = get_order(player=player1, quantity=2, order_type=OFFER)
+        o2 = get_order(player=player2, quantity=2, order_type=OFFER)
+
+        p = PropertyMock()
+        type(o1).original_quantity = p
+        type(o2).original_quantity = p
+
+        itr = basic_iteration(offers=[o1, o2], players=[player1, player2])
+        itr.group.get_short_limit = MagicMock(return_value=4)
+
+        # Test
+        itr.screen_orders_for_over_shorting()
+
+        # Assert
+        o1.original_quantity.assert_not_called()
+        o2.original_quantity.assert_not_called()
+
+    def tests_screen_orders_for_over_shorting_cancel_partial(self):
+        # Set-up
+        player1 = basic_player(shares=0)
+        player2 = basic_player(shares=0)
+
+        o1 = get_order(player=player1, quantity=2, price=5, order_type=OFFER, original_quantity=None)
+        o2 = get_order(player=player2, quantity=2, price=4, order_type=OFFER, original_quantity=None)
+
+        itr = basic_iteration(offers=[o1, o2], players=[player1, player2])
+        itr.group.get_short_limit = MagicMock(return_value=3)
+
+        # Test
+        itr.screen_orders_for_over_shorting()
+        for o in itr.offers:
+            o.update_order()
+
+        # Assert
+        self.assertEqual(o1.original_quantity, 2)
+        self.assertEqual(o1.quantity, 1)
+        self.assertIsNone(o2.original_quantity)
+        self.assertEqual(o2.quantity, 2)
+
+    def tests_screen_orders_for_over_shorting_cancel_full(self):
+        # Set-up
+        player1 = basic_player(shares=0)
+        player2 = basic_player(shares=0)
+
+        o1 = get_order(player=player1, quantity=2, price=5, order_type=OFFER, original_quantity=None)
+        o2 = get_order(player=player2, quantity=2, price=4, order_type=OFFER, original_quantity=None)
+
+        itr = basic_iteration(offers=[o1, o2], players=[player1, player2])
+        itr.group.get_short_limit = MagicMock(return_value=1)
+
+        # Test
+        itr.screen_orders_for_over_shorting()
+        for o in itr.offers:
+            o.update_order()
+
+        # Assert
+        self.assertEqual(o1.original_quantity, 2)
+        self.assertEqual(o1.quantity, 0)
+        self.assertEqual(o2.original_quantity, 2)
+        self.assertEqual(o2.quantity, 1)
+
+    def tests_screen_orders_for_over_shorting_overage_just_zeroed(self):
+        # Set-up
+        player1 = basic_player(shares=0)
+        player2 = basic_player(shares=0)
+
+        o1 = get_order(player=player1, quantity=2, price=5, order_type=OFFER, original_quantity=None)
+        o2 = get_order(player=player2, quantity=2, price=4, order_type=OFFER, original_quantity=None)
+
+        itr = basic_iteration(offers=[o1, o2], players=[player1, player2])
+        itr.group.get_short_limit = MagicMock(return_value=0)
+
+        # Test
+        itr.screen_orders_for_over_shorting()
+        for o in itr.offers:
+            o.update_order()
+
+        # Assert
+        self.assertEqual(o1.original_quantity, 2)
+        self.assertEqual(o1.quantity, 0)
+        self.assertEqual(o2.original_quantity, 2)
+        self.assertEqual(o2.quantity, 0)
