@@ -214,9 +214,9 @@ class TestDataForPlayer(unittest.TestCase):
     def test_generate_buy_in_order(self):
         # Set-up
         p = basic_player()
+        p.shares = -10
+        p.cash = 1000
         d4p = DataForPlayer(p)
-        d4p.shares_result = -10
-        d4p.cash_result = 1000
 
         # Execute
         o = d4p.generate_buy_in_order(60)
@@ -226,6 +226,22 @@ class TestDataForPlayer(unittest.TestCase):
         self.assertEqual(o.order_type, BID)
         self.assertEqual(o.price, 75)
         self.assertEqual(o.quantity, 6)
+
+    def test_generate_sell_off_order(self):
+        # Set-up
+        p = basic_player()
+        p.shares = 10
+        p.cash = -1000
+        d4p = DataForPlayer(p)
+
+        # Execute
+        o = d4p.generate_sell_off_order(60)  # price is 60
+
+        # Assert
+        self.assertTrue(o.is_buy_in)
+        self.assertEqual(o.order_type, OFFER)
+        self.assertEqual(o.price, 45)
+        self.assertEqual(o.quantity, 5)
 
 
 # noinspection DuplicatedCode
@@ -300,7 +316,7 @@ class TestDataForOrder(unittest.TestCase):
     def test_update_order_None(self):
         # Setup
         d4o = DataForOrder()
-        g, _ , p = self.basic_setup()
+        g, _, p = self.basic_setup()
 
         d4o.player = p
         d4o.group = g
@@ -329,3 +345,15 @@ class TestDataForOrder(unittest.TestCase):
         self.assertEqual(CallMarket.get_total_quantity(all_orders), 45)
         self.assertEqual(CallMarket.get_total_quantity([]), 0)
         self.assertEqual(CallMarket.get_total_quantity(None), 0)
+
+    def test_cancel_order(self):
+        # Set-up
+        o = DataForOrder()
+        o.quantity = 10
+
+        # Test
+        o.cancel()
+
+        # Assert
+        self.assertEqual(o.quantity, 0)
+        self.assertEqual(o.original_quantity, 10)

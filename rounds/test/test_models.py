@@ -8,6 +8,7 @@ from otree.models import Session
 from rounds.models import *
 from unittest.mock import MagicMock
 import common.SessionConfigFunctions as scf
+from rounds.test.test_call_market import get_order
 
 
 class TestOrderErrorCodeMethods(unittest.TestCase):

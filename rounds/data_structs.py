@@ -40,6 +40,10 @@ class DataForOrder:
         self.original_quantity = o.original_quantity
         self.is_buy_in = o.is_buy_in
 
+    def cancel(self):
+        self.original_quantity = self.quantity
+        self.quantity = 0
+
     def update_order(self):
         if self.order is None:
             self.order = Order.create(player=self.player,
@@ -127,8 +131,8 @@ class DataForPlayer:
         margin_premium = scf.get_margin_premium(self.player)
         p = int(round(market_price * (1 + margin_premium)))  # premium of current market price
         tr = scf.get_margin_target_ratio(self.player)
-        c = abs(self.cash_result)
-        s = abs(self.shares_result)
+        c = abs(self.player.cash)
+        s = abs(self.player.shares)
 
         number_of_shares = math.ceil(((1 + tr)*s*p - c) / (tr * p))
 
@@ -154,17 +158,19 @@ class DataForPlayer:
 
     def generate_sell_off_order(self, market_price):
         """
-        Generate a sell-off order.
+        Generate a sell-off order.  The order is capped to the number of shares the plays owns.
+        This should never be reached, but it's a backstop just in case.
         @param market_price: The market price
          @return: DataForOrder
         """
         margin_premium = scf.get_margin_premium(self.player)
         p = int(round(market_price * (1 - margin_premium)))  # premium of current market price
         tr = scf.get_margin_target_ratio(self.player)
-        s = abs(self.shares_result)
-        c = abs(self.cash_result)
+        s = abs(self.player.shares)
+        c = abs(self.player.cash)
 
-        number_of_shares = int(math.ceil(((1 + tr)*c - s*p) / (tr*p)))
+        sell_off_amount = int(math.ceil(abs(((1 - tr) * c - s * p) / (tr * p))))
+        number_of_shares = min(sell_off_amount, s)  # prevent shorts
 
         player = self.player
         return DataForOrder(player=player,

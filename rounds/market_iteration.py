@@ -34,6 +34,24 @@ class MarketIteration:
         self.margin_target_ratio = scf.get_margin_target_ratio(group)
 
     def run_iteration(self):
+        # Pre-screen offers to limit shorting
+        # This will mutate the data stored in self.offers
+        self.screen_orders_for_over_shorting()
+
+        # Cancel the offers of players with forced buy-ins
+        # The buy-in price could get quite high.  Higher than this player's sell orders
+        # So avoid the situation where the buy price is higher than the sell.
+        # Plus this player has no business selling anyway.
+        if self.buy_ins:
+            buy_in_players = [o.player for o in self.buy_ins]
+            self.cancel_orders_for_players(buy_in_players, OrderType.OFFER)
+
+        # Cancel the bids of players with forced sell-offs
+        # Similar to buy-ins, but it is the sell price that can get quite low.
+        if self.sell_offs:
+            sell_off_players = [o.player for o in self.sell_offs]
+            self.cancel_orders_for_players(sell_off_players, OrderType.BID)
+
         # Evaluate the new market conditions
         market_price, market_volume = self.get_market_price()
         self.market_price = market_price
@@ -53,6 +71,11 @@ class MarketIteration:
         self.pending_sell_offs = auto_sells
         self.pending_buy_ins = auto_buys
         return auto_buys, auto_sells
+
+    def cancel_orders_for_players(self, players, order_type):
+        orders = self.get_orders_for_players(players, order_type)
+        for o in orders:
+            o.cancel()
 
     def fill_orders(self, market_price):
         of = OrderFill(self.get_all_orders())
@@ -154,7 +177,7 @@ class MarketIteration:
                 overage -= order_supply
                 allowed_amount = 0
             elif order_supply > overage:
-                allowed_amount = overage
+                allowed_amount = o.quantity - overage
                 overage = 0
 
             o.original_quantity = o.quantity
