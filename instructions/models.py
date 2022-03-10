@@ -13,7 +13,6 @@ import rounds
 import numpy as np
 from common.ParticipantFuctions import generate_participant_ids
 
-
 doc = """
 Instructions for the Short-squeeze market experiment
 """
@@ -42,27 +41,7 @@ class Player(BasePlayer):
     qz1q2 = models.BooleanField(label="It is possible to both buy and sell shares in a single market round.")
     qz1q3 = models.BooleanField(label="When you short the STOCK you must pay out the dividend.")
     qz1q4 = models.StringField(label='What is the interest rate paid out on CASH?')
-
-    @staticmethod
-    def qz1q1_error_message(player, value):
-        if value != 6:
-            return "You are allowed up to 6 orders per market period."
-
-    @staticmethod
-    def qz1q2_error_message(player, value):
-        if value:
-            return "You may not BUY and SELL at the same time."
-
-    @staticmethod
-    def qz1q3_error_message(player, value):
-        if not value:
-            return "When you short the STOCK, dividends  will be deducted from you CASH holdings."
-
-    @staticmethod
-    def qz1q4_error_message(player, value):
-        ir = scf.as_wnp(scf.get_interest_rate(player))
-        if value != ir:
-            return f"Interest on CASH is earned at {ir}."
+    qz1_attempted = models.BooleanField(initial=False)
 
     @staticmethod
     def qz1q4_choices(player):
@@ -78,24 +57,7 @@ class Player(BasePlayer):
     qz2q2 = models.IntegerField(label="An automatic BUY-IN will occur when:",
                                 widget=widgets.RadioSelect)
     qz2q3 = models.IntegerField(label="How many market periods will you participate in today?")
-
-    @staticmethod
-    def qz2q1_error_message(player, value):
-        fundamental = scf.get_fundamental_value(player)
-        if value != fundamental:
-            return f'The system will buy back share of STOCK at a price of {fundamental} points'
-
-    @staticmethod
-    def qz2q2_error_message(player, value):
-        mr = scf.get_margin_ratio(player, wnp=True)
-        if value != 1:
-            return f'The value of you shorted shares of STOCK is more that {mr} of your amount of CASH'
-
-    @staticmethod
-    def qz2q3_error_message(player, value):
-        num = rounds.Constants.num_rounds
-        if value != num:
-            return f'The market will last for {num} periods'
+    qz2_attempted = models.BooleanField(initial=False)
 
     @staticmethod
     def qz2q1_choices(player):
@@ -108,7 +70,7 @@ class Player(BasePlayer):
     def qz2q2_choices(player):
         mr = scf.get_margin_ratio(player, wnp=True)
         return [[0, f'The amount of CASH you borrowed is more than {mr} of the value of you STOCK holdings'],
-                [1, f'The value of your shorted shares of STOCK is more that {mr} of your amount of CASH'],
+                [1, f'You have shorted the STOCK and your margin ratio drops below {mr}'],
                 [2, 'Every two rounds to ensure an equal distribution of STOCK']]
 
     @staticmethod

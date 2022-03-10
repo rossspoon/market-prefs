@@ -1,0 +1,30 @@
+{{ block title }}
+    MARKET RESTRICTIONS - Limit on Shorting
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+    <link rel="stylesheet" href="{{ static 'css/global.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+        In this experiment, the system will limit short sales to {{ float_ratio_cap }} of the STOCK that is available
+        to trade (this is called the "float"). &nbsp;&nbsp; This limit applies to the whole market, so if you attempt to
+        short the STOCK and others have already shorted {{ float_ratio_cap }} of the float, your order
+        will be canceled. &nbsp;&nbsp; The Market Page will inform you of the proportion of shorted STOCK.
+
+        <div class="example">
+            <p>Suppose there are 10 shares of STOCK available to trade, and two other traders have already
+            shorted the STOCK by 5 shares each. &nbsp;&nbsp; This means that 100% of the STOCK float has been shorted.
+            If you attempt to sell one share short, that order will be canceled.</p>
+        </div>
+
+
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

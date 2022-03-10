@@ -1,0 +1,35 @@
+{{ block title }}
+    AUTOMATIC BUY-IN / SELL-OFF
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+    <link rel="stylesheet" href="{{ static 'css/global.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+        <p>If your MARGIN drops below {{ marg_ratio_pct }} you will need to correct the situation.&nbsp;&nbsp;
+            If you borrowed CASH you will need to sell off STOCK. &nbsp;&nbsp; If you shorted STOCK you
+            will need to buy back shares. &nbsp;&nbsp; These actions will increase your MARGIN.&nbsp;&nbsp;
+            You will be shown a warning message and advised on the proper course of
+            action.
+        </p>
+        <p>
+            If you see such a warning you will be given one market period to increase your MARGIN. &nbsp;&nbsp; If at the end of
+            the market period, your margin is still below {{ marg_ratio_pct }}, the system will BUY or SELL shares
+            on your behalf to correct your MARGIN.
+        </p>
+        <p>
+            Depending on market conditions, an automatic buy-in can happen at a very high price.&nbsp;&nbsp;
+            Also, a sell-off can happen at a very low price. &nbsp;&nbsp; It is therefore advisable to maintain a proper
+            MARGIN ratio to avoid this situation.
+        </p>
+
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

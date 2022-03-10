@@ -12,6 +12,7 @@ class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
     num_rounds = 50
+    # TODO: Can we do this with a session config, better than way.
     MARKET_TIME = 6000
 
 
@@ -226,8 +227,10 @@ def get_messages(player: Player):
         short_float_ratio = player.group.short / player.group.float
         ret.append(dict(class_attr="",
                         msg=f"""
-                            <span class="left-side">Current Market Price: <span class="bold-text"> {price}</span></span>
-                            <span class="right-side">Percent of Float Shorted: <span class="bold-text">{short_float_ratio}</span></span>
+                            <span class="left-side">Current Market Price: <span class="bold-text"> 
+                            {price}</span></span>
+                            <span class="right-side">Percent of Float Shorted: 
+                            <span class="bold-text">{short_float_ratio:.0%}</span></span> 
                         """))
     else:
         ret.append(dict(class_attr="",
@@ -281,7 +284,7 @@ def get_debt_message(margin_ratio, margin_target_ratio, personal_cash_margin, de
         class_attr = "alert-warning"
         msg = f"""<p>Warning:  CASH Margin: <span class="bold-text"> {personal_cash_margin:.0%} </span></p>
                         <p> Your CASH margin is getting close to the minimum requirement of {margin_ratio:.0%}.
-                        This most likely happened because the value of you STOCK has decrease.  If your
+                        This most likely happened because the value of your STOCK has decreased.  If your
                         CASH margin becomes {margin_ratio:.0%} or lower, the system will sell off your STOCK to
                         satisfy the margin requirement.</p>
                         """

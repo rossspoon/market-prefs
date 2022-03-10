@@ -19,6 +19,8 @@ SK_RANDOMIZE_HISTORY = 'random_hist'
 SK_BONUS_CAP = 'bonus_cap'
 SK_AUTO_TRANS_DELAY = 'auto_trans_delay'
 SK_FLOAT_RATIO_CAP = 'float_ratio_cap'
+SK_FORECAST_THOLD = 'forecast_thold'
+SK_FORECAST_REWARD = 'forecast_reward'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -164,3 +166,13 @@ def get_float_ratio_cap(obj):
     """
     config = ensure_config(obj)
     return get_item_as_float(config, SK_FLOAT_RATIO_CAP, return_none=True)
+
+
+def get_forecast_thold(obj):
+    config = ensure_config(obj)
+    return get_item_as_int(config, SK_FORECAST_THOLD)
+
+
+def get_forecast_reward(obj):
+    config = ensure_config(obj)
+    return get_item_as_int(config, SK_FORECAST_REWARD)

@@ -87,7 +87,7 @@ SESSION_CONFIGS = [
 
 SESSION_CONFIG_DEFAULTS = dict(
     real_world_currency_per_point=0.0001,
-    participation_fee=5.00,
+    participation_fee=10.00,
     doc="",
     use_browser_bots=False,
     interest_rate=0.05,
@@ -106,7 +106,9 @@ SESSION_CONFIG_DEFAULTS = dict(
     shares_endowment_treatment=-2,
 
     initial_price=2800,
-    bonus_cap=300000
+    bonus_cap=250000,
+    forecast_thold=250,
+    forecast_reward=500
 )
 
 PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT']

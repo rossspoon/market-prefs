@@ -3,20 +3,22 @@
 {{ endblock }}
 {{ block content }}
     <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
-    <link rel="stylesheet" href="{{ static 'instructions/css/forecast_page.css' }}">
     <link rel="stylesheet" href="{{ static 'css/global.css' }}">
 
     <div class="layout-box">
     <div class="main-block">
     <div class="side-by-side">
         <div class="sbs-left">
-            <p>After the Market page, is the Forecasting page.   Here you will be asked to predict the market price for the current period and the next two periods.   If your prediction for the current period is within 250 points of the actual value, you will be awarded an additional 500 points.  Note, only the current round forecast is considered for this award.
+            <p>After the Market page, is the Forecasting page. &nbsp;&nbsp; Here you will be asked to predict the market price
+                for the current period and the next two periods. &nbsp;&nbsp; If your prediction for the current period
+                is within {{ forecast_thold }} points of the actual value, you will be awarded an
+                additional {{ forecast_reward }} points. &nbsp;&nbsp;
+                Note, only the current round forecast is considered for this award.
             </p>
             <p>The example to the right shows what this page would look like in period 2.</p>
             <p>After making your forecasts, use the <span class="btn-look-alike">Next</span>
                 button to progress to the period
-                summary page.  The page will automatically advance to the summary page after 15
-            seconds.</p>
+                summary page. &nbsp;&nbsp; The page will automatically advance to the summary page after 15 seconds.</p>
         </div>
         <div class="sbs-right">
             <img class="instr-img" src="{{ static 'instructions/img/forecast_explode.png' }}"/>

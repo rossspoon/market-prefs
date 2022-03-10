@@ -1,0 +1,44 @@
+{{ block title }}
+    Equity
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+    <link rel="stylesheet" href="{{ static 'css/global.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+
+    <p>Equity is the combined value of your CASH and STOCK. &nbsp;&nbsp; Shorting the STOCK or borrowing CASH will decrease your
+        equity. &nbsp;&nbsp; If you decide to short or borrow, you have taken on debt.
+        The ratio of equity to debt is called your MARGIN, and you will be required to maintain a margin of
+        {{ marg_ratio_pct }} of your debt.
+    </p>
+    <div class="example">
+        <p>If the price of the STOCK is 3000 points, and you have shorted it by 2 shares, then the value of your
+            STOCK is -6000 points. &nbsp;&nbsp; If you have 10,000 in CASH, your total equity is 4000 &nbsp;&nbsp;(10,000 - 6000).
+        </p>
+        <p>
+            Your MARGIN is
+            67% of the value of your STOCK &nbsp;&nbsp; (4000 / 6000). &nbsp;&nbsp;  This is well above the {{ marg_ratio_pct }} margin
+            requirement.
+        </p>
+    </div>
+    <div class="example">
+        <p>If the price of the STOCK is 2000 points, and you own 7 shares, then the value of your
+            STOCK is +14,000 points. &nbsp;&nbsp; If you have also borrowed 10,000 points of CASH, your equity is 4000 points
+            (14,000 - 10,000).
+        </p>
+        <p>
+            Your MARGIN is then 40% (4000 / 10,000) which is below the {{ marg_ratio_pct }} margin requirement.
+            At this point you will need to sell off shares of STOCK to bring up your MARGIN.
+        </p>
+    </div>
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

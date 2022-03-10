@@ -7,7 +7,9 @@
 
     <div class="layout-box">
     <div class="main-block">
-    <p>As you create orders, your lowest SELL price must be greater you’re your highest BUY price.  When the market closes you will be either a buyer or a seller (nor neither) depending on the resulting market price.</p>
+    <p>As you create orders, your lowest SELL price must be greater than you’re your highest BUY price. &nbsp;&nbsp;
+        When the market closes you will be either a buyer or a seller (nor neither) depending on the resulting
+        market price.</p>
 
     <div class="example">
         <p>You attempt to enter the following orders in this order:</p>
@@ -15,17 +17,19 @@
             <li>SELL 4 shares @ 2500</li>
             <li>BUY 1 shares @ 2500</li>
         </ul>
-        <p>This will result in an error when you attempt to submit the second order because the BUY price is equal to the outstanding SELL price.   The second order will not be accepted.  Either lower the BUY price or cancel the SELL order.</p>
+        <p>This will result in an error when you attempt to submit the second order because the BUY price is
+            equal to the outstanding SELL price.   The second order will not be accepted. &nbsp;&nbsp; Either lower the BUY
+            price or cancel the SELL order.</p>
     </div>
 
     <div class="example">
-        <p>You enter the following orders:</p>
+        <p>You enter the following valid orders:</p>
         <ul>
             <li>SELL 4 @ 3000</li>
             <li>BUY 2 @ 2000</li>
         </ul>
     <p>If the market price is 3000 or greater, you will be a seller this period.
-        If the market price is 2000 or lower you will be a buyer.  If the market price is
+        If the market price is 2000 or lower you will be a buyer. &nbsp;&nbsp; If the market price is
         between 2001 and 2999, you will not make any trades this period.</p>
     </div>
 
