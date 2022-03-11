@@ -243,8 +243,9 @@ class Player(BasePlayer):
         f0 = self.field_maybe_none('f0')
         if f0 is not None:
             forecast_error = abs(price - self.f0)
-            # TODO: session config for 500 & 250
-            forecast_reward = 500 if forecast_error <= 250 else 0
+            reward = scf.get_forecast_reward(self)
+            threshold = scf.get_forecast_thold(self)
+            forecast_reward = reward if forecast_error <= threshold else 0
             self.forecast_error = forecast_error
             self.forecast_reward = forecast_reward
             self.cash_result += forecast_reward
