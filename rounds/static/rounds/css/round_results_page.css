@@ -56,3 +56,17 @@
     color: gray;
     font-size: .7em;
 }
+
+table {
+    width: 80%;
+    margin: auto auto 30px;
+}
+
+.larger-font {
+    font-size: 1.6em;
+}
+
+.vitals div {
+    width: 60%;
+    margin: auto;
+}

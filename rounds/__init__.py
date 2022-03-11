@@ -11,7 +11,7 @@ from common.ParticipantFuctions import generate_participant_ids
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
-    num_rounds = 50
+    num_rounds = 2
     # TODO: Can we do this with a session config, better than way.
     MARKET_TIME = 6000
 
@@ -514,5 +514,34 @@ class RoundResultsPage(Page):
         if player.is_bankrupt():
             return upcoming_apps[0]
 
+    @staticmethod
+    def before_next_page(player: Player, timeout_happened):
+        if player.is_bankrupt():
+            return
 
-page_sequence = [PreMarketWait, Market, ForecastPage, MarketWaitPage, RoundResultsPage]
+        if player.round_number != Constants.num_rounds:
+            return
+
+        participant = player.participant
+        stock_value = player.shares_result * scf.get_fundamental_value(player)
+        total_equity = stock_value + player.cash_result
+        participant.payoff = total_equity
+
+
+class FinalResultsPage(Page):
+    js_vars = get_js_vars
+    form_model = 'player'
+
+    @staticmethod
+    def is_displayed(player: Player):
+        return player.round_number == Constants.num_rounds
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        participant = player.participant
+        session = player.session
+        return {'bonus_rwc': participant.payoff.to_real_world_currency(session),
+                'total_pay': participant.payoff_plus_participation_fee()}
+
+
+page_sequence = [PreMarketWait, Market, ForecastPage, MarketWaitPage, RoundResultsPage, FinalResultsPage]
