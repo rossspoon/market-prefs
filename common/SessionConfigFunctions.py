@@ -21,6 +21,8 @@ SK_AUTO_TRANS_DELAY = 'auto_trans_delay'
 SK_FLOAT_RATIO_CAP = 'float_ratio_cap'
 SK_FORECAST_THOLD = 'forecast_thold'
 SK_FORECAST_REWARD = 'forecast_reward'
+SK_MARKET_TIME = 'market_time'
+SK_IS_PRACTICE = 'is_practice'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -34,10 +36,12 @@ def ensure_config(obj):
         return obj.session.config
 
 
-def get_item_as_int(config, key, default=0):
+def get_item_as_int(config, key, default=0, return_none=False):
     raw_value = config.get(key)
     if raw_value:
         return int(raw_value)
+    elif raw_value is None and return_none:
+        return None
     else:
         return default
 
@@ -176,3 +180,13 @@ def get_forecast_thold(obj):
 def get_forecast_reward(obj):
     config = ensure_config(obj)
     return get_item_as_int(config, SK_FORECAST_REWARD)
+
+
+def get_market_time(obj):
+    config = ensure_config(obj)
+    return get_item_as_int(config, SK_MARKET_TIME, return_none=True)
+
+
+def get_is_practice(obj):
+    config = ensure_config(obj)
+    return get_item_as_bool(config, SK_IS_PRACTICE)

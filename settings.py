@@ -78,6 +78,12 @@ SESSION_CONFIGS = [
         app_sequence=['payment'],
         num_demo_participants=1
     )
+    , dict(
+        name='practice',
+        app_sequence=['practice'],
+        num_demo_participants=1,
+        is_practice=True,
+    )
 ]
 
 # if you set a property in SESSION_CONFIG_DEFAULTS, it will be inherited by all configs
@@ -108,7 +114,8 @@ SESSION_CONFIG_DEFAULTS = dict(
     initial_price=2800,
     bonus_cap=250000,
     forecast_thold=250,
-    forecast_reward=500
+    forecast_reward=500,
+    market_time=45,
 )
 
 PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT']

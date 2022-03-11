@@ -57,5 +57,12 @@
         </div>
         </div>
 </div>
-        {{ next_button }}
+{{ if is_practice }}
+    <div class="page_width">
+        <div class="right-side">
+            {{ next_button }}
+        </div>
+    </div>
+
+{{ endif }}
 {{ endblock }}

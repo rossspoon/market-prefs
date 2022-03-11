@@ -55,7 +55,7 @@ class OrderErrorCode(Enum):
 
 
 class Subsession(BaseSubsession):
-    pass
+    is_practice = models.BooleanField(initial=False)
 
 
 NO_SHORT_LIMIT = -199
@@ -68,6 +68,7 @@ class Group(BaseGroup):
 
     float = models.IntegerField()
     short = models.IntegerField()
+    is_practice = models.BooleanField(initial=False)
 
     def in_round_or_none(self, round_number):
         try:
@@ -144,6 +145,7 @@ class Player(BasePlayer):
     f2 = models.CurrencyField()
     forecast_error = models.CurrencyField()
     forecast_reward = models.CurrencyField(initial=0)
+    is_practice = models.BooleanField(initial=False)
 
     # Per-round Survey
     # emotion = models.IntegerField(
@@ -307,6 +309,7 @@ class Order(ExtraModel):
     quantity_final = models.IntegerField(initial=0)
     original_quantity = models.IntegerField()
     is_buy_in = models.BooleanField(initial=False)  # is this order an automatic buy-in?
+    is_practice = models.BooleanField(initial=False)
 
     def to_dict(self):
         return dict(

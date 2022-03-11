@@ -26,7 +26,7 @@ def vars_for_temp_common(player: Player):
     ret['part_fee_whole_num'] = int(ret['participation_fee'])
     ret['bonus_cap_whole_num'] = int(ret['bonus_cap'] / 10000)
     ret['float_ratio_cap'] = scf.as_wnp(scf.get_float_ratio_cap(player))
-    ret['market_time'] = rounds.Constants.MARKET_TIME
+    ret['market_time'] = scf.get_market_time(player)
     ret['forecast_thold'] = forecast_thold
     ret['forecast_reward'] = forecast_reward
 

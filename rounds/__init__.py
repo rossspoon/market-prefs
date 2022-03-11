@@ -2,6 +2,7 @@ import math
 import random
 from collections import defaultdict
 
+from common import PracticeStuff
 from rounds.call_market import CallMarket
 from .models import *
 import common.SessionConfigFunctions as scf
@@ -11,13 +12,16 @@ from common.ParticipantFuctions import generate_participant_ids
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
-    num_rounds = 2
-    # TODO: Can we do this with a session config, better than way.
-    MARKET_TIME = 6000
+    num_rounds = 3
 
 
 # assign treatments
 def creating_session(subsession):
+    app_name = scf.get_session_name(subsession)
+    if app_name == 'practice':
+        PracticeStuff.creating_session(subsession)
+        return
+
     # only set up endowments in the first round
     if subsession.round_number != 1:
         return
@@ -144,7 +148,7 @@ def is_order_valid(player: Player, data):
     return error_code
 
 
-def process_order_submit(player, data):
+def process_order_submit(player, data, is_practice=False):
     p_id = player.id_in_group
 
     error_code = is_order_valid(player, data)
@@ -159,10 +163,12 @@ def process_order_submit(player, data):
                          group=player.group,
                          order_type=o_type,
                          price=o_price,
-                         quantity=o_quant)
+                         quantity=o_quant,
+                         is_practice=is_practice)
 
         # HACK!!!!  I don't know why this works, but I'm trying to send the id to of the Order object
         # back to browser and that doesn't work unless I make a db query.
+        # TODO: May a db.commit()?
         Order.filter(player=player)
 
         return {p_id: {'func': 'order_confirmed', 'order_id': o.id}}
@@ -187,12 +193,12 @@ def delete_order(player, oid):
         Order.delete(o)
 
 
-def market_page_live_method(player, d):
+def market_page_live_method(player, d, is_practice=False):
     func = d['func']
 
     if func == 'submit-order':
         data = d['data']
-        return process_order_submit(player, data)
+        return process_order_submit(player, data, is_practice=is_practice)
 
     elif func == 'get_orders_for_player':
         return get_orders_for_player_live(player)
@@ -345,6 +351,7 @@ def get_short_message(margin_ratio, margin_target_ratio, personal_stock_margin, 
 def vars_for_market_template(player: Player):
     ret = standard_vars_for_template(player)
     ret['messages'] = get_messages(player)
+    ret['is_practice'] = scf.get_is_practice(player)  # this ensures a value
     return ret
 
 
@@ -372,6 +379,8 @@ def vars_for_round_results_template(player: Player):
     if filled_amount > 0:
         # get the order type
         o_types = list(set(o.order_type for o in orders if o.quantity_final > 0))
+        print(orders)
+        print(o_types)
 
         if len(o_types) != 1:
             trans_type = 0
@@ -467,7 +476,7 @@ class PreMarketWait(WaitPage):
 
 
 class Market(Page):
-    timeout_seconds = Constants.MARKET_TIME
+    get_timeout_seconds = scf.get_market_time
     form_model = 'player'
     form_fields = ['type', 'price', 'quantity']
 
@@ -525,7 +534,7 @@ class RoundResultsPage(Page):
         participant = player.participant
         stock_value = player.shares_result * scf.get_fundamental_value(player)
         total_equity = stock_value + player.cash_result
-        participant.payoff = total_equity
+        participant.payoff = max(total_equity, 0)
 
 
 class FinalResultsPage(Page):
