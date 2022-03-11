@@ -1,9 +1,9 @@
-from ._builtin import Page, WaitPage
+from ._builtin import Page
 
 
 class ConsentDeniedPage(Page):
     def is_displayed(self):
-        return not self.player.participant.CONSENT
+        return not self.player.participant.vars.get('CONSENT')
 
 
 class FinalResultsPage(Page):
@@ -15,7 +15,7 @@ class FinalResultsPage(Page):
                 }
 
     def is_displayed(self):
-        return self.player.participant.CONSENT
+        return self.player.participant.vars.get('CONSENT')
 
 
 page_sequence = [ConsentDeniedPage, FinalResultsPage]

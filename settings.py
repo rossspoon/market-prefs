@@ -70,7 +70,7 @@ SESSION_CONFIGS = [
     )
     , dict(
         name='survey',
-        app_sequence=['survey'],
+        app_sequence=['survey', 'payment'],
         num_demo_participants=1,
     )
     , dict(

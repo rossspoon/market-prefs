@@ -1,3 +1,4 @@
+import numpy as np
 from otree.api import (
     models,
     widgets,
@@ -5,12 +6,10 @@ from otree.api import (
     BaseSubsession,
     BaseGroup,
     BasePlayer,
-    Currency as c,
-    currency_range,
 )
+
 import common.SessionConfigFunctions as scf
 import rounds
-import numpy as np
 from common.ParticipantFuctions import generate_participant_ids
 
 doc = """

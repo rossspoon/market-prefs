@@ -29,7 +29,9 @@ class Constants(BaseConstants):
 
 
 class Subsession(BaseSubsession):
-    pass
+    @staticmethod
+    def creating_session(subsession: BaseSubsession):
+        generate_participant_ids(subsession)
 
 
 class Group(BaseGroup):
