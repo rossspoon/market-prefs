@@ -35,8 +35,13 @@ class PracticeMarketPage(Page):
 
     # method bindings
     js_vars = rounds.get_js_vars_not_current
-    vars_for_template = rounds.vars_for_market_template
     live_method = practice_market_page_live_method
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        ret = rounds.vars_for_market_template(player)
+        ret['is_practice'] = True
+        return ret
 
 
 class PracticeForecastPage(Page):

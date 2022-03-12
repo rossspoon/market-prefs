@@ -351,7 +351,7 @@ def get_short_message(margin_ratio, margin_target_ratio, personal_stock_margin, 
 def vars_for_market_template(player: Player):
     ret = standard_vars_for_template(player)
     ret['messages'] = get_messages(player)
-    ret['is_practice'] = scf.get_is_practice(player)  # this ensures a value
+    ret['is_practice'] = False
     return ret
 
 
