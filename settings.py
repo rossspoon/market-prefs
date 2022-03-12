@@ -80,9 +80,13 @@ SESSION_CONFIGS = [
     )
     , dict(
         name='practice',
-        app_sequence=['practice'],
+        app_sequence=['practice', 'rounds'],
         num_demo_participants=1,
-        is_practice=True,
+    )
+    , dict(
+        name='whole_experiment',
+        app_sequence=['consent', 'instructions', 'practice', 'rounds', 'survey', 'payment'],
+        num_demo_participants=2,
     )
 ]
 

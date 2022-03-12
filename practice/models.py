@@ -4,6 +4,7 @@ from enum import Enum
 from otree.common import InvalidRoundError
 
 import common.SessionConfigFunctions as scf
+from rounds.models import NO_AUTO_TRANS
 
 
 class OrderType(Enum):
@@ -14,53 +15,11 @@ class OrderType(Enum):
     OFFER = 1
 
 
-class OrderField(Enum):
-    """
-        Enumeration representing fields on the order form
-    """
-    PRICE = 1
-    QUANTITY = 2
-    TYPE = 3
-
-
-class OrderErrorCode(Enum):
-    """
-        Enumeration representing error codes for order submission
-    """
-
-    def __new__(cls, val, field, desc):
-        obj = object.__new__(cls)
-        obj._value_ = val
-        obj.field = field
-        obj.desc = desc
-        return obj
-
-    PRICE_NEGATIVE = (1, OrderField.PRICE, 'Must be greater than zero')
-    PRICE_NOT_NUM = (2, OrderField.PRICE, 'Must be an integer number')
-    QUANT_NEGATIVE = (4, OrderField.QUANTITY, 'Must be greater than zero')
-    QUANT_NOT_NUM = (8, OrderField.QUANTITY, 'Must be an integer number')
-    BAD_TYPE = (16, OrderField.TYPE, 'Select a type')
-    BID_GREATER_THAN_ASK = (32, OrderField.PRICE, 'Buy price must be less than all sell orders')
-    ASK_LESS_THAN_BID = (64, OrderField.PRICE, 'Sell price must be greater than all buy orders')
-
-    def combine(self, code):
-        if type(code) is OrderErrorCode:
-            code = code.value
-        return self.value | code
-
-    def to_dict(self):
-        return dict(value=self.value,
-                    field=self.field.value,
-                    desc=self.desc)
-
-
 class Subsession(BaseSubsession):
     pass
 
 
-NO_SHORT_LIMIT = -199
-
-
+# noinspection DuplicatedCode
 class Group(BaseGroup):
     price = models.CurrencyField()
     volume = models.IntegerField()
@@ -88,24 +47,6 @@ class Group(BaseGroup):
                 return init_price
             else:
                 return scf.get_fundamental_value(self)
-
-    def get_short_limit(self):
-        """
-        Determine the number of shorted shares allowed this round.  This is the limit of the
-        combined number of shares this round.   All sell order made this round that will be a
-        short sale for the player, when combined must be equal to or below this amount.
-        @return: int number of shares.
-        """
-        cap_ratio = scf.get_float_ratio_cap(self)
-        if not cap_ratio:
-            return NO_SHORT_LIMIT
-
-        max_short_shares = int(cap_ratio * self.float)
-        allowable = max_short_shares - self.short
-        return max(allowable, 0)
-
-
-NO_AUTO_TRANS = -99
 
 
 # noinspection DuplicatedCode
@@ -145,18 +86,6 @@ class Player(BasePlayer):
     f2 = models.CurrencyField()
     forecast_error = models.CurrencyField()
     forecast_reward = models.CurrencyField(initial=0)
-
-    # Per-round Survey
-    # emotion = models.IntegerField(
-    #    label='How do you feel about these results?',
-    #    choices=[
-    #        [1, '<img src="/static/rounds/img/angry.png" style="width:50px;height:50px;"/>'],
-    #        [2, '<img src="/static/rounds/img/annoyed.jpeg" style="width:50px;height:50px;"/>'],
-    #        [3, '<img src="/static/rounds/img/meh.jpeg" style="width:50px;height:50px;"/>'],
-    #        [4, '<img src="/static/rounds/img/happy.png" style="width:50px;height:50px;"/>'],
-    #        [5, '<img src="/static/rounds/img/big_grin.jpeg" style="width:50px;height:50px;"/>']],
-    #    widget=widgets.RadioSelectHorizontal
-    # )
 
     def to_dict(self):
         d = {'cash': self.field_maybe_none('cash'),

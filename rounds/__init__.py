@@ -2,7 +2,6 @@ import math
 import random
 from collections import defaultdict
 
-from common import PracticeStuff
 from rounds.call_market import CallMarket
 from .models import *
 import common.SessionConfigFunctions as scf
@@ -17,11 +16,6 @@ class Constants(BaseConstants):
 
 # assign treatments
 def creating_session(subsession):
-    app_name = scf.get_session_name(subsession)
-    if app_name == 'practice':
-        PracticeStuff.creating_session(subsession)
-        return
-
     # only set up endowments in the first round
     if subsession.round_number != 1:
         return
@@ -148,7 +142,7 @@ def is_order_valid(player: Player, data):
     return error_code
 
 
-def process_order_submit(player, data, is_practice=False):
+def process_order_submit(player, data):
     p_id = player.id_in_group
 
     error_code = is_order_valid(player, data)
@@ -164,7 +158,7 @@ def process_order_submit(player, data, is_practice=False):
                          order_type=o_type,
                          price=o_price,
                          quantity=o_quant,
-                         is_practice=is_practice)
+                         )
 
         # HACK!!!!  I don't know why this works, but I'm trying to send the id to of the Order object
         # back to browser and that doesn't work unless I make a db query.
@@ -193,12 +187,12 @@ def delete_order(player, oid):
         Order.delete(o)
 
 
-def market_page_live_method(player, d, is_practice=False):
+def market_page_live_method(player, d):
     func = d['func']
 
     if func == 'submit-order':
         data = d['data']
-        return process_order_submit(player, data, is_practice=is_practice)
+        return process_order_submit(player, data)
 
     elif func == 'get_orders_for_player':
         return get_orders_for_player_live(player)
