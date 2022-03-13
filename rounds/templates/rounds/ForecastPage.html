@@ -6,6 +6,7 @@
 <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 <script src="{{ static 'rounds/js/price_history.js' }}"></script>
+<script src="{{ static 'rounds/js/move_timer.js' }}"></script>
 <link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
 <link rel="stylesheet" href="{{ static 'rounds/css/forecast_page.css' }}">
 <link rel="stylesheet" href="{{ static 'css/global.css' }}">
@@ -31,15 +32,16 @@
         </div>
 
         <div class="forecast-form-box boxed_area">
-        <div class="results-layout-box">
-            {{ formfield 'f0' label="What do you think the market price will be this period?" }}
-            {{ if include_f1 }}
-                {{ formfield 'f1' label=period_f1_prompt }}
-            {{ endif }}
-            {{ if include_f2 }}
-                {{ formfield 'f2' label=period_f2_prompt }}
-            {{ endif }}
-        </div>
+            <div class="timer-box" id="timer_box"></div>
+            <div class="results-layout-box">
+                {{ formfield 'f0' label="What do you think the market price will be this period?" }}
+                {{ if include_f1 }}
+                    {{ formfield 'f1' label=period_f1_prompt }}
+                {{ endif }}
+                {{ if include_f2 }}
+                    {{ formfield 'f2' label=period_f2_prompt }}
+                {{ endif }}
+            </div>
             <div class="next-button-div">
                 <div class="bottom-right">
                     {{ next_button }}

@@ -6,6 +6,7 @@
 <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 <script src="{{ static 'rounds/js/price_history.js' }}"></script>
+<script src="{{ static 'rounds/js/move_timer.js' }}"></script>
 
 <link rel="stylesheet" href="{{ static 'css/global.css' }}">
 <link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
@@ -33,11 +34,13 @@
 
         <div class="round-result-box boxed_area">
         <div class="results-layout-box">
+            <div id="timer_box"></div>
             <div class="results-div">
             <ul class="results-ul">
                  <li>
                     {{ if filled_amount == 0 }}
-                        No orders filled this round
+                     <p>No orders filled this round</p>
+                     <p>Market Price: {{ group.price }}</p>
                     {{ else }}
                         You <span class="bold-text">
                         {{ if trans_type == -1}}

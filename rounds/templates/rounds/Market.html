@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 <script src="{{ static 'rounds/js/price_history.js' }}"></script>
 <script src="{{ static 'rounds/js/market_page.js' }}"></script>
+<script src="{{ static 'rounds/js/move_timer.js' }}"></script>
 
 <link rel="stylesheet" href="{{ static 'css/global.css' }}">
 <link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
@@ -33,6 +34,7 @@
         </div>
 
         <div class="message-box" >
+            <div id="timer_box"></div>
             {{ for msg in messages }}
                 <div class="alert {{ msg.class_attr }}">
                     <p class = "message"> {{ msg.msg }}</p>

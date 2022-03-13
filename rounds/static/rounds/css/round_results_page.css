@@ -1,6 +1,6 @@
 .layout-box {
     display: grid;
-    grid-template-columns: 750px 1fr;
+    grid-template-columns: 800px 1fr;
     grid-template-rows: 50px auto;
     gap: 10px;
 }
@@ -35,7 +35,7 @@
 .results-layout-box {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 4fr 1fr;
+    grid-template-rows: 1fr 5fr 1fr;
     gap: 10px;
     height: 100%;
 }

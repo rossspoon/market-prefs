@@ -11,7 +11,7 @@ from common.ParticipantFuctions import generate_participant_ids
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
-    num_rounds = 3
+    num_rounds = 12
 
 
 # assign treatments
@@ -486,6 +486,7 @@ class ForecastPage(Page):
     js_vars = get_js_vars_not_current
     vars_for_template = vars_for_forecast_template
     is_displayed = only_show_for_rounds_app
+    get_timeout_seconds = scf.get_forecast_time
 
     @staticmethod
     def get_form_fields(player):
@@ -508,6 +509,7 @@ class RoundResultsPage(Page):
     is_displayed = only_show_for_rounds_app
     js_vars = get_js_vars
     vars_for_template = vars_for_round_results_template
+    get_timeout_seconds = scf.get_summary_time
 
     @staticmethod
     def app_after_this_page(player: Player, upcoming_apps):

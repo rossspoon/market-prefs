@@ -7,8 +7,8 @@ $(window).on('load', function () {
     liveSend({'func': 'get_orders_for_player'});
 
     //Move the timer
-    var timer = $('.otree-timer').detach();
-    $('.message-box').prepend(timer);
+    //var timer = $('.otree-timer').detach();
+    //$('.message-box').prepend(timer);
 
     //Add place holder on the order form
     $('#id_quantity').attr('placeholder', 'Quantity')

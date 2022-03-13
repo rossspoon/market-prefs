@@ -22,6 +22,8 @@ SK_FLOAT_RATIO_CAP = 'float_ratio_cap'
 SK_FORECAST_THOLD = 'forecast_thold'
 SK_FORECAST_REWARD = 'forecast_reward'
 SK_MARKET_TIME = 'market_time'
+SK_FORECAST_TIME = 'forecast_time'
+SK_SUMMARY_TIME = 'summary_time'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -184,3 +186,13 @@ def get_forecast_reward(obj):
 def get_market_time(obj):
     config = ensure_config(obj)
     return get_item_as_int(config, SK_MARKET_TIME, return_none=True)
+
+
+def get_forecast_time(obj):
+    config = ensure_config(obj)
+    return get_item_as_int(config, SK_FORECAST_TIME, return_none=True)
+
+
+def get_summary_time(obj):
+    config = ensure_config(obj)
+    return get_item_as_int(config, SK_SUMMARY_TIME, return_none=True)

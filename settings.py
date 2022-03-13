@@ -120,6 +120,8 @@ SESSION_CONFIG_DEFAULTS = dict(
     forecast_thold=250,
     forecast_reward=500,
     market_time=45,
+    forecast_time=15,
+    summary_time=15,
 )
 
 PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT']
@@ -140,3 +142,11 @@ ADMIN_PASSWORD = environ.get('OTREE_ADMIN_PASSWORD')
 DEMO_PAGE_INTRO_HTML = """ """
 
 SECRET_KEY = '7763949237284'
+
+ROOMS = [
+    dict(
+        name='market',
+        display_name='Market Experiment',
+        participant_label_file='_rooms/market.txt',
+        use_secure_urls=True
+    )]
