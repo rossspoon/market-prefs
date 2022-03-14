@@ -285,7 +285,9 @@ class ScriptedBot(Bot):
             player.cash = this_round.cash
             player.shares = this_round.shares
 
-        yield Market
+        yield Submission(Market, dict(), timeout_happened=True, check_html=False)
+        yield Submission(ForecastPage, dict(f0=0, f1=0, f2=0))
+        yield RoundResultsPage
         if this_round:
             self.after_market_page_tests(actor_name, this_round)
 

@@ -11,7 +11,7 @@ from common.ParticipantFuctions import generate_participant_ids
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
-    num_rounds = 12
+    num_rounds = 20
 
 
 # assign treatments
@@ -454,10 +454,6 @@ def f2_choices(player: Player):
     return get_forecasters_choices(player, 'f2')
 
 
-def only_show_for_rounds_app(player: Player):
-    return scf.get_session_name(player) in ['rounds', 'rounds_sell_off']
-
-
 ############
 # PAGES
 ##########
@@ -485,7 +481,6 @@ class ForecastPage(Page):
 
     js_vars = get_js_vars_not_current
     vars_for_template = vars_for_forecast_template
-    is_displayed = only_show_for_rounds_app
     get_timeout_seconds = scf.get_forecast_time
 
     @staticmethod
@@ -506,7 +501,6 @@ class MarketWaitPage(WaitPage):
 # TODO: Make this page say something about bankruptcy.
 class RoundResultsPage(Page):
     form_model = 'player'
-    is_displayed = only_show_for_rounds_app
     js_vars = get_js_vars
     vars_for_template = vars_for_round_results_template
     get_timeout_seconds = scf.get_summary_time

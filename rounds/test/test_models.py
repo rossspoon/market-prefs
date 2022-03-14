@@ -492,10 +492,15 @@ class TestPlayerMethods(unittest.TestCase):
 
     def generic_forecast_test(self, f0=None, price=None, reward=None, error=None):
         # Setup
+        session = Session()
+        config = {scf.SK_FORECAST_REWARD: 500, scf.SK_FORECAST_THOLD: 250}
+        session.config = config
+
         p = Player()
         p.f0 = f0
         p.cash_result = 0
         p.forecast_reward = 0
+        p.session = session
 
         # Test
         p.determine_forecast_reward(price)
