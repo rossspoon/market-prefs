@@ -153,6 +153,7 @@ def process_order_submit(player, data):
         o_price = int(data['price'])
         o_quant = int(data['quantity'])
 
+
         o = Order.create(player=player,
                          group=player.group,
                          order_type=o_type,
@@ -349,11 +350,11 @@ def vars_for_market_template(player: Player):
     return ret
 
 
-def vars_for_forecast_template(player: Player):
+def vars_for_forecast_template(player: Player, num_rounds=Constants.num_rounds):
     ret = standard_vars_for_template(player)
     round_number = player.round_number
-    include_f1 = round_number < Constants.num_rounds
-    include_f2 = round_number < Constants.num_rounds - 1
+    include_f1 = round_number < num_rounds
+    include_f2 = round_number < num_rounds - 1
 
     ret['period_f1_prompt'] = "What do you think the market price will be in period {}?".format(round_number + 1)
     ret['period_f2_prompt'] = "What do you think the market price will be in period {}?".format(round_number + 2)
@@ -373,8 +374,6 @@ def vars_for_round_results_template(player: Player):
     if filled_amount > 0:
         # get the order type
         o_types = list(set(o.order_type for o in orders if o.quantity_final > 0))
-        print(orders)
-        print(o_types)
 
         if len(o_types) != 1:
             trans_type = 0

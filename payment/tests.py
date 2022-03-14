@@ -1,9 +1,13 @@
-from otree.api import Currency as c, currency_range
-from . import pages
+from otree.api import Submission
+
 from ._builtin import Bot
-from .models import Constants
+from .pages import FinalResultsPage, ConsentDeniedPage
 
 
 class PlayerBot(Bot):
+    # noinspection PyMethodMayBeStatic
     def play_round(self):
-        pass
+        if self.player.participant.vars.get('CONSENT'):
+            yield Submission(FinalResultsPage, check_html=False)
+        else:
+            yield Submission(ConsentDeniedPage, check_html=False)

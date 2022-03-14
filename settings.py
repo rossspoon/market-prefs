@@ -3,13 +3,13 @@ from os import environ
 SESSION_CONFIGS = [
     dict(
         name='rounds',
-        app_sequence=['rounds', 'survey'],
+        app_sequence=['rounds'],
         num_demo_participants=2,
         random_hist=False
     )
     , dict(
         name='rounds_sell_off',
-        app_sequence=['rounds', 'survey'],
+        app_sequence=['rounds'],
         num_demo_participants=2,
         random_hist=False,
         treated_ids='1 0',
@@ -65,12 +65,12 @@ SESSION_CONFIGS = [
     )
     , dict(
         name='consent',
-        app_sequence=['consent', 'payment'],
+        app_sequence=['consent'],
         num_demo_participants=1,
     )
     , dict(
         name='survey',
-        app_sequence=['survey', 'payment'],
+        app_sequence=['survey'],
         num_demo_participants=1,
     )
     , dict(
@@ -80,12 +80,17 @@ SESSION_CONFIGS = [
     )
     , dict(
         name='practice',
-        app_sequence=['practice', 'rounds'],
+        app_sequence=['practice'],
         num_demo_participants=1,
     )
     , dict(
         name='whole_experiment',
         app_sequence=['consent', 'instructions', 'practice', 'rounds', 'survey', 'payment'],
+        num_demo_participants=2,
+    )
+    , dict(
+        name='with_practice',
+        app_sequence=['practice', 'rounds', 'survey', 'payment'],
         num_demo_participants=2,
     )
 ]
@@ -119,7 +124,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     bonus_cap=250000,
     forecast_thold=250,
     forecast_reward=500,
-    market_time=45,
+    market_time=30,
     forecast_time=15,
     summary_time=15,
 )

@@ -1,9 +1,10 @@
-from otree.api import Currency as cu, currency_range
-from . import *
 from otree.api import Bot
 
+from . import page_sequence
 
 
 class PlayerBot(Bot):
+    # noinspection PyMethodMayBeStatic
     def play_round(self):
-        pass
+        for page in page_sequence:
+            yield page
