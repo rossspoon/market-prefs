@@ -139,48 +139,77 @@ class _15_EndOfMarket(Page):
 class QuizPage(Page):
     template_name = 'instructions/Quiz_template.html'
     form_model = Player
-    attempt_field = ''
+    attempted_field = ''
+
+    def grade_quiz(self, values):
+        raise NotImplementedError("Please Implement this method")
+
+    def js_vars(self):
+        question_class = {name: 'normal' for name in self.form_fields}
+        success = False
+
+        # if the page has already been submitted, we now have a form object,
+        # and it has been 'graded'.  determine the check/ex class of each question.
+        if getattr(self.player, self.attempted_field):
+            correct = {f.name: not bool(f.errors) for f in self.form}
+            question_class = {n: 'correct' if b else 'wrong' for n, b in correct.items()}
+
+            # This variable will signal the js to turn the error message green.
+            success = all(correct.values())
+
+        return {'q_class': question_class,
+                'success': success}
+
+    def error_message(self, values):
+        player = self.player
+
+        if getattr(player, self.attempted_field):
+            return
+
+        ret = self.grade_quiz(values)
+        setattr(player, self.attempted_field, True)
+
+        # if errors are present the truthiness of ret will be True
+        if ret:
+            num_wrong = len(ret)
+            s = '' if num_wrong == 1 else 's'
+            self.form.non_field_error = f"You missed {num_wrong} question{s}. &nbsp;&nbsp Please take note of the " \
+                                        f"correct answers and click ""Next"" to continue."
+        else:
+            self.form.non_field_error = "Well Done! &nbsp;&nbsp Please click Next to continue."
+        return ret
 
 
 class Quiz01(QuizPage):
     form_fields = ['qz1q1', 'qz1q2', 'qz1q3', 'qz1q4']
+    attempted_field = 'qz1_attempted'
 
-    def error_message(self, values):
-        player = self.player
+    def grade_quiz(self, values):
         ret = {}
-
-        if player.qz1_attempted:
-            return
 
         if values['qz1q1'] != 6:
             ret['qz1q1'] = "You are allowed up to 6 orders per market period."
 
-        if values['qz1q2']:
-            ret['qz1q2'] = "Though you may make both BUY and SELL orders in the same market period, the system will " \
-                           "only execute either your BUY or SELL orders but not both depending on the market " \
-                           "price."
+        if values['qz1q2'] is None or values['qz1q2']:
+            ret['qz1q2'] = "Your BUY prices must all be less than you SELL prices."
 
         if not values['qz1q3']:
             ret['qz1q3'] = "When you short the STOCK, dividends  will be deducted from your CASH holdings."
 
-        ir = scf.as_wnp(scf.get_interest_rate(player))
+        ir = scf.as_wnp(scf.get_interest_rate(self.player))
         if values['qz1q4'] != ir:
             ret['qz1q4'] = f"Interest on CASH is earned at {ir}."
 
-        player.qz1_attempted = True
-        self.form.non_field_error = "Please take note of the correct answers and click ""Next"" to continue."
         return ret
 
 
 class Quiz02(QuizPage):
     form_fields = ['qz2q1', 'qz2q2', 'qz2q3']
+    attempted_field = 'qz2_attempted'
 
-    def error_message(self, values):
+    def grade_quiz(self, values):
         player = self.player
         ret = {}
-
-        if player.qz2_attempted:
-            return
 
         fundamental = scf.get_fundamental_value(player)
         if values['qz2q1'] != fundamental:
@@ -195,8 +224,6 @@ class Quiz02(QuizPage):
         if values['qz2q3'] != num:
             ret['qz2q3'] = f'The market will last for {num} periods'
 
-        self.form.non_field_error = "Please take note of the correct answers and click ""Next"" to continue."
-        player.qz2_attempted = True
         return ret
 
 

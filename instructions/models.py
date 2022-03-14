@@ -36,10 +36,15 @@ class Group(BaseGroup):
 class Player(BasePlayer):
     ## QUIZ 1
     qz1q1 = models.IntegerField(choices=[1, 2, 3, 4, 5, 6, 7, 8],
-                                label='What is the maximum number of orders that you may place in each round?')
-    qz1q2 = models.BooleanField(label="It is possible to both buy and sell shares in a single market round.")
-    qz1q3 = models.BooleanField(label="When you short the STOCK you must pay out the dividend.")
-    qz1q4 = models.StringField(label='What is the interest rate paid out on CASH?')
+                                label='What is the maximum number of orders that you may place in each round?',
+                                blank=True)
+    qz1q2 = models.BooleanField(label="In each round, all of your BUY prices must be greater than all of your SELL "
+                                      "prices.",
+                                blank=True)
+    qz1q3 = models.BooleanField(label="When you short the STOCK you must pay out the dividend.",
+                                blank=True)
+    qz1q4 = models.StringField(label='What is the interest rate paid out on CASH?',
+                               blank=True)
     qz1_attempted = models.BooleanField(initial=False)
 
     @staticmethod
@@ -51,11 +56,14 @@ class Player(BasePlayer):
         return choices
 
     ## QUIZ 2
-    qz2q1 = models.CurrencyField(
-        label="At what price will shares of STOCK be bought back at the end of the experiment?")
+    qz2q1 = models.IntegerField(
+        label="At what price will shares of STOCK be bought back at the end of the experiment?",
+        blank=True)
     qz2q2 = models.IntegerField(label="An automatic BUY-IN will occur when:",
-                                widget=widgets.RadioSelect)
-    qz2q3 = models.IntegerField(label="How many market periods will you participate in today?")
+                                widget=widgets.RadioSelect,
+                                blank=True)
+    qz2q3 = models.IntegerField(label="How many market periods will you participate in today?",
+                                blank=True)
     qz2_attempted = models.BooleanField(initial=False)
 
     @staticmethod
@@ -63,7 +71,7 @@ class Player(BasePlayer):
         fv = scf.get_fundamental_value(player)
         start = fv - 500
         end = fv + 300
-        return [int(x) for x in np.arange(start, end, 100)]
+        return [[int(x), f"{x} Points"] for x in np.arange(start, end, 100)]
 
     @staticmethod
     def qz2q2_choices(player):
@@ -77,4 +85,5 @@ class Player(BasePlayer):
         num_rounds = rounds.Constants.num_rounds
         start = max(num_rounds - 20, 0)
         end = num_rounds + 30
+        print(np.arange(start, end, 5))
         return np.arange(start, end, 5)

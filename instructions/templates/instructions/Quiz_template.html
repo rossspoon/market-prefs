@@ -4,13 +4,16 @@
 {{ block content }}
     <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
     <link rel="stylesheet" href="{{ static 'css/global.css' }}">
+    <script src="{{ static 'instructions/js/quiz_page.js' }}"></script>
 
     <div class="layout-box">
     <div class="main-block">
     Before continuing, please answer the following questions.
         <ul>
         {{ for f in form }}
-            <li class="quiz-question">{{ formfield_errors f.name }}{{ f.label }}{{ f }}</li>
+            <li id="{{ f.name }}" class="quiz-question">
+                {{ f.label }}{{ f }}{{ formfield_errors f.name }}
+            </li>
         {{ endfor }}
         </ul>
     </div>
