@@ -85,5 +85,4 @@ class Player(BasePlayer):
         num_rounds = rounds.Constants.num_rounds
         start = max(num_rounds - 20, 0)
         end = num_rounds + 30
-        print(np.arange(start, end, 5))
         return np.arange(start, end, 5)
