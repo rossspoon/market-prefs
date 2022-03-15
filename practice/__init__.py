@@ -184,7 +184,7 @@ class PracticeMarketPage(Page):
 class PracticeForecastPage(Page):
     template_name = 'rounds/ForecastPage.html'
     form_model = 'player'
-
+    get_timeout_seconds = scf.get_forecast_time
     js_vars = rounds.get_js_vars_not_current
 
     @staticmethod
@@ -226,6 +226,8 @@ class PracticeRoundResultsPage(Page):
     template_name = 'rounds/RoundResultsPage.html'
     form_model = 'player'
     js_vars = rounds.get_js_vars
+    get_timeout_seconds = scf.get_summary_time
+
     vars_for_template = rounds.vars_for_round_results_template
 
     @staticmethod
