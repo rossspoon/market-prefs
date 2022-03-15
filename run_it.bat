@@ -13,4 +13,4 @@ set DATABASE_URL=postgres://vteconlab:econvt!@localhost/squeeze
 
 
 REM otree resetdb
-otree prodserver econlabhost18s:8000
+otree prodserver econlabhost18s:80
