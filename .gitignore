@@ -15,4 +15,4 @@ __pycache__/
 export_tests/
 *.swp
 /notebooks/
-run_it.*
+./run_it.*
