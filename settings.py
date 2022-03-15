@@ -31,12 +31,6 @@ SESSION_CONFIGS = [
         margin_target_ratio=.6,
         auto_trans_delay=0,
         initial_price=0,
-
-        treated_ids='1 0 0',
-        cash_endowment_control=500,
-        shares_endowment_control=10,
-        cash_endowment_treatment=1000,
-        shares_endowment_treatment=-10,
     )
     , dict(
         name='sim_1',
@@ -114,11 +108,8 @@ SESSION_CONFIG_DEFAULTS = dict(
     auto_trans_delay=0,
     float_ratio_cap=1.0,
 
-    fraction_of_short_starts=.5,
-    cash_endowment_control=5000,
-    shares_endowment_control=12,
-    cash_endowment_treatment=8400,
-    shares_endowment_treatment=-2,
+    endow_stock='6 2 -2 -6',
+    endow_worth=30000,
 
     initial_price=2800,
     bonus_cap=250000,
@@ -154,4 +145,9 @@ ROOMS = [
         display_name='Market Experiment',
         participant_label_file='_rooms/market.txt',
         use_secure_urls=True
-    )]
+    ),
+    dict(
+        name='market2',
+        display_name='Market Experiment (w/o participant labels)'
+    )
+]

@@ -1,4 +1,3 @@
-import math
 import random
 from collections import defaultdict
 
@@ -21,45 +20,18 @@ def creating_session(subsession):
         return
 
     generate_participant_ids(subsession)
-    session = subsession.session
 
-    # Assemble config params regarding endowments
-    cash_control = session.config['cash_endowment_control']
-    shares_control = session.config['shares_endowment_control']
-    cash_treatment = session.config['cash_endowment_treatment']
-    shares_treatment = session.config['shares_endowment_treatment']
+    # Set up endowments.  All endowments are of equivalent value at the
+    # fundamental value of the stock
+    stock_endowments = scf.get_endow_stocks(subsession)
+    worth = scf.get_endow_worth(subsession)
+    fund_val = scf.get_fundamental_value(subsession)
 
-    endowments = [{'cash': cash_control, 'shares': shares_control},
-                  {'cash': cash_treatment, 'shares': shares_treatment}]
-
-    if 'treated_ids' in session.config:
-        treated_ids = [int(x) for x in session.config['treated_ids'].split()]
-        modulus = len(treated_ids)
-        for group in subsession.get_groups():
-
-            # Make initial endowments to all players in the group
-            for _idx, player in enumerate(group.get_players()):
-                idx = _idx % modulus
-                endowment_idx = treated_ids[idx]
-                print("assigning endowments: ", player.id_in_group, " IS Treatment:", endowment_idx)
-                endow = endowments[endowment_idx]
-                player.cash = endow['cash']
-                player.shares = endow['shares']
-
-    else:
-        # randomize to treatments
-        fraction = session.config['fraction_of_short_starts']
-        for group in subsession.get_groups():
-            cnt = len(group.get_players())
-            num_treatments = math.floor(cnt * fraction)
-            num_controls = cnt - num_treatments
-            type_assignments = ([0] * num_controls) + ([1] * num_treatments)
-            random.shuffle(type_assignments)
-
-            for idx, player in enumerate(group.get_players()):
-                endow = endowments[type_assignments[idx]]
-                player.cash = endow['cash']
-                player.shares = endow['shares']
+    for p in subsession.get_players():
+        stock_idx = (p.id_in_group - 1) % len(stock_endowments)
+        shares = stock_endowments[stock_idx]
+        p.shares = shares
+        p.cash = worth - shares * fund_val
 
 
 def get_js_vars_not_current(player: Player):
@@ -99,6 +71,7 @@ def get_js_vars(player: Player, include_current=True):
 
 #########################
 # LIVE PAGES FUNCTIONS
+# noinspection DuplicatedCode
 def is_order_valid(player: Player, data):
     o_type = data['type']
     o_price = data['price']
@@ -152,7 +125,6 @@ def process_order_submit(player, data):
         o_type = int(data['type'])
         o_price = int(data['price'])
         o_quant = int(data['quantity'])
-
 
         o = Order.create(player=player,
                          group=player.group,

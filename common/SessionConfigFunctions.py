@@ -8,11 +8,6 @@ SK_DIV_DIST = 'div_dist'
 SK_MARGIN_RATIO = 'margin_ratio'
 SK_MARGIN_PREMIUM = 'margin_premium'
 SK_MARGIN_TARGET_RATIO = 'margin_target_ratio'
-SK_FRACTION_OF_SHORT_STARTS = 'fraction_of_short_starts'
-SK_CASH_ENDOWMENT_CONTROL = 'cash_endowment_control'
-SK_SHARES_ENDOWMENT_CONTROL = 'shares_endowment_control'
-SK_CASH_ENDOWMENT_TREATMENT = 'cash_endowment_treatment'
-SK_SHARES_ENDOWMENT_TREATMENT = 'shares_endowment_treatment'
 SK_INITIAL_PRICE = 'initial_price'
 SK_SESSION_NAME = 'name'
 SK_RANDOMIZE_HISTORY = 'random_hist'
@@ -24,6 +19,8 @@ SK_FORECAST_REWARD = 'forecast_reward'
 SK_MARKET_TIME = 'market_time'
 SK_FORECAST_TIME = 'forecast_time'
 SK_SUMMARY_TIME = 'summary_time'
+SK_ENDOW_STOCK = 'endow_stock'
+SK_ENDOW_WORTH = 'endow_worth'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -196,3 +193,17 @@ def get_forecast_time(obj):
 def get_summary_time(obj):
     config = ensure_config(obj)
     return get_item_as_int(config, SK_SUMMARY_TIME, return_none=True)
+
+
+def get_endow_stock(obj):
+    config = ensure_config(obj)
+    return config.get(SK_ENDOW_STOCK)
+
+
+def get_endow_stocks(obj):
+    return [int(x) for x in get_endow_stock(obj).split()]
+
+
+def get_endow_worth(obj):
+    config = ensure_config(obj)
+    return get_item_as_int(config, SK_ENDOW_WORTH)
