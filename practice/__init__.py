@@ -151,6 +151,26 @@ def creating_session(subsession):
         p.shares = 2
 
 
+def practice_round_results_vars(player: Player):
+    ret = rounds.vars_for_round_results_template(player)
+    filled_amount = ret.get('filled_amount')
+    orders = Order.filter(player=player)
+
+    # All transaction types should be the same for a given player
+    trans_type = 0
+    if filled_amount > 0:
+        # get the order type
+        o_types = list(set(o.order_type for o in orders if o.quantity_final > 0))
+
+        if len(o_types) != 1:
+            trans_type = 0
+        else:
+            trans_type = o_types[0]
+
+    ret['trans_type'] = trans_type
+    return ret
+
+
 def f0_choices(player: Player):
     return rounds.get_forecasters_choices(player, 'f0')
 
@@ -228,7 +248,7 @@ class PracticeRoundResultsPage(Page):
     js_vars = rounds.get_js_vars
     get_timeout_seconds = scf.get_summary_time
 
-    vars_for_template = rounds.vars_for_round_results_template
+    vars_for_template = practice_round_results_vars
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
