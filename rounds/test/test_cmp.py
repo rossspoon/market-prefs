@@ -488,7 +488,7 @@ class TestCallMarketPrice(unittest.TestCase):
         price, volume = mp.get_market_price(last_price=-1)  # last price is not needed here
 
         # Assert
-        self.assertEqual(price, 10)
+        self.assertEqual(price, -1)
         self.assertEqual(volume, 0)
         self.assertEqual(mp.final_principle, Principle.REFERENCE)
 
