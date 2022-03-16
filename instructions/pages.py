@@ -1,4 +1,5 @@
 import common.SessionConfigFunctions as scf
+import practice
 import rounds
 from ._builtin import Page
 from .models import Player
@@ -23,6 +24,7 @@ def vars_for_temp_common(player: Player):
     ret['marg_target_rat_pct'] = marg_target_rate_pct
     ret['margin_premium_pct'] = margin_premium_pct
     ret['num_rounds'] = rounds.Constants.num_rounds
+    ret['num_practice_rounds'] = practice.C.NUM_ROUNDS
     ret['part_fee_whole_num'] = int(ret['participation_fee'])
     ret['bonus_cap_whole_num'] = int(ret['bonus_cap'] / 10000)
     ret['float_ratio_cap'] = scf.as_wnp(scf.get_float_ratio_cap(player))
@@ -228,7 +230,7 @@ class Quiz02(QuizPage):
 
 
 class OutroPage(Page):
-    pass
+    vars_for_template = vars_for_temp_common
 
 
 page_sequence = [IntroPage,
