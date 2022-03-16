@@ -58,7 +58,9 @@ class Player(BasePlayer):
                                    [1, 'Asian'],
                                    [2, 'Black or African American'],
                                    [3, 'Native Hawaiian or Other Pacific Islander'],
-                                   [4, 'Caucasian']
+                                   [4, 'Caucasian'],
+                                   [5, 'More than one race'],
+                                   [6, 'Other']
                                ])
     college = models.IntegerField(blank=True,
                                   label="How many years have you been at university/college?",
