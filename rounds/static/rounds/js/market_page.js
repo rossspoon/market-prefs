@@ -144,7 +144,6 @@ function process_order_rejection(data) {
         }
     });
 }
-    
 
 function liveRecv(data) {
     var func = data.func;
@@ -157,5 +156,22 @@ function liveRecv(data) {
 
     } else if (func == 'order_list') {
         add_orders_to_list(data);
+    }
+
+    // Process Warnings
+    $('.pop-up-warning').detach();
+    let warnings = data.warnings;
+    let warning_elem;
+    if (warnings) {
+        for (let idx in warnings) {
+            let warning_elem = document.createElement("div");
+            warning_elem.classList.add("alert", "alert-warning", "pop-up-warning");
+            let p = document.createElement("p")
+            p.classList.add("message")
+            p.innerHTML = warnings[idx]
+            warning_elem.append(p)
+
+            $('.message-box').append(warning_elem)
+        }
     }
 }
