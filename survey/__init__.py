@@ -116,7 +116,8 @@ class Player(BasePlayer):
                                                 [3, 'Once a year'],
                                                 [4, 'A few times a year'],
                                                 [5, 'Once a month '],
-                                                [6, 'Two or three times a month']
+                                                [6, 'Two or three times a month'],
+                                                [7, 'Once a week or more']
                                             ])
     vote_reg = models.BooleanField(blank=True,
                                    label="Are you registered to vote?",
