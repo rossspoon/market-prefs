@@ -137,7 +137,7 @@ class MarketPrice:
     def only_one_candidate_price(self):
         return self.get_candidate_price_count() == 1
 
-    def finalize_and_get_result(self):
+    def finalize_and_get_result(self, last_price=0):
         if not self.only_one_candidate_price():
             price_cnt = self.get_candidate_price_count()
             raise ValueError(f"Found {price_cnt} market prices, there should be exactly 1")
@@ -146,6 +146,10 @@ class MarketPrice:
 
         self.price_df['market_price'] = self.price_df.price == market_price
         mev = self.get_mev()
+
+        # backstop.  If there is zero volume, then the market price should not change
+        if mev == 0:
+            market_price = last_price
         return market_price, mev
 
     def apply_max_volume_princ(self):
@@ -246,21 +250,21 @@ class MarketPrice:
         #  2 PRINCIPLE OF MAXIMUM VOLUME
         self.apply_max_volume_princ()
         if self.only_one_candidate_price():
-            return self.finalize_and_get_result()
+            return self.finalize_and_get_result(last_price=last_price)
 
         #  3 PRINCIPLE OF MINIMUM RESIDUAL
         self.apply_least_residual_princ()
         if self.only_one_candidate_price():
-            return self.finalize_and_get_result()
+            return self.finalize_and_get_result(last_price=last_price)
 
         #  4 PRINCIPLE OF MARKET PRESSURES
         self.apply_market_pressure_princ()
         if self.only_one_candidate_price():
-            return self.finalize_and_get_result()
+            return self.finalize_and_get_result(last_price=last_price)
 
         # 5 PRINCIPLE OF REFERENCE PRICES
         self.apply_reference_price_princ()
-        return self.finalize_and_get_result()  # at this point, we are guaranteed one price
+        return self.finalize_and_get_result(last_price=last_price)  # at this point, we are guaranteed one price
 
 
 # END MarketPrice
