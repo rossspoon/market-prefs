@@ -174,7 +174,7 @@ class Player(BasePlayer):
 
     bat_and_ball = models.IntegerField(blank=True,
                                        label="""A bat and a ball cost 22 dollars in total. The bat costs 20 dollars 
-                                       more than the ball. How many dollars does the ball cost? """,
+                                       more than the ball. How much does the ball cost? """,
                                        choices=[[x, f'${x}.00'] for x in range(22)]
                                        )
     widgets = models.IntegerField(blank=True,
