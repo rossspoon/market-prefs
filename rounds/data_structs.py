@@ -110,7 +110,7 @@ class DataForPlayer:
         self.cash_result = int(self.player.cash + self.interest_earned + self.trans_cost + self.dividend_earned)
 
     def set_mv_short_future(self, margin_ratio, market_price):
-        if self.shares_result >= 0:
+        if self.shares_result >= 0 or market_price == 0:
             self.mv_short_future = False
             return
 
