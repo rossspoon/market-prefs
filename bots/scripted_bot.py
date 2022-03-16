@@ -375,7 +375,7 @@ class ScriptedBot(Bot):
 
         # Save away the error
         if error:
-            ScriptedBot.errors_by_round[self.round_number].append(error)
+            ScriptedBot.errors_by_round[actions.round_number].append(error)
 
     def show_errors(self):
         errors = ScriptedBot.errors_by_round[self.round_number - 1]
@@ -499,4 +499,20 @@ market = MarketTests().round(1) \
            .expect(cash=2000, shares=-2)
            .expect_order(price=500, quant=1, otype=SELL, quant_orig=2)) \
     .actor("Treated", lambda ar: ar.set(0, 0)) \
+    .finish() \
+    .round(9) \
+    .actor("Buyer", lambda ar: ar.set(cash=13743, shares=10)) \
+    .actor("Seller", lambda ar: ar.set(cash=82338, shares=-6)) \
+    .actor("Treated", lambda ar: ar.set(cash=29794, shares=2)) \
+    .finish() \
+    .round(10) \
+    .actor("Buyer", lambda ar: ar.set(cash=13743, shares=10)
+           .sell(4, at=4000).sell(5, at=4000)
+           ) \
+    .actor("Seller", lambda ar: ar.set(cash=82338, shares=-6)
+           .buy(6, at=2000).sell(1, at=6000)) \
+    .actor("Treated", lambda ar: ar.set(cash=29794, shares=2)
+           .sell(2, at=6000).buy(3, at=3000)) \
+    .expect(price=500, volume=0, float=6, short=6) \
     .finish()
+
