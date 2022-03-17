@@ -40,7 +40,17 @@ function submit_order_form(){
 
 var num_orders = 0;
 $(document).on('click', ".close-button", function(){
-    var raw_id = $(this).attr('id');
+    cancel_order($(this));
+});
+
+$(document).on('keydown', ".close-button", function(event){
+    if (event.keyCode == 13) {
+        cancel_order($(this));
+    }
+});
+
+function cancel_order(elem){
+    var raw_id = elem.attr('id');
     oid = raw_id.substr(raw_id.indexOf('_') +1);
     remove_all_error_messages();
     liveSend({'func': 'delete_order', 'oid': oid});
@@ -54,7 +64,7 @@ $(document).on('click', ".close-button", function(){
         $("select").prop("disabled", false);
         $(".order-form").removeClass("disabled");
     }
-});
+}
 
 function remove_all_error_messages(){
         $(".form-control,.form-select").each(remove_error_message);

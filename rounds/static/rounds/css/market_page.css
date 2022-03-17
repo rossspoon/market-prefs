@@ -94,6 +94,7 @@
     left: 0;
 }
 
+.close-button:focus,
 .close-button:hover {
    animation-name: close-button-hover;
    animation-duration: .25s;
@@ -101,6 +102,7 @@
    animation-fill-mode: forwards;
 }
 
+.close-button:focus ~ .order-details,
 .close-button:hover ~ .order-details{
     background-color: lightgray;
 }
