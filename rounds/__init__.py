@@ -173,9 +173,7 @@ def create_order_from_live_submit(player, o_type: OrderType, price, quant, o_cls
                      quantity=quant,
                      )
 
-    # HACK!!!!  I don't know why this works, but I'm trying to send the id to of the Order object
-    # back to browser and that doesn't work unless I make a db query.
-    # TODO: May a db.commit()?
+    # Commit the order so that we can get an id.
     database.db.commit()
 
     return {'func': 'order_confirmed', 'order_id': o.id}
