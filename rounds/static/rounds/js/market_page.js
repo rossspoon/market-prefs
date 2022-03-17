@@ -126,7 +126,7 @@ function add_order_to_list(oid, o_info){
     close_btn_elem.id = "cb_" + oid;
     close_btn_elem.txt = "Cancel this order.";
     close_btn_elem.innerHTML = 'X';
-    close_btn_elem.tabIndex = "0";
+    close_btn_elem.tabIndex = 0;
 
     //assemble order line and append to list
     order_elem = document.createElement("div");
