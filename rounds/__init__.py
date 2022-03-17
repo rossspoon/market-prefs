@@ -166,6 +166,7 @@ def get_orders_by_type(existing_orders):
 
 
 def create_order_from_live_submit(player, o_type: OrderType, price, quant, o_cls=Order):
+    # TODO:  Does this need to go in a transaction?
     o = o_cls.create(player=player,
                      group=player.group,
                      order_type=o_type.value,
