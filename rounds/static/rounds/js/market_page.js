@@ -19,14 +19,24 @@ $(window).on('load', function () {
 
     // Submit the order form
     $("#submit-btn").click(function(){
-        data = get_order_details();
-        remove_all_error_messages();
-        liveSend({'func':'submit-order', 'data': data});
+        submit_order_form();
+    });
+
+    $("#submit-btn").keypress(function(event){
+        if ( event.which == 13 ) {
+            submit_order_form();
+        }
     });
 
     // Remove the error message for a form field as it is changed
     $(".form-control,.form-select").change(remove_error_message);
 })
+
+function submit_order_form(){
+        data = get_order_details();
+        remove_all_error_messages();
+        liveSend({'func':'submit-order', 'data': data});
+}
 
 var num_orders = 0;
 $(document).on('click', ".close-button", function(){
@@ -106,6 +116,7 @@ function add_order_to_list(oid, o_info){
     close_btn_elem.id = "cb_" + oid;
     close_btn_elem.txt = "Cancel this order.";
     close_btn_elem.innerHTML = 'X';
+    close_btn_elem.tabIndex = "0";
 
     //assemble order line and append to list
     order_elem = document.createElement("div");
@@ -145,23 +156,10 @@ function process_order_rejection(data) {
     });
 }
 
-function liveRecv(data) {
-    var func = data.func;
-
-    if (func == 'order_confirmed') {
-        add_form_order_to_list(data);
-
-    } else if (func == 'order_rejected') {
-        process_order_rejection(data)
-
-    } else if (func == 'order_list') {
-        add_orders_to_list(data);
-    }
-
+function process_warnings(data) {
     // Process Warnings
     $('.pop-up-warning').detach();
     let warnings = data.warnings;
-    let warning_elem;
     if (warnings) {
         for (let idx in warnings) {
             let warning_elem = document.createElement("div");
@@ -174,4 +172,20 @@ function liveRecv(data) {
             $('.message-box').append(warning_elem)
         }
     }
+}
+
+function liveRecv(data) {
+    const func = data.func;
+
+    if (func === 'order_confirmed') {
+        add_form_order_to_list(data);
+
+    } else if (func === 'order_rejected') {
+        process_order_rejection(data)
+
+    } else if (func === 'order_list') {
+        add_orders_to_list(data);
+    }
+
+    process_warnings(data)
 }

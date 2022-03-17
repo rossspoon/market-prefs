@@ -15,9 +15,10 @@ BID = OrderType.BID.value
 OFFER = OrderType.OFFER.value
 
 
-def basic_player(pid=None, id_in_group=None, shares=0):
+def basic_player(pid=None, id_in_group=None, shares=0, cash=0):
     player = MagicMock(spec=Player)
     player.shares = shares
+    player.cash = cash
     if pid:
         player.id = pid
     if id_in_group:
@@ -60,8 +61,10 @@ sess_config = dict(interest_rate=.1,
                    margin_target_ratio=.4)
 
 
-def get_group(players, market_price=98):
+def get_group(players, market_price=98, gid=None):
     group = Group()
+    if gid:
+        group.id = gid
     group.get_players = MagicMock(return_value=players)
     group.get_last_period_price = MagicMock(return_value=market_price)
     group.session = Session()
@@ -69,6 +72,7 @@ def get_group(players, market_price=98):
     return group
 
 
+# noinspection PyUnresolvedReferences
 class TestMarketIteration(unittest.TestCase):
 
     def test_init(self):
@@ -333,9 +337,6 @@ class TestMarketIteration(unittest.TestCase):
 
         _buy_in_p1 = get_order(player=p1, order_type=BID, price=8, quantity=1)
         _sell_off_p2 = get_order(player=p2, order_type=OFFER, price=8, quantity=1)
-
-        buy_in_data = DataForOrder(_buy_in_p1)
-        sell_off_data = DataForPlayer(_sell_off_p2)
 
         group = get_group(players=[p1, p2, p3, p4])
         mi = MarketIteration([ob1, ob2, ob3, ob4], [os1, os2, os3, os4], group, 4,

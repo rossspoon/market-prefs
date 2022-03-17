@@ -58,8 +58,6 @@ def run_order_placement_coverage_tests(method):
     test_place_order(method, 2, '1', '-1', '10', valid=False, code_expect=OrderErrorCode.PRICE_NEGATIVE)
     test_place_order(method, 2, '1', '50', 'a', valid=False, code_expect=OrderErrorCode.QUANT_NOT_NUM)
     test_place_order(method, 2, '1', '50', '-1', valid=False, code_expect=OrderErrorCode.QUANT_NEGATIVE)
-    # test_place_order(method, 2, '2', 'a', '-1', valid=False, code_expect=22)
-    test_place_order(method, 2, '2', '-1', 'a', valid=False, code_expect=25)
 
 
 #############################################################################################################
@@ -354,7 +352,8 @@ class ScriptedBot(Bot):
             for var in vars(group):
                 self.test_object_attribute(group, last_round_market, var)
 
-    def test_object_attribute(self, obj, actions, attr):
+    @staticmethod
+    def test_object_attribute(obj, actions, attr):
         if not actions.expects(attr):
             return
 
@@ -515,4 +514,3 @@ market = MarketTests().round(1) \
            .sell(2, at=6000).buy(3, at=3000)) \
     .expect(price=500, volume=0, float=6, short=6) \
     .finish()
-

@@ -5,6 +5,7 @@ from rounds.call_market import CallMarket
 from .models import *
 import common.SessionConfigFunctions as scf
 from common.ParticipantFuctions import generate_participant_ids
+from otree import database
 
 
 class Constants(BaseConstants):
@@ -72,110 +73,169 @@ def get_js_vars(player: Player, include_current=True):
 #########################
 # LIVE PAGES FUNCTIONS
 # noinspection DuplicatedCode
-def is_order_valid(player: Player, data):
-    o_type = data['type']
-    o_price = data['price']
-    o_quant = data['quantity']
+def is_order_valid(data, orders_by_type):
+    error_code, o_type, price, quant = is_order_form_valid(data)
 
-    error_code = 0
-
-    # We'll need to check this order against all other outstanding orders
-    # And categorize them by type
-    orders = get_orders_for_player(player)
-    orders_cat = defaultdict(list)
-    for o in orders:
-        orders_cat[o.order_type].append(o)
+    # All remaining tests depend on the numeric form data
+    if error_code > 0:
+        return error_code
 
     # price tests
-    if not o_price.lstrip('-').isnumeric():
-        error_code = OrderErrorCode.PRICE_NOT_NUM.combine(error_code)
-    elif int(o_price) <= 0:
+    if price <= 0:
         error_code = OrderErrorCode.PRICE_NEGATIVE.combine(error_code)
 
     # quant tests
-    if not o_quant.lstrip('-').isnumeric():
-        error_code = OrderErrorCode.QUANT_NOT_NUM.combine(error_code)
-    elif int(o_quant) <= 0:
+    if quant <= 0:
         error_code = OrderErrorCode.QUANT_NEGATIVE.combine(error_code)
 
-    # type tests
-    if o_type not in ['-1', '1']:
-        error_code = OrderErrorCode.BAD_TYPE.combine(error_code)
+    # All remaining tests depend on valid price and quant
+    if error_code > 0:
+        return error_code
 
     # If this is a bid, then its price must be less than the lowest ask
-    min_ask = min([o.price for o in orders_cat[OrderType.OFFER.value]], default=999999999)
-    max_bid = max([o.price for o in orders_cat[OrderType.BID.value]], default=-999)
+    min_ask = min([o.price for o in orders_by_type[OrderType.OFFER]], default=999999999)
+    max_bid = max([o.price for o in orders_by_type[OrderType.BID]], default=-999)
 
-    if o_type == '-1' and float(o_price) >= min_ask:
+    if o_type == OrderType.BID and price >= min_ask:
         error_code = OrderErrorCode.BID_GREATER_THAN_ASK.combine(error_code)
 
-    if o_type == '1' and float(o_price) <= max_bid:
+    if o_type == OrderType.OFFER and price <= max_bid:
         error_code = OrderErrorCode.ASK_LESS_THAN_BID.combine(error_code)
 
     return error_code
 
 
-def process_order_submit(player, data):
-    p_id = player.id_in_group
-
-    error_code = is_order_valid(player, data)
-    valid = error_code == 0
-
-    if valid:
-        o_type = int(data['type'])
-        o_price = int(data['price'])
-        o_quant = int(data['quantity'])
-
-        o = Order.create(player=player,
-                         group=player.group,
-                         order_type=o_type,
-                         price=o_price,
-                         quantity=o_quant,
-                         )
-
-        # HACK!!!!  I don't know why this works, but I'm trying to send the id to of the Order object
-        # back to browser and that doesn't work unless I make a db query.
-        # TODO: May a db.commit()?
-        Order.filter(player=player)
-
-        return {p_id: {'func': 'order_confirmed', 'order_id': o.id}}
+def is_order_form_valid(data):
+    """
+    Syntactic checks of the order form.  Basically test that the price and quant are all
+    integer numbers, and that the type is either -1 or 1 (BUY or SELL).
+    @param data: Data from the otree live page's packet
+    @return: Error Code - 0 if valid
+    @return: An OrderType object if valid, None otherwise
+    @return: The price as an integer if valid, None otherwise
+    @return: The quantity as an integer if valid, None otherwise
+    """
+    raw_type = data['type']
+    raw_price = data['price']
+    raw_quant = data['quantity']
+    error_code = 0
+    # Numeric Tests  - Price and Quantity must be numeric
+    price = None
+    quant = None
+    o_type = None
+    if not raw_price.lstrip('-').isnumeric():
+        error_code = OrderErrorCode.PRICE_NOT_NUM.combine(error_code)
     else:
-        return {p_id: {'func': 'order_rejected', 'error_code': error_code}}
+        price = int(raw_price)
+    if not raw_quant.lstrip('-').isnumeric():
+        error_code = OrderErrorCode.QUANT_NOT_NUM.combine(error_code)
+    else:
+        quant = int(raw_quant)
+    if raw_type not in ['-1', '1']:
+        error_code = OrderErrorCode.BAD_TYPE.combine(error_code)
+    else:
+        o_type = OrderType(int(raw_type))
+    return error_code, o_type, price, quant
 
 
-def get_orders_for_player_live(player):
-    p_id = player.id_in_group
-    orders = [o.to_dict() for o in Order.filter(player=player)]
-    return {p_id: dict(func='order_list', orders=orders)}
+def get_order_warnings(player, o_type, price, quant, orders_by_type):
+    warnings = []
+
+    # show a warning if the combined orders can cause a short
+    existing_supply = sum((o.quantity for o in orders_by_type[OrderType.OFFER]))
+    test_supply = existing_supply + quant if o_type == OrderType.OFFER else existing_supply
+    if player.shares < test_supply:
+        warnings.append("Note:  Depending on market conditions, your combined SELL orders might result in a short "
+                        "STOCK position.")
+
+    existing_cost = sum((o.price * o.quantity for o in orders_by_type[OrderType.BID]))
+    order_cost = price * quant
+    test_cost = existing_cost + order_cost if o_type == OrderType.BID else existing_cost
+    if player.cash < test_cost:
+        warnings.append("Note:  Depending on market conditions, your combined BUY orders might require you to borrow "
+                        "CASH.")
+
+    return warnings
 
 
-def get_orders_for_player(player):
-    return Order.filter(player=player)
+def get_orders_by_type(existing_orders):
+    orders_cat = defaultdict(list)
+    for o in existing_orders:
+        orders_cat[OrderType(o.order_type)].append(o)
+    return orders_cat
+
+
+def create_order_from_live_submit(player, o_type: OrderType, price, quant, o_cls=Order):
+    o = o_cls.create(player=player,
+                     group=player.group,
+                     order_type=o_type.value,
+                     price=price,
+                     quantity=quant,
+                     )
+
+    # HACK!!!!  I don't know why this works, but I'm trying to send the id to of the Order object
+    # back to browser and that doesn't work unless I make a db query.
+    # TODO: May a db.commit()?
+    database.db.commit()
+
+    return {'func': 'order_confirmed', 'order_id': o.id}
+
+
+def get_orders_for_player_live(orders):
+    orders_dicts = [o.to_dict() for o in orders]
+    return dict(func='order_list', orders=orders_dicts)
 
 
 # noinspection PyUnresolvedReferences
-def delete_order(player, oid):
-    obs = Order.filter(player=player, id=oid)
+def delete_order(player, oid, o_cls=Order):
+    obs = o_cls.filter(player=player, id=oid)
     for o in obs:
-        Order.delete(o)
+        o_cls.delete(o)
 
 
-def market_page_live_method(player, d):
+def market_page_live_method(player, d, o_cls=Order):
     func = d['func']
+
+    # Do delete first.  it might change the outcome of get_orders_for_player
+    if func == 'delete_order':
+        delete_order(player, d['oid'], o_cls=o_cls)
+
+    orders_for_player = get_orders_for_player(player, o_cls=o_cls)
+    orders_by_type = get_orders_by_type(orders_for_player)
+    ret = {}
+    this_order_q = 0
+    this_order_p = 0
+    this_order_t = 'no_order'
 
     if func == 'submit-order':
         data = d['data']
-        return process_order_submit(player, data)
+        form_code, t, p, q = is_order_form_valid(data)
+        error_code = is_order_valid(data, orders_by_type)
+
+        if form_code == 0 and error_code == 0:
+            ret.update(create_order_from_live_submit(player, t, p, q, o_cls=o_cls))
+            this_order_q = q
+            this_order_p = p
+            this_order_t = t
+        else:
+            ret.update({'func': 'order_rejected', 'error_code': error_code})
 
     elif func == 'get_orders_for_player':
-        return get_orders_for_player_live(player)
+        ret.update(get_orders_for_player_live(orders_for_player))
 
-    elif func == 'delete_order':
-        delete_order(player, d['oid'])
+    # generate warnings
+    warnings = get_order_warnings(player, this_order_t, this_order_p, this_order_q, orders_by_type)
+    ret['warnings'] = warnings
+
+    return {player.id_in_group: ret}
 
 
 # END LIVE METHODS
 #######################################
+
+
+def get_orders_for_player(player, o_cls=Order):
+    return o_cls.filter(player=player)
 
 
 def standard_vars_for_template(player: Player):

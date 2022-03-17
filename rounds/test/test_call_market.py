@@ -16,6 +16,8 @@ MARGIN_TARGET: float = .3
 
 def get_order(**kwargs):
     o = MagicMock(spec=Order)
+    if kwargs.get('oid'):
+        o.id = kwargs.get('oid')
     o.player = kwargs.get('player')
     o.group = kwargs.get('group')
     o.order_type = kwargs.get('order_type')
