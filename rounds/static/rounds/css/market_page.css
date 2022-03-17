@@ -96,10 +96,11 @@
 
 .close-button:focus,
 .close-button:hover {
-   animation-name: close-button-hover;
-   animation-duration: .25s;
-   animation-timing-function: ease-in-out;
-   animation-fill-mode: forwards;
+    outline: 1px solid tomato;
+    animation-name: close-button-hover;
+    animation-duration: .25s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
 }
 
 .close-button:focus ~ .order-details,
