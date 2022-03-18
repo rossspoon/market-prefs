@@ -34,6 +34,14 @@ def creating_session(subsession):
         p.shares = shares
         p.cash = worth - shares * fund_val
 
+    # Determine the float and set it on all group objects
+    stock_float = sum(p.shares for p in subsession.get_players())
+    print("stock float:", stock_float)
+    for g in subsession.get_groups():
+        for g2 in g.in_all_rounds():
+            print("g2:", g2)
+            g2.float = stock_float
+
 
 def get_js_vars_not_current(player: Player):
     return get_js_vars(player, include_current=False)
@@ -428,8 +436,12 @@ def pre_round_tasks(group: Group):
         # update margin violations
         p.determine_auto_trans_status()
 
-    # Calculate float the total shorts
-    group.float = sum(p.shares for p in group.get_players())
+    # copy float from previous round
+    prev_g = group.in_round_or_none(group.round_number - 1)
+    if prev_g:
+        group.float = prev_g.float
+
+    # Calculate total shorts
     group.short = abs(sum(p.shares for p in group.get_players() if p.shares < 0))
 
 
