@@ -4,7 +4,7 @@
 
 import unittest
 from collections import defaultdict
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch, call, ANY
 
 from otree.models import Session
 
@@ -20,6 +20,7 @@ M_RAT = .6
 T_RAT = .7
 
 
+# noinspection DuplicatedCode
 class TestInitFunctions(unittest.TestCase):
     def test_debt_msg_no_worries(self):
         cls, msg = get_debt_message(M_RAT, T_RAT, .701, 0, 1)
@@ -367,8 +368,7 @@ class TestInitFunctions(unittest.TestCase):
         buy.to_dict.assert_called_once()
 
     @patch.object(Order, 'create')
-    @patch.object(Order, 'filter')
-    def test_create_order_from_live_submit(self, filter_mock, create_mock):
+    def test_create_order_from_live_submit(self, create_mock):
         # Set-up
         player = basic_player(id_in_group=55)
         group = get_group([player])
@@ -382,7 +382,6 @@ class TestInitFunctions(unittest.TestCase):
         # Assert
         self.assertEqual(d['func'], 'order_confirmed')
         self.assertEqual(d['order_id'], o.id)
-        filter_mock.assert_called_with(player=player)
 
     @patch.object(Order, 'filter')
     @patch.object(Order, 'delete')
@@ -472,6 +471,162 @@ class TestInitFunctions(unittest.TestCase):
         # Assert
         self.assertEqual(len(warnings), 1)
         self.assertRegex(warnings[0], r'BUY.*CASH')
+
+    @patch('rounds.delete_order')
+    @patch('rounds.get_orders_for_player', return_value=[])
+    @patch('rounds.get_orders_by_type', return_value={})
+    @patch('rounds.is_order_form_valid', side_effect=TypeError)
+    @patch('rounds.is_order_valid', side_effect=TypeError)
+    @patch('rounds.create_order_from_live_submit', side_effect=TypeError)
+    @patch('rounds.get_orders_for_player_live', side_effect=TypeError)
+    @patch('rounds.get_order_warnings', return_value=['abc', 'def'])
+    def test_market_page_live_delete(self, warn_m, o4pl_m, create_m, is_v_m, is_vf_m, obt_m, o4p_m, del_m):
+        # Set-up
+        player = basic_player(id_in_group=66)
+        data = dict(func='delete_order', oid='7')
+
+        # Test
+        d = rounds.market_page_live_method(player, data)
+
+        # Assert
+        del_m.assert_called_once_with(player, '7', o_cls=ANY)
+        o4p_m.assert_called_once_with(player, o_cls=ANY)
+        obt_m.assert_called_once_with([])
+        is_vf_m.assert_not_called()
+        is_v_m.assert_not_called()
+        create_m.assert_not_called()
+        o4pl_m.assert_not_called()
+        warn_m.assert_called_once_with(player, 'no_order', 0, 0, {})
+        self.assertEqual(d.keys(), {66})
+        self.assertEqual(d[66]['warnings'], ['abc', 'def'])
+
+    @patch('rounds.delete_order', side_effect=TypeError)
+    @patch('rounds.get_orders_for_player', return_value=[])
+    @patch('rounds.get_orders_by_type', return_value={})
+    @patch('rounds.is_order_form_valid', return_value=(1, None, None, None))
+    @patch('rounds.is_order_valid', return_value=1)
+    @patch('rounds.create_order_from_live_submit', side_effect=TypeError)
+    @patch('rounds.get_orders_for_player_live', side_effect=TypeError)
+    @patch('rounds.get_order_warnings', return_value=['abc', 'def'])
+    def test_market_page_live_submit_fail(self, warn_m, o4pl_m, create_m, is_v_m, is_vf_m, obt_m, o4p_m, del_m):
+        # Set-up
+        player = basic_player(id_in_group=66)
+        form_data = dict(type='-1', price='3890', quantity='9')
+        data = dict(func='submit-order', data=form_data)
+
+        # Test
+        d = rounds.market_page_live_method(player, data)
+
+        # Assert
+        del_m.assert_not_called()
+        o4p_m.assert_called_once_with(player, o_cls=ANY)
+        obt_m.assert_called_once_with([])
+        is_vf_m.assert_called_once_with(form_data)
+        is_v_m.assert_called_once_with(form_data, {})
+        create_m.assert_not_called()
+        o4pl_m.assert_not_called()
+        warn_m.assert_called_once_with(player, 'no_order', 0, 0, {})
+        self.assertEqual(d.keys(), {66})
+        sub_d = d[66]
+        self.assertEqual(sub_d['warnings'], ['abc', 'def'])
+        self.assertEqual(sub_d['func'], 'order_rejected')
+        self.assertEqual(sub_d['error_code'], 1)
+
+    @patch('rounds.delete_order', side_effect=TypeError)
+    @patch('rounds.get_orders_for_player', return_value=[])
+    @patch('rounds.get_orders_by_type', return_value={})
+    @patch('rounds.is_order_form_valid', return_value=(0, None, None, None))
+    @patch('rounds.is_order_valid', return_value=1)
+    @patch('rounds.create_order_from_live_submit', side_effect=TypeError)
+    @patch('rounds.get_orders_for_player_live', side_effect=TypeError)
+    @patch('rounds.get_order_warnings', return_value=['abc', 'def'])
+    def test_market_page_live_submit_fail2(self, warn_m, o4pl_m, create_m, is_v_m, is_vf_m, obt_m, o4p_m, del_m):
+        # Set-up
+        player = basic_player(id_in_group=66)
+        form_data = dict(type='-1', price='3890', quantity='9')
+        data = dict(func='submit-order', data=form_data)
+
+        # Test
+        d = rounds.market_page_live_method(player, data)
+
+        # Assert
+        del_m.assert_not_called()
+        o4p_m.assert_called_once_with(player, o_cls=ANY)
+        obt_m.assert_called_once_with([])
+        is_vf_m.assert_called_once_with(form_data)
+        is_v_m.assert_called_once_with(form_data, {})
+        create_m.assert_not_called()
+        o4pl_m.assert_not_called()
+        warn_m.assert_called_once_with(player, 'no_order', 0, 0, {})
+        self.assertEqual(d.keys(), {66})
+        sub_d = d[66]
+        self.assertEqual(sub_d['warnings'], ['abc', 'def'])
+        self.assertEqual(sub_d['func'], 'order_rejected')
+        self.assertEqual(sub_d['error_code'], 1)
+
+    @patch('rounds.delete_order', side_effect=TypeError)
+    @patch('rounds.get_orders_for_player', return_value=[])
+    @patch('rounds.get_orders_by_type', return_value={})
+    @patch('rounds.is_order_form_valid', return_value=(0, OrderType.BID, 3890, 9))
+    @patch('rounds.is_order_valid', return_value=0)
+    @patch('rounds.create_order_from_live_submit', return_value={'func': 'order_confirmed', 'order_id': 7})
+    @patch('rounds.get_orders_for_player_live', side_effect=TypeError)
+    @patch('rounds.get_order_warnings', return_value=['abc', 'def'])
+    def test_market_page_live_submit_success(self, warn_m, o4pl_m, create_m, is_v_m, is_vf_m, obt_m, o4p_m, del_m):
+        # Set-up
+        player = basic_player(id_in_group=66)
+        form_data = dict(type='-1', price='3890', quantity='9')
+        data = dict(func='submit-order', data=form_data)
+
+        # Test
+        d = rounds.market_page_live_method(player, data)
+
+        # Assert
+        del_m.assert_not_called()
+        o4p_m.assert_called_once_with(player, o_cls=ANY)
+        obt_m.assert_called_once_with([])
+        is_vf_m.assert_called_once_with(form_data)
+        is_v_m.assert_called_once_with(form_data, {})
+        create_m.assert_called_once_with(player, OrderType.BID, 3890, 9, o_cls=ANY)
+        o4pl_m.assert_not_called()
+        warn_m.assert_called_once_with(player, OrderType.BID, 3890, 9, {})
+        self.assertEqual(d.keys(), {66})
+        sub_d = d[66]
+        self.assertEqual(sub_d['warnings'], ['abc', 'def'])
+        self.assertEqual(sub_d['func'], 'order_confirmed')
+        self.assertEqual(sub_d['order_id'], 7)
+
+    @patch('rounds.delete_order')
+    @patch('rounds.get_orders_for_player', return_value=[9, 8, 7])
+    @patch('rounds.get_orders_by_type', return_value={})
+    @patch('rounds.is_order_form_valid')
+    @patch('rounds.is_order_valid')
+    @patch('rounds.create_order_from_live_submit')
+    @patch('rounds.get_orders_for_player_live', return_value={'func': 'order_list', 'orders': [1, 2, 3]})
+    @patch('rounds.get_order_warnings', return_value=['abc', 'def'])
+    def test_market_page_live_get_o4p(self, warn_m, o4pl_m, create_m, is_v_m, is_vf_m, obt_m, o4p_m, del_m):
+        # Set-up
+        player = basic_player(id_in_group=66)
+        form_data = dict(type='-1', price='3890', quantity='9')
+        data = dict(func='get_orders_for_player', data=form_data)
+
+        # Test
+        d = rounds.market_page_live_method(player, data)
+
+        # Assert
+        del_m.assert_not_called()
+        o4p_m.assert_called_once_with(player, o_cls=ANY)
+        obt_m.assert_called_once_with([9, 8, 7])
+        is_vf_m.assert_not_called()
+        is_v_m.assert_not_called()
+        create_m.assert_not_called()
+        o4pl_m.assert_called_once_with([9, 8, 7])
+        warn_m.assert_called_once_with(player, 'no_order', 0, 0, {})
+        self.assertEqual(d.keys(), {66})
+        sub_d = d[66]
+        self.assertEqual(sub_d['warnings'], ['abc', 'def'])
+        self.assertEqual(sub_d['func'], 'order_list')
+        self.assertEqual(sub_d['orders'], [1, 2, 3])
 
 
 if __name__ == '__main__':

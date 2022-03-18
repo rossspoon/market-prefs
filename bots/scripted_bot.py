@@ -1,7 +1,6 @@
 import sys
 import unittest
 
-from otree import database
 from otree.bots.bot import ExpectError
 
 from rounds import *
