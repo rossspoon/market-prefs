@@ -198,8 +198,14 @@ class MarketRound:
         self.round_number = round_number
         self.player_actions = {}  # ActionRounds  - The player actions for a particular round
         self.expected_values = {}
+        self.set_values = {}
+        self.is_not_set = True
 
     # Configuration Interface
+    def set(self, **kwargs):
+        self.set_values.update(kwargs)
+        return self
+
     def expect(self, **kwargs):
         self.expected_values.update(kwargs)
         return self
@@ -249,6 +255,13 @@ class ScriptedBot(Bot):
         # exit if we are past the defined rounds
         if round_number > market.get_num_defined_rounds() + 1:
             return
+
+        # Set group-level items
+        market_round_this_round: MarketRound = market.for_round(round_number)
+        if market_round_this_round and  market_round_this_round.is_not_set:
+            market_round_this_round.is_not_set = False
+            d = market_round_this_round.set_values
+            self.group_level_sets(self.group, d)
 
         ScriptedBot.number_of_bots_in_round[round_number] += 1
         number_of_bots = len(self.group.get_players())
@@ -325,6 +338,12 @@ class ScriptedBot(Bot):
 
                     error = f"Round {actions.round_number}: Actor {actor_name}: Did not find order {exp_key}"
                     ScriptedBot.errors_by_round[actions.round_number].append(error)
+
+    @staticmethod
+    def group_level_sets(group, d):
+        stock_float = d.get('float')
+        if stock_float:
+            group.float = stock_float
 
     @staticmethod
     def order_key_order(o):
@@ -478,7 +497,7 @@ market = MarketTests().round(1) \
     .actor("Treated", lambda ar: ar.expect(cash=350, shares=0, periods_until_auto_sell=-99)
            .expect_order(price=450, quant=3, otype=SELL, is_auto=True).expect_num_orders(1)) \
     .finish() \
-    .round(7) \
+    .round(7).set(float=2) \
     .expect(price=500, volume=1) \
     .actor("Buyer", lambda ar: ar.set(2000, 2)
            .buy(1, at=500)
@@ -498,7 +517,7 @@ market = MarketTests().round(1) \
            .expect_order(price=500, quant=1, otype=SELL, quant_orig=2)) \
     .actor("Treated", lambda ar: ar.set(0, 0)) \
     .finish() \
-    .round(9) \
+    .round(9).set(float=6) \
     .actor("Buyer", lambda ar: ar.set(cash=13743, shares=10)) \
     .actor("Seller", lambda ar: ar.set(cash=82338, shares=-6)) \
     .actor("Treated", lambda ar: ar.set(cash=29794, shares=2)) \

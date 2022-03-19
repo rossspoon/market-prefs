@@ -135,6 +135,8 @@ class TestInitFunctions(unittest.TestCase):
         subsession.session = session
         subsession.round_number = 1
         subsession.get_players = MagicMock(return_value=players)
+        group = get_group(players)
+        subsession.get_groups = MagicMock(return_value=[group])
 
         # Test
         rounds.creating_session(subsession)

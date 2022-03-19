@@ -36,11 +36,8 @@ def creating_session(subsession):
 
     # Determine the float and set it on all group objects
     stock_float = sum(p.shares for p in subsession.get_players())
-    print("stock float:", stock_float)
     for g in subsession.get_groups():
-        for g2 in g.in_all_rounds():
-            print("g2:", g2)
-            g2.float = stock_float
+        g.float = stock_float
 
 
 def get_js_vars_not_current(player: Player):

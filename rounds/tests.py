@@ -1,11 +1,9 @@
-import otree
 from otree.api import Submission, expect
+from otree.bots import Bot
 from otree.models import Session
 
 from bots.scripted_bot import ScriptedBot, test_place_order
 from bots.sim_bot import SimulationBot
-from otree.bots import Bot
-
 from rounds import Constants, ForecastPage, RoundResultsPage, Market, FinalResultsPage, Group
 
 
@@ -27,6 +25,10 @@ class PlayerBot(Bot):
 
     def play_round(self):
         yield Submission(Market, check_html=False)
+
+        expect(self.group.float, 21)
+
+        # Forcast Page
         round_number = self.round_number
         f0 = self.f0s[round_number]
         form_data = {'f0': f0}
@@ -41,6 +43,7 @@ class PlayerBot(Bot):
         expect(player.forecast_reward, 500)
         expect(player.forecast_error, 0)
 
+        # Round Result Page
         yield RoundResultsPage
 
         if round_number == Constants.num_rounds:
