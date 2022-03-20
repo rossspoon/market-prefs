@@ -36,6 +36,14 @@
         <div class="results-layout-box">
             <div id="timer_box"></div>
             <div class="results-div">
+                {{ if bankrupt }}
+                <div class="alert alert-danger">
+                    <p class = "message"> You are now bankrupt.  You are no longer able to trade in the market.
+                        You will next be asked to complete a survey before receiving your {{ session.participation_fee }}
+                        show-up fee.
+                    </p>
+                </div>
+                {{ endif }}
             <ul class="results-ul">
                  <li>
                     {{ if filled_amount == 0 }}
@@ -67,11 +75,13 @@
                     <span class="forecast-error"> (Error: {{ player.forecast_error }} )<span>
                 </li>
                 <li>
+                    {{ if not bankrupt }}
                     You now have:
                     <ul class="tight-list">
                         <li>{{ player.cash_result }}</li>
                         <li>{{ player.shares_result }} shares </li>
                     </ul>
+                    {{ endif }}
                 </li>
 
             </ul>

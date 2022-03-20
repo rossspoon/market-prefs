@@ -419,6 +419,9 @@ def vars_for_round_results_template(player: Player):
     ret['filled_amount'] = filled_amount
     ret['trans_type'] = trans_type
     ret['trans_cost'] = filled_amount * player.group.price
+    ret['bankrupt'] = player.shares_result < 0 and player.cash_result < 0
+
+    print(ret)
 
     return ret
 
@@ -537,7 +540,6 @@ class MarketWaitPage(WaitPage):
     after_all_players_arrive = calculate_market
 
 
-# TODO: Make this page say something about bankruptcy.
 class RoundResultsPage(Page):
     form_model = 'player'
     js_vars = get_js_vars

@@ -53,3 +53,12 @@
     font-weight: bold;
 }
 
+/*Hijacked this otree style to fit my purpose better*/
+.alert {
+    position: relative;
+    padding: 5px;
+    margin-bottom: .7rem;
+    border: 1px solid transparent;
+    border-radius: 1rem;
+}
+
