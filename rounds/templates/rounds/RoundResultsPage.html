@@ -74,15 +74,15 @@
                     Forecast Reward: {{ player.forecast_reward }}
                     <span class="forecast-error"> (Error: {{ player.forecast_error }} )<span>
                 </li>
-                <li>
-                    {{ if not bankrupt }}
-                    You now have:
-                    <ul class="tight-list">
-                        <li>{{ player.cash_result }}</li>
-                        <li>{{ player.shares_result }} shares </li>
-                    </ul>
-                    {{ endif }}
-                </li>
+                {{ if not bankrupt }}
+                    <li>
+                        You now have:
+                        <ul class="tight-list">
+                            <li>{{ player.cash_result }}</li>
+                            <li>{{ player.shares_result }} shares </li>
+                        </ul>
+                    </li>
+                {{ endif }}
 
             </ul>
 
