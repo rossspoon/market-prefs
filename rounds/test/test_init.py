@@ -6,6 +6,7 @@ import unittest
 from collections import defaultdict
 from unittest.mock import MagicMock, patch, call, ANY
 
+from otree import database
 from otree.models import Session
 
 import rounds
@@ -369,8 +370,9 @@ class TestInitFunctions(unittest.TestCase):
         sell.to_dict.assert_called_once()
         buy.to_dict.assert_called_once()
 
+    @patch.object(database.db, 'commit')
     @patch.object(Order, 'create')
-    def test_create_order_from_live_submit(self, create_mock):
+    def test_create_order_from_live_submit(self, create_mock, commit_mock):
         # Set-up
         player = basic_player(id_in_group=55)
         group = get_group([player])
@@ -384,6 +386,7 @@ class TestInitFunctions(unittest.TestCase):
         # Assert
         self.assertEqual(d['func'], 'order_confirmed')
         self.assertEqual(d['order_id'], o.id)
+        commit_mock.assert_called_once()
 
     @patch.object(Order, 'filter')
     @patch.object(Order, 'delete')

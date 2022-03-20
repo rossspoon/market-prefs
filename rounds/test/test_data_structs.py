@@ -1,6 +1,5 @@
 import unittest
-
-from otree.models import Session
+from unittest.mock import MagicMock, patch
 
 from rounds.call_market import CallMarket
 from rounds.data_structs import DataForPlayer, DataForOrder
@@ -29,7 +28,7 @@ all_orders = [b_10_05, b_10_06, b_11_05, b_11_06, o_05_05, o_05_06, o_06_05, o_0
 
 
 def get_session():
-    session = Session()
+    session = MagicMock()
     config = {scf.SK_MARGIN_RATIO: MARGIN_RATIO,
               scf.SK_MARGIN_TARGET_RATIO: MARGIN_TARGET,
               scf.SK_MARGIN_PREMIUM: MARGIN_PREM}
@@ -313,7 +312,8 @@ class TestDataForOrder(unittest.TestCase):
         self.assertEqual(o.quantity_final, -7777)
         self.assertEqual(d4o.original_quantity, 56)
 
-    def test_update_order_None(self):
+    @patch.object(Order, 'create')
+    def test_update_order_None(self, create_mock):
         # Setup
         d4o = DataForOrder()
         g, _, p = self.basic_setup()
@@ -329,17 +329,16 @@ class TestDataForOrder(unittest.TestCase):
 
         # Execute
         d4o.update_order()
-        o = d4o.order
 
         # Assert
-        self.assertIsNotNone(o)
-        self.assertEqual(o.player, p)
-        self.assertEqual(o.group, g)
-        self.assertEqual(o.price, -54)
-        self.assertEqual(o.quantity, -55)
-        self.assertTrue(o.is_buy_in)
-        self.assertEqual(o.quantity_final, -56)
-        self.assertEqual(o.original_quantity, 56)
+        create_mock.assert_called_once_with(player=p,
+                                            group=g,
+                                            order_type=OFFER,
+                                            price=-54,
+                                            quantity=-55,
+                                            is_buy_in=True,
+                                            quantity_final=-56,
+                                            original_quantity=56)
 
     def test_get_total_quantity(self):
         self.assertEqual(CallMarket.get_total_quantity(all_orders), 45)

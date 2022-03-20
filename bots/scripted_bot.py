@@ -12,11 +12,6 @@ SELL = 1
 def run_unit_tests():
     suite = unittest.defaultTestLoader.discover('rounds/test')
     print("\n===========================\nRUNNING UNIT TESTS")
-    # for s in suite:
-    #    for t in s:
-    #        for i in t:
-    #            print("TEST", i, "\n")
-
     ttr = unittest.TextTestRunner(stream=sys.stdout)
     ttr.run(suite)
     database.db.rollback()
@@ -258,7 +253,7 @@ class ScriptedBot(Bot):
 
         # Set group-level items
         market_round_this_round: MarketRound = market.for_round(round_number)
-        if market_round_this_round and  market_round_this_round.is_not_set:
+        if market_round_this_round and market_round_this_round.is_not_set:
             market_round_this_round.is_not_set = False
             d = market_round_this_round.set_values
             self.group_level_sets(self.group, d)
