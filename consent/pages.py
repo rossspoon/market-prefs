@@ -4,7 +4,7 @@ from .models import Player
 
 def determine_app(self, upcoming_apps):
     player = self.player
-    if not player.consent_given and player.button_clicked:
+    if not player.consent_given:
         return upcoming_apps[-1]
 
 
@@ -13,13 +13,9 @@ def show_id_page(self):
     return player.consent_given
 
 
-def show_non_part_page(self):
-    player = self.player
-    return not player.button_clicked
-
-
 def record_consent(self):
     self.player.participant.CONSENT = self.player.consent_given
+    self.player.participant.CONSENT_BUTTON_CLICKED = self.player.button_clicked
 
 
 class ConsentPage(Page):
@@ -33,8 +29,4 @@ class IdPage(Page):
     is_displayed = show_id_page
 
 
-class NonParticipantPage(Page):
-    is_displayed = show_non_part_page
-
-
-page_sequence = [ConsentPage, IdPage, NonParticipantPage]
+page_sequence = [ConsentPage, IdPage]

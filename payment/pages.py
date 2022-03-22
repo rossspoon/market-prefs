@@ -3,7 +3,8 @@ from ._builtin import Page
 
 class ConsentDeniedPage(Page):
     def is_displayed(self):
-        return not self.player.participant.vars.get('CONSENT')
+        participant = self.player.participant
+        return not participant.vars.get('CONSENT') and participant.vars.get('CONSENT_BUTTON_CLICKED')
 
 
 class FinalResultsPage(Page):
@@ -15,7 +16,14 @@ class FinalResultsPage(Page):
                 }
 
     def is_displayed(self):
-        return self.player.participant.vars.get('CONSENT')
+        participant = self.player.participant
+        return participant.vars.get('CONSENT') and participant.vars.get('CONSENT_BUTTON_CLICKED')
 
 
-page_sequence = [ConsentDeniedPage, FinalResultsPage]
+class NonParticipantPage(Page):
+    def is_displayed(self):
+        player = self.player
+        return not player.participant.vars.get('CONSENT_BUTTON_CLICKED')
+
+
+page_sequence = [ConsentDeniedPage, FinalResultsPage, NonParticipantPage]
