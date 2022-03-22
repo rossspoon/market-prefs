@@ -26,10 +26,14 @@ class PlayerBot(Bot):
     def play_round(self):
         yield Submission(Market, check_html=False)
 
-        expect(self.group.float, 21)
+        round_number = self.round_number
+
+        # Check the float
+        if self.round_number == 1:
+            stock_float = sum(p.shares for p in self.group.get_players())
+            expect(self.group.float, stock_float)
 
         # Forcast Page
-        round_number = self.round_number
         f0 = self.f0s[round_number]
         form_data = {'f0': f0}
         if round_number < Constants.num_rounds:
