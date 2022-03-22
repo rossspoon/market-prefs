@@ -462,6 +462,56 @@ class TestInitFunctions(unittest.TestCase):
         self.assertRegex(warnings[0], r'SELL.*STOCK')
         self.assertRegex(warnings[1], r'BUY.*CASH')
 
+    def test_get_warnings_short_any_supply_is_warn(self):
+        # Set-up
+        player = basic_player(shares=-1, cash=5000)
+        sell_1 = get_order(order_type=1, quantity=3)
+        obt = {OrderType.OFFER: [sell_1], OrderType.BID: []}
+
+        # Test
+        warnings = rounds.get_order_warnings(player, 'no_order', 0, 0, obt)
+
+        # Assert
+        self.assertEqual(len(warnings), 1)
+        self.assertRegex(warnings[0], r'SELL.*STOCK')
+
+    def test_get_warnings_short_any_supply_is_warn_2(self):
+        # Set-up
+        player = basic_player(shares=-1, cash=5000)
+        obt = {OrderType.OFFER: [], OrderType.BID: []}
+
+        # Test
+        warnings = rounds.get_order_warnings(player, OrderType.OFFER, 0, 1, obt)
+
+        # Assert
+        self.assertEqual(len(warnings), 1)
+        self.assertRegex(warnings[0], r'SELL.*STOCK')
+
+    def test_get_warnings_any_cost_warn(self):
+        # Set-up
+        player = basic_player(shares=4, cash=0)
+        buy1 = get_order(order_type=-1, quantity=1, price=1001)
+        obt = {OrderType.OFFER: [], OrderType.BID: [buy1]}
+
+        # Test
+        warnings = rounds.get_order_warnings(player, 'no_order', 0, 0, obt)
+
+        # Assert
+        self.assertEqual(len(warnings), 1)
+        self.assertRegex(warnings[0], r'BUY.*CASH')
+
+    def test_get_warnings_any_cost_warn_2(self):
+        # Set-up
+        player = basic_player(shares=4, cash=-1)
+        obt = {OrderType.OFFER: [], OrderType.BID: []}
+
+        # Test
+        warnings = rounds.get_order_warnings(player, OrderType.BID, 1, 1, obt)
+
+        # Assert
+        self.assertEqual(len(warnings), 1)
+        self.assertRegex(warnings[0], r'BUY.*CASH')
+
     def test_get_warnings_no_order(self):
         # Set-up
         player = basic_player(shares=4, cash=5000)
@@ -471,11 +521,33 @@ class TestInitFunctions(unittest.TestCase):
         obt = {OrderType.OFFER: [sell_1], OrderType.BID: [buy1, buy2]}
 
         # Test
-        warnings = rounds.get_order_warnings(player, 'no_order', 0, 2, obt)
+        warnings = rounds.get_order_warnings(player, 'no_order', 0, 0, obt)
 
         # Assert
         self.assertEqual(len(warnings), 1)
         self.assertRegex(warnings[0], r'BUY.*CASH')
+
+    def test_get_warnings_no_order_already_short(self):
+        # Set-up
+        player = basic_player(shares=-4, cash=5000)
+        obt = {OrderType.OFFER: [], OrderType.BID: []}
+
+        # Test
+        warnings = rounds.get_order_warnings(player, 'no_order', 0, 0, obt)
+
+        # Assert
+        self.assertEqual(len(warnings), 0)
+
+    def test_get_warnings_no_order_already_debt(self):
+        # Set-up
+        player = basic_player(shares=4, cash=-5000)
+        obt = {OrderType.OFFER: [], OrderType.BID: []}
+
+        # Test
+        warnings = rounds.get_order_warnings(player, 'no_order', 0, 0, obt)
+
+        # Assert
+        self.assertEqual(len(warnings), 0)
 
     @patch('rounds.delete_order')
     @patch('rounds.get_orders_for_player', return_value=[])

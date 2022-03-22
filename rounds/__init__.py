@@ -149,14 +149,14 @@ def get_order_warnings(player, o_type, price, quant, orders_by_type):
     # show a warning if the combined orders can cause a short
     existing_supply = sum((o.quantity for o in orders_by_type[OrderType.OFFER]))
     test_supply = existing_supply + quant if o_type == OrderType.OFFER else existing_supply
-    if player.shares < test_supply:
+    if test_supply > 0 and player.shares < test_supply:
         warnings.append("Note:  Depending on market conditions, your combined SELL orders might result in a short "
                         "STOCK position.")
 
     existing_cost = sum((o.price * o.quantity for o in orders_by_type[OrderType.BID]))
     order_cost = price * quant
     test_cost = existing_cost + order_cost if o_type == OrderType.BID else existing_cost
-    if player.cash < test_cost:
+    if test_cost > 0 and player.cash < test_cost:
         warnings.append("Note:  Depending on market conditions, your combined BUY orders might require you to borrow "
                         "CASH.")
 
