@@ -115,7 +115,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     bonus_cap=250000,
     forecast_thold=250,
     forecast_reward=500,
-    market_time=30,
+    market_time=45,
     forecast_time=15,
     summary_time=15,
 )

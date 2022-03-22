@@ -91,7 +91,7 @@ class PracticeMarketPage(Page):
     @staticmethod
     def vars_for_template(player: Player):
         ret = rounds.vars_for_market_template(player)
-        ret['is_practice'] = True
+        ret['show_next'] = False
         return ret
 
 
