@@ -59,7 +59,7 @@ SESSION_CONFIGS = [
     )
     , dict(
         name='consent',
-        app_sequence=['consent'],
+        app_sequence=['consent', 'payment'],
         num_demo_participants=1,
     )
     , dict(

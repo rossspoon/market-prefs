@@ -1,19 +1,20 @@
 from otree.api import (
     models,
-    widgets,
     BaseConstants,
     BaseSubsession,
     BaseGroup,
     BasePlayer,
-    Currency as c,
-    currency_range,
 )
 
 from common.ParticipantFuctions import generate_participant_ids
 
 doc = """
-Your app description
+Handle Consent
 """
+
+NON_PARTICIPANT = -1
+CONSENT_NOT_GIVEN = 0
+CONSENT_GIVEN = 1
 
 
 class Constants(BaseConstants):
@@ -34,3 +35,4 @@ class Group(BaseGroup):
 
 class Player(BasePlayer):
     consent_given = models.BooleanField()
+    button_clicked = models.BooleanField()
