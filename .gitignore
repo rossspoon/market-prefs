@@ -17,3 +17,4 @@ export_tests/
 /notebooks/
 ./run_it.*
 run_it.bat
+/simulation_results/

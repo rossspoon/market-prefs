@@ -108,7 +108,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     auto_trans_delay=0,
     float_ratio_cap=1.0,
 
-    endow_stock='15 -2 8 -6',
+    endow_stock='18 -2 10 -6',
     endow_worth=30000,
 
     initial_price=2800,

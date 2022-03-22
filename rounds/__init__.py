@@ -421,8 +421,6 @@ def vars_for_round_results_template(player: Player):
     ret['trans_cost'] = filled_amount * player.group.price
     ret['bankrupt'] = player.shares_result < 0 and player.cash_result < 0
 
-    print(ret)
-
     return ret
 
 
@@ -496,6 +494,14 @@ def f2_choices(player: Player):
     return get_forecasters_choices(player, 'f2')
 
 
+def not_displayed_for_simulation(player: Player):
+    return not scf.get_session_name(player) == 'sim_1'
+
+
+def not_displayed_for_simulation_except_last_round(player: Player):
+    return not scf.get_session_name(player) == 'sim_1' or player.round_number == Constants.num_rounds
+
+
 ############
 # PAGES
 ##########
@@ -524,6 +530,7 @@ class ForecastPage(Page):
     js_vars = get_js_vars_not_current
     vars_for_template = vars_for_forecast_template
     get_timeout_seconds = scf.get_forecast_time
+    is_displayed = not_displayed_for_simulation
 
     @staticmethod
     def get_form_fields(player):
@@ -545,6 +552,7 @@ class RoundResultsPage(Page):
     js_vars = get_js_vars
     vars_for_template = vars_for_round_results_template
     get_timeout_seconds = scf.get_summary_time
+    is_displayed = not_displayed_for_simulation_except_last_round
 
     @staticmethod
     def app_after_this_page(player: Player, upcoming_apps):
