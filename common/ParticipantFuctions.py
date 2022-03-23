@@ -3,6 +3,7 @@ import random
 from otree.api import (
     BaseSubsession,
 )
+from otree.models import Participant
 
 PARTICIPANT_ID_SPACE = 99 * 26 + 26
 
@@ -25,6 +26,7 @@ def generate_participant_ids(subsession: BaseSubsession):
             player.participant.PART_ID = pid
             player.participant.label = pid
 
+
 # def generate_participant_ids(subsession: BaseSubsession):
 #    for player in subsession.get_players():
 #        participant = player.participant
@@ -32,3 +34,14 @@ def generate_participant_ids(subsession: BaseSubsession):
 #        pid = participant.code[-3:].upper()
 #        if not existing:
 #            player.participant.PART_ID = pid
+
+def ensure_participant(obj):
+    if type(obj) == Participant:
+        return obj
+    else:
+        return obj.participant
+
+
+def is_button_click(obj):
+    participant = ensure_participant(obj)
+    return bool(participant.vars.get('CONSENT_BUTTON_CLICKED'))

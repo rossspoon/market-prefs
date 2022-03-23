@@ -1,4 +1,6 @@
 from ._builtin import Page
+from .models import Subsession, Player
+from common.ParticipantFuctions import is_button_click
 
 
 class ConsentDeniedPage(Page):
