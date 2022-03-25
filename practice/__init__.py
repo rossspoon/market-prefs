@@ -15,9 +15,9 @@ class C(BaseConstants):
     NUM_ROUNDS = 3
 
 
-prices = [-1, 3000, 2500, 1400]
+prices = [-1, 30.00, 25.00, 14.00]
 volumes = [-1, 12, 18, 8]
-dividends = [-1, 40, 100, 40]
+dividends = [-1, 0.40, 1.00, 0.40]
 
 
 def creating_session(subsession):

@@ -72,7 +72,7 @@ def get_item_as_bool(config, key, default=False):
 
 def get_init_price(obj):
     config = ensure_config(obj)
-    return get_item_as_int(config, SK_INITIAL_PRICE)
+    return get_item_as_float(config, SK_INITIAL_PRICE, return_none=True)
 
 
 def get_session_name(obj):
@@ -123,7 +123,7 @@ def get_dividend_amount(obj):
 
 
 def get_dividend_amounts(obj):
-    return np.array([int(x) for x in get_dividend_amount(obj).split()])
+    return np.array([float(x) for x in get_dividend_amount(obj).split()])
 
 
 def get_interest_rate(obj):
@@ -142,7 +142,7 @@ def get_fundamental_value(obj):
     if r == 0:
         return 0
 
-    return int(exp / r)
+    return round(exp / r, 2)
 
 
 def is_random_hist(obj):

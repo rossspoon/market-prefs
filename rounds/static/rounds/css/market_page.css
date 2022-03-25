@@ -8,7 +8,7 @@
 /* Main Grid layout */
 .layout-box {
     display: grid;
-    grid-template-columns: 500px 2fr 1fr;
+    grid-template-columns: 650px 2fr 1fr;
     grid-template-rows: 50px 80px auto;
     gap: 10px;
 }

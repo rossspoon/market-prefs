@@ -27,7 +27,7 @@ class TestCallMarketPrice(unittest.TestCase):
         # Basic instantiation with lists of orders
         mp = MarketPrice(bids, offers)
         df = mp.price_df
-        expected_prices = {5, 6, 10, 11}
+        expected_prices = {500, 600, 1000, 1100}
         actual_prices = df.price.values
         expected_vol = {20, 21, 15, 16}
         actual_vol = df.volume.values
@@ -42,7 +42,7 @@ class TestCallMarketPrice(unittest.TestCase):
         offers_tup = [(5, 15), (6, 16), (11, 2)]
         mp = MarketPrice(bids_tup, offers_tup)
         df = mp.price_df
-        expected_prices = {5, 6, 10, 11}
+        expected_prices = {500, 600, 1000, 1100}
         actual_prices = df.price.values
         expected_vol = {20, 28, 15, 16}
         actual_vol = df.volume.values
@@ -67,8 +67,8 @@ class TestCallMarketPrice(unittest.TestCase):
         offers = [o(price=5, quantity=15),
                   o(price=6, quantity=16)]
 
-        b_tup = [(10, 20), (11, 21)]
-        o_tup = [(5, 15), (6, 16)]
+        b_tup = [(1000, 20), (1100, 21)]
+        o_tup = [(500, 15), (600, 16)]
 
         # Test object
         MarketPrice(None, None)
@@ -80,8 +80,8 @@ class TestCallMarketPrice(unittest.TestCase):
 
         # Test with lists of tuples
         b_actual, o_actual = ensure_tuples(b_tup, o_tup)
-        self.assertEqual(b_actual, b_tup)
-        self.assertEqual(o_actual, o_tup)
+        self.assertEqual(b_actual, [(100000, 20), (110000, 21)])
+        self.assertEqual(o_actual, [(50000, 15), (60000, 16)])
 
         # Test with lists of None
         b_actual, o_actual = ensure_tuples(None, None)
@@ -151,7 +151,7 @@ class TestCallMarketPrice(unittest.TestCase):
         # Set up
         mp = MarketPrice(None, None)
         df = pd.DataFrame(dict(
-            price=[1, 2, 3, 4],
+            price=[100, 200, 300, 400],
             mev=[5, 6, 7, 8]
         ))
         mp.price_df = df
@@ -209,8 +209,8 @@ class TestCallMarketPrice(unittest.TestCase):
         self.assertEqual(list(mp.candidate_prices), [False, True])
 
     def test_apply_max_vol_multiple(self):
-        b_resid = [(4, 2), (6, 1)]
-        o_resid = [(4, 1), (6, 1)]
+        b_resid = [(4.0, 2), (6.0, 1)]
+        o_resid = [(4.0, 1), (6.0, 1)]
 
         mp = MarketPrice(b_resid, o_resid)
         mp.apply_max_volume_princ()

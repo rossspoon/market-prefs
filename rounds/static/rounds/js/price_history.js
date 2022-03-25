@@ -42,9 +42,9 @@ window.onload = function() {
                     },
                     ticks: {
                         callback: pad_val
-                        , suggestedMax: 3000
-                        , suggestedMin: 2600
-                        , stepSize: 100
+                        , suggestedMax: 20.00
+                        , suggestedMin: 0.00
+                        , stepSize: 1.00
                     }
                 }],
             },

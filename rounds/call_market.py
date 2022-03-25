@@ -66,8 +66,8 @@ class CallMarket:
             o.update_order()
 
         # Update the group
-        self.group.price = int(iteration.market_price)
-        self.group.volume = int(iteration.market_volume)
+        self.group.price = iteration.market_price
+        self.group.volume = iteration.market_volume
         self.group.dividend = iteration.dividend
 
     @staticmethod

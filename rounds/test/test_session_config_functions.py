@@ -12,7 +12,7 @@ class Test_Session_Config_Functions(unittest.TestCase):
         group = Group()
         group.session = Session()
         group.session.config = dict(div_dist='0.5 0.5',
-                                    div_amount='40 100',
+                                    div_amount='0.40 1.00',
                                     interest_rate=0)
         # Execute
         f = scf.get_fundamental_value(group)
@@ -25,23 +25,23 @@ class Test_Session_Config_Functions(unittest.TestCase):
         group = Group()
         group.session = Session()
         group.session.config = dict(div_dist='0.5 0.5',
-                                    div_amount='0 100',
+                                    div_amount='0.0 1.00',
                                     interest_rate=0.1)
         # Execute
         f = scf.get_fundamental_value(group)
 
         # Assert
-        self.assertEqual(f, 500)
+        self.assertEqual(f, 5.00)
 
     def test_get_fundamental_value_exp_relevant(self):
         # Set-up
         group = Group()
         group.session = Session()
         group.session.config = dict(div_dist='0.5 0.5',
-                                    div_amount='40 100',
+                                    div_amount='0.40 1.00',
                                     interest_rate=0.05)
         # Execute
         f = scf.get_fundamental_value(group)
 
         # Assert
-        self.assertEqual(f, 1400)
+        self.assertEqual(f, 14.00)

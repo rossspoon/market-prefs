@@ -21,9 +21,9 @@ class Principle(Enum):
 
 def ensure_tuple(obj):
     if type(obj) == tuple:
-        return obj
+        return int(obj[0] * 100), obj[1]
     else:
-        return obj.price, obj.quantity
+        return int(obj.price * 100), obj.quantity
 
 
 def get_cxq(price, orders, otype):
@@ -98,18 +98,18 @@ class MarketPrice:
     """
 
     def __init__(self, bids, offers):
-        bids, offers = ensure_tuples(bids, offers)
-        self.bids, self.offers = bids, offers
+        _bids, _offers = ensure_tuples(bids, offers)
+        self.bids, self.offers = _bids, _offers
 
-        self.has_bids = bids is not None and len(bids) > 0
-        self.has_offers = offers is not None and len(offers) > 0
+        self.has_bids = _bids is not None and len(_bids) > 0
+        self.has_offers = _offers is not None and len(_offers) > 0
         self.price_df = None
         self.final_principle = None
         self.candidate_prices = None
 
         # 1 get all prices
         if self.has_bids and self.has_offers:
-            all_orders = np.concatenate((bids, offers))
+            all_orders = np.concatenate((_bids, _offers))
         else:
             return
 
@@ -142,14 +142,18 @@ class MarketPrice:
             price_cnt = self.get_candidate_price_count()
             raise ValueError(f"Found {price_cnt} market prices, there should be exactly 1")
 
+        # Determine the market price
         market_price = self.price_df[self.candidate_prices].price.values[0]
-
         self.price_df['market_price'] = self.price_df.price == market_price
         mev = self.get_mev()
 
         # backstop.  If there is zero volume, then the market price should not change
         if mev == 0:
             market_price = last_price
+        else:
+            # Otherwise, divide out the 100 to return the calculated price
+            market_price = round(market_price / 100, 2)
+
         return market_price, mev
 
     def apply_max_volume_princ(self):

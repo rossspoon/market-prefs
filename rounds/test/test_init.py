@@ -7,7 +7,8 @@ from collections import defaultdict
 from unittest.mock import MagicMock, patch, call, ANY
 
 from otree import database
-from otree.models import Session
+from otree.api import cu
+from otree.models import Session, Participant
 
 import rounds
 from rounds import get_debt_message, Subsession, OrderType, OrderErrorCode, Order
@@ -704,6 +705,25 @@ class TestInitFunctions(unittest.TestCase):
         self.assertEqual(sub_d['warnings'], ['abc', 'def'])
         self.assertEqual(sub_d['func'], 'order_list')
         self.assertEqual(sub_d['orders'], [1, 2, 3])
+
+    # noinspection PyArgumentList
+    def test_FinalResultsPage_vars(self):
+        # Set-up
+        p = basic_player(shares=3, cash=1.5)
+        p.participant = Participant()
+        p.participant.payoff = cu(1000)
+        session = Session()
+        config = {'real_world_currency_per_point': 0.02, 'participation_fee': 5.55}
+        session.config = config
+        p.session = session
+        p.participant.session = session
+        page = rounds.FinalResultsPage({'type': 'http'}, 'rec', 'send')
+
+        # Test
+        d = page.vars_for_template(p)
+
+        # Assert
+        self.assertEqual({'bonus_rwc': 20, 'total_pay': 25.55}, d)
 
 
 if __name__ == '__main__':

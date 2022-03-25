@@ -12,12 +12,6 @@ SESSION_CONFIGS = [
         app_sequence=['rounds'],
         num_demo_participants=2,
         random_hist=False,
-        treated_ids='1 0',
-        cash_endowment_control=10000,
-        shares_endowment_control=10,
-        cash_endowment_treatment=-9375,
-        shares_endowment_treatment=15,
-        initial_price=1000
     )
     , dict(
         name='rounds_test',
@@ -30,31 +24,18 @@ SESSION_CONFIGS = [
         margin_premium=0.1,
         margin_target_ratio=.6,
         auto_trans_delay=0,
-        initial_price=0,
     )
     , dict(
         name='sim_1',
         app_sequence=['rounds'],
         num_demo_participants=3,
-        interest_rate=0.05,
-        div_amount='40 100',
-        div_dist='.5 .5',
-        margin_ratio=.5,
-        margin_premium=0.1,
-        margin_target_ratio=.6,
-
-        treated_ids='1 0 0',
-        cash_endowment_control=5000,
-        shares_endowment_control=10,
-        cash_endowment_treatment=10000,
-        shares_endowment_treatment=-10,
     )
     , dict(
         name='instructions',
         app_sequence=['instructions'],
         num_demo_participants=1,
 
-        _08_example_cash=6000,
+        _08_example_cash=60.00,
         _08_example_short=2
     )
     , dict(
@@ -95,12 +76,12 @@ SESSION_CONFIGS = [
 # e.g. self.session.config['participation_fee']
 
 SESSION_CONFIG_DEFAULTS = dict(
-    real_world_currency_per_point=0.0001,
+    real_world_currency_per_point=0.01,
     participation_fee=10.00,
     doc="",
     use_browser_bots=False,
     interest_rate=0.05,
-    div_amount='40 100',
+    div_amount='0.40 1.00',
     div_dist='.5 .5',
     margin_ratio=.5,
     margin_premium=0.1,
@@ -109,13 +90,13 @@ SESSION_CONFIG_DEFAULTS = dict(
     float_ratio_cap=1.0,
 
     endow_stock='18 -2 10 -6',
-    endow_worth=30000,
+    endow_worth=300.0,
 
-    initial_price=2800,
-    bonus_cap=250000,
-    forecast_thold=250,
-    forecast_reward=500,
-    market_time=45,
+    initial_price=14.0,
+    bonus_cap=50,
+    forecast_thold=2.5,
+    forecast_reward=5,
+    market_time=4500,
     forecast_time=15,
     summary_time=15,
 )
@@ -130,6 +111,7 @@ LANGUAGE_CODE = 'en'
 # e.g. EUR, GBP, CNY, JPY
 REAL_WORLD_CURRENCY_CODE = 'USD'
 USE_POINTS = True
+POINTS_DECIMAL_PLACES = 2
 
 ADMIN_USERNAME = 'admin'
 # for security, best to set admin password in an environment variable

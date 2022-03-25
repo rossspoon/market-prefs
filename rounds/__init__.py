@@ -57,7 +57,7 @@ def get_js_vars(player: Player, include_current=True):
 
     if scf.is_random_hist(player):
         show_rounds = 2 * Constants.num_rounds // 3
-        prices = random.choices(range(2500, 3200), k=show_rounds) + [init_price]
+        prices = random.choices(range(25.00, 32.00), k=show_rounds) + [init_price]
         volumes = random.choices(range(0, 11), k=show_rounds) + [4]
     else:
         prices = [init_price] + [g.price for g in groups]
@@ -128,14 +128,16 @@ def is_order_form_valid(data):
     price = None
     quant = None
     o_type = None
-    if not raw_price.lstrip('-').isnumeric():
+    try:
+        price = float(raw_price)
+    except ValueError:
         error_code = OrderErrorCode.PRICE_NOT_NUM.combine(error_code)
-    else:
-        price = int(raw_price)
+
     if not raw_quant.lstrip('-').isnumeric():
         error_code = OrderErrorCode.QUANT_NOT_NUM.combine(error_code)
     else:
         quant = int(raw_quant)
+
     if raw_type not in ['-1', '1']:
         error_code = OrderErrorCode.BAD_TYPE.combine(error_code)
     else:

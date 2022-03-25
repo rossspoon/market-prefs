@@ -13,7 +13,7 @@ def run_unit_tests():
     suite = unittest.defaultTestLoader.discover('rounds/test')
     print("\n===========================\nRUNNING UNIT TESTS")
     ttr = unittest.TextTestRunner(stream=sys.stdout)
-    ttr.run(suite)
+    kttr.run(suite)
     database.db.rollback()
     print("\n FINISHED UNIT TESTS\n===========================\n\n")
 
@@ -37,7 +37,7 @@ def run_order_placement_coverage_tests(method):
     # test order deletion
     # generate some sell orders for player 1 and delete them.
     test_place_order(method, 2, '1', '12', '6')
-    test_place_order(method, 2, '1', '12', '6')
+    test_place_order(method, 2, '1', '12.50', '6')
 
     orders = test_get_orders_for_player(method, 2, 2)
     # we'll delete the sell orders for this player
@@ -106,6 +106,7 @@ class ActorRound:
                      price=None,
                      quant=None,
                      quant_orig=None,
+                     quant_final=None,
                      otype=None,
                      is_auto=False):
         # Try to parse order information
@@ -113,7 +114,8 @@ class ActorRound:
             print("Incomplete Order specification:  Skipping")
             return self
 
-        self.expected_orders.append(dict(price=price, quant=quant, otype=otype, is_auto=is_auto, quant_orig=quant_orig))
+        self.expected_orders.append(dict(price=price, quant=quant, otype=otype, is_auto=is_auto,
+                                         quant_orig=quant_orig, quant_final=quant_final))
         self.order_count = 1 if self.order_count < 1 else self.order_count + 1
         return self
 
@@ -317,7 +319,7 @@ class ScriptedBot(Bot):
             try:
                 expect(len(orders), actions.order_count)
             except ExpectError as err:
-                error = f"Round {self.round_number}: Actor {actor_name}: Testing Order Count: {err}"
+                error = f"Round {self.round_number - 1}: Actor {actor_name}: Testing Order Count: {err}"
                 ScriptedBot.errors_by_round[actions.round_number].append(error)
 
         # Compare actual orders with expected orders
@@ -343,12 +345,20 @@ class ScriptedBot(Bot):
     @staticmethod
     def order_key_order(o):
         q_orig_str = "None" if o.original_quantity is None else f"{o.original_quantity}"
-        return f"p:{int(o.price)}:::q:{o.quantity}:::t:{o.order_type}:::a:{o.is_buy_in}:::q_orig:{q_orig_str}"
+        q_final_str = ""
+        if o.quantity_final:
+            q_final_str = f":::q_final:{o.quantity_final}"
+        return f"p:{o.price:.2f}:::q:{o.quantity}:::t:{o.order_type}:::a:{o.is_buy_in}" \
+               f":::q_orig:{q_orig_str}{q_final_str}"
 
     @staticmethod
     def order_key_expects(o):
         q_orig_str = "None" if o['quant_orig'] is None else f"{o['quant_orig']}"
-        return f"p:{o['price']}:::q:{o['quant']}:::t:{o['otype']}:::a:{o['is_auto']}:::q_orig:{q_orig_str}"
+        q_final_str = ""
+        if o.get('quant_final'):
+            q_final_str = f":::q_final:{o.get('quant_final')}"
+        return f"p:{o['price']:.2f}:::q:{o['quant']}:::t:{o['otype']}:::a:{o['is_auto']}" \
+               f":::q_orig:{q_orig_str}{q_final_str}"
 
     def after_market_page_tests(self, actor, actions):
         pass
@@ -438,92 +448,93 @@ def call_live_method(method, **kwargs):
 
 #############################################################################################################
 market = MarketTests().round(1) \
-    .expect(price=500, volume=1) \
-    .actor("Buyer", lambda ar: ar.set(1000, 5)
-           .buy(1, at=500)
-           .expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
-    .actor("Seller", lambda ar: ar.set(1000, 5)
-           .sell(1, at=500)
-           .expect(cash=1500, shares=4, periods_until_auto_buy=-99)) \
-    .actor("Treated", lambda ar: ar.set(1500, -2)
-           .expect(cash=1500, shares=-2, periods_until_auto_buy=0)
+    .expect(price=5.00, volume=1) \
+    .actor("Buyer", lambda ar: ar.set(10.00, 5)
+           .buy(1, at=5.00)
+           .expect(cash=5.00, shares=6, periods_until_auto_buy=-99)) \
+    .actor("Seller", lambda ar: ar.set(10.00, 5)
+           .sell(1, at=5.00)
+           .expect(cash=15.00, shares=4, periods_until_auto_buy=-99)
+           .expect_order(price=5.00, quant=1, quant_final=1, otype=SELL, quant_orig=None)) \
+    .actor("Treated", lambda ar: ar.set(15.00, -2)
+           .expect(cash=15.00, shares=-2, periods_until_auto_buy=0)
            .expect_num_orders(0)) \
     .finish() \
     .round(2) \
-    .expect(price=500, volume=0) \
-    .actor("Buyer", lambda ar: ar.expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
-    .actor("Seller", lambda ar: ar.expect(cash=1500, shares=4, periods_until_auto_buy=-99,
+    .expect(price=5.00, volume=0) \
+    .actor("Buyer", lambda ar: ar.expect(cash=5.00, shares=6, periods_until_auto_buy=-99)) \
+    .actor("Seller", lambda ar: ar.expect(cash=15.00, shares=4, periods_until_auto_buy=-99,
                                           interest_earned=None, dividend_earned=None)) \
-    .actor("Treated", lambda ar: ar.expect(cash=1500, shares=-2, periods_until_auto_buy=0)
-           .expect_order(price=550, quant=1, otype=BUY, is_auto=True).expect_num_orders(1)) \
+    .actor("Treated", lambda ar: ar.expect(cash=15.00, shares=-2, periods_until_auto_buy=0)
+           .expect_order(price=5.50, quant=1, quant_final=0, otype=BUY, is_auto=True).expect_num_orders(1)) \
     .finish() \
     .round(3) \
-    .expect(price=550, volume=1) \
-    .actor("Buyer", lambda ar: ar.expect(cash=500, shares=6, periods_until_auto_buy=-99)) \
-    .actor("Seller", lambda ar: ar.sell(1, at=500)
-           .expect(cash=2050, shares=3, periods_until_auto_buy=-99)) \
-    .actor("Treated", lambda ar: ar.expect(cash=950, shares=-1, periods_until_auto_buy=-99)
-           .expect_order(price=550, quant=1, otype=BUY, is_auto=True).expect_num_orders(1)) \
+    .expect(price=5.50, volume=1) \
+    .actor("Buyer", lambda ar: ar.expect(cash=5.00, shares=6, periods_until_auto_buy=-99)) \
+    .actor("Seller", lambda ar: ar.sell(1, at=5.00)
+           .expect(cash=20.50, shares=3, periods_until_auto_buy=-99)) \
+    .actor("Treated", lambda ar: ar.expect(cash=9.50, shares=-1, periods_until_auto_buy=-99)
+           .expect_order(price=5.50, quant=1, quant_final=1, otype=BUY, is_auto=True).expect_num_orders(1)) \
     .finish() \
     .round(4) \
-    .expect(price=500, volume=1) \
-    .actor("Buyer", lambda ar: ar.set(2000, 5)
-           .buy(1, at=500)
-           .expect(cash=1500, shares=6, periods_until_auto_sell=-99)) \
-    .actor("Seller", lambda ar: ar.set(1000, 5)
-           .sell(1, at=500)
-           .expect(cash=1500, shares=4, periods_until_auto_sell=-99)) \
-    .actor("Treated", lambda ar: ar.set(-1000, 3)
-           .expect(cash=-1000, shares=3, periods_until_auto_sell=0, periods_until_auto_buy=-99)
+    .expect(price=5.00, volume=1) \
+    .actor("Buyer", lambda ar: ar.set(20.00, 5)
+           .buy(1, at=5.00)
+           .expect(cash=15.00, shares=6, periods_until_auto_sell=-99)) \
+    .actor("Seller", lambda ar: ar.set(10.00, 5)
+           .sell(1, at=5.00)
+           .expect(cash=15.00, shares=4, periods_until_auto_sell=-99)) \
+    .actor("Treated", lambda ar: ar.set(-10.00, 3)
+           .expect(cash=-10.00, shares=3, periods_until_auto_sell=0, periods_until_auto_buy=-99)
            .expect_num_orders(0)) \
     .finish() \
     .round(5) \
-    .expect(price=500, volume=0) \
-    .actor("Buyer", lambda ar: ar.expect(cash=1500, shares=6, periods_until_auto_buy=-99)) \
-    .actor("Seller", lambda ar: ar.expect(cash=1500, shares=4, periods_until_auto_buy=-99)) \
-    .actor("Treated", lambda ar: ar.expect(cash=-1000, shares=3, periods_until_auto_sell=0)
-           .expect_order(price=450, quant=3, otype=SELL, is_auto=True).expect_num_orders(1)) \
+    .expect(price=5.00, volume=0) \
+    .actor("Buyer", lambda ar: ar.expect(cash=15.00, shares=6, periods_until_auto_buy=-99)) \
+    .actor("Seller", lambda ar: ar.expect(cash=15.00, shares=4, periods_until_auto_buy=-99)) \
+    .actor("Treated", lambda ar: ar.expect(cash=-10.00, shares=3, periods_until_auto_sell=0)
+           .expect_order(price=4.50, quant=3, quant_final=0, otype=SELL, is_auto=True).expect_num_orders(1)) \
     .finish() \
     .round(6) \
-    .expect(price=450, volume=3) \
-    .actor("Buyer", lambda ar: ar.buy(4, at=450)
-           .expect(cash=150, shares=9, periods_until_auto_sell=-99)) \
-    .actor("Seller", lambda ar: ar.expect(cash=1500, shares=4, periods_until_auto_sell=-99)) \
-    .actor("Treated", lambda ar: ar.expect(cash=350, shares=0, periods_until_auto_sell=-99)
-           .expect_order(price=450, quant=3, otype=SELL, is_auto=True).expect_num_orders(1)) \
+    .expect(price=4.50, volume=3) \
+    .actor("Buyer", lambda ar: ar.buy(4, at=4.50)
+           .expect(cash=1.50, shares=9, periods_until_auto_sell=-99)) \
+    .actor("Seller", lambda ar: ar.expect(cash=15.00, shares=4, periods_until_auto_sell=-99)) \
+    .actor("Treated", lambda ar: ar.expect(cash=3.50, shares=0, periods_until_auto_sell=-99)
+           .expect_order(price=4.50, quant=3, quant_final=3, otype=SELL, is_auto=True).expect_num_orders(1)) \
     .finish() \
     .round(7).set(float=2) \
-    .expect(price=500, volume=1) \
-    .actor("Buyer", lambda ar: ar.set(2000, 2)
-           .buy(1, at=500)
-           .expect(cash=1500, shares=3)) \
-    .actor("Seller", lambda ar: ar.set(1000, 0)
-           .sell(1, at=500)
-           .expect(cash=1500, shares=-1)
-           .expect_order(price=500, quant=1, otype=SELL, quant_orig=None)) \
+    .expect(price=5.00, volume=1) \
+    .actor("Buyer", lambda ar: ar.set(20.00, 2)
+           .buy(1, at=5.00)
+           .expect(cash=15.00, shares=3)) \
+    .actor("Seller", lambda ar: ar.set(10.00, 0)
+           .sell(1, at=5.00)
+           .expect(cash=15.00, shares=-1)
+           .expect_order(price=5.00, quant=1, otype=SELL, quant_orig=None, quant_final=1)) \
     .actor("Treated", lambda ar: ar.set(0, 0)) \
     .finish() \
     .round(8) \
-    .expect(price=500, volume=1) \
-    .actor("Buyer", lambda ar: ar.buy(2, at=500)
-           .expect(cash=1000, shares=4)) \
-    .actor("Seller", lambda ar: ar.sell(2, at=500)
-           .expect(cash=2000, shares=-2)
-           .expect_order(price=500, quant=1, otype=SELL, quant_orig=2)) \
+    .expect(price=5.00, volume=1) \
+    .actor("Buyer", lambda ar: ar.buy(2, at=5.00)
+           .expect(cash=10.00, shares=4)) \
+    .actor("Seller", lambda ar: ar.sell(2, at=5.00)
+           .expect(cash=20.00, shares=-2)
+           .expect_order(price=5.00, quant=1, otype=SELL, quant_orig=2, quant_final=1)) \
     .actor("Treated", lambda ar: ar.set(0, 0)) \
     .finish() \
     .round(9).set(float=6) \
-    .actor("Buyer", lambda ar: ar.set(cash=13743, shares=10)) \
-    .actor("Seller", lambda ar: ar.set(cash=82338, shares=-6)) \
-    .actor("Treated", lambda ar: ar.set(cash=29794, shares=2)) \
+    .actor("Buyer", lambda ar: ar.set(cash=137.43, shares=10)) \
+    .actor("Seller", lambda ar: ar.set(cash=823.38, shares=-6)) \
+    .actor("Treated", lambda ar: ar.set(cash=297.94, shares=2)) \
     .finish() \
     .round(10) \
-    .actor("Buyer", lambda ar: ar.set(cash=13743, shares=10)
-           .sell(4, at=4000).sell(5, at=4000)
+    .actor("Buyer", lambda ar: ar.set(cash=137.43, shares=10)
+           .sell(4, at=40.00).sell(5, at=40.00)
            ) \
-    .actor("Seller", lambda ar: ar.set(cash=82338, shares=-6)
-           .buy(6, at=2000).sell(1, at=6000)) \
-    .actor("Treated", lambda ar: ar.set(cash=29794, shares=2)
-           .sell(2, at=6000).buy(3, at=3000)) \
-    .expect(price=500, volume=0, float=6, short=6) \
+    .actor("Seller", lambda ar: ar.set(cash=823.38, shares=-6)
+           .buy(6, at=20.00).sell(1, at=60.00)) \
+    .actor("Treated", lambda ar: ar.set(cash=297.94, shares=2)
+           .sell(2, at=60.00).buy(3, at=30.00)) \
+    .expect(price=5.00, volume=0, float=6, short=6) \
     .finish()

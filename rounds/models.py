@@ -1,6 +1,6 @@
-from otree.api import *
 from enum import Enum
 
+from otree.api import *
 from otree.common import InvalidRoundError
 
 import common.SessionConfigFunctions as scf
@@ -36,7 +36,7 @@ class OrderErrorCode(Enum):
         return obj
 
     PRICE_NEGATIVE = (1, OrderField.PRICE, 'Must be greater than zero')
-    PRICE_NOT_NUM = (2, OrderField.PRICE, 'Must be an integer number')
+    PRICE_NOT_NUM = (2, OrderField.PRICE, 'Must be a number')
     QUANT_NEGATIVE = (4, OrderField.QUANTITY, 'Must be greater than zero')
     QUANT_NOT_NUM = (8, OrderField.QUANTITY, 'Must be an integer number')
     BAD_TYPE = (16, OrderField.TYPE, 'Select a type')
@@ -84,7 +84,7 @@ class Group(BaseGroup):
             return round(last_group.price)
         else:
             init_price = scf.get_init_price(self)
-            if init_price:
+            if init_price is not None:
                 return init_price
             else:
                 return scf.get_fundamental_value(self)
@@ -122,7 +122,7 @@ class Player(BasePlayer):
         ],
         blank=True
     )
-    price = models.IntegerField(blank=True)
+    price = models.CurrencyField(blank=True)
     quantity = models.IntegerField(blank=True)
 
     periods_until_auto_buy = models.IntegerField(initial=NO_AUTO_TRANS)
@@ -130,13 +130,13 @@ class Player(BasePlayer):
 
     # Market Movement
     shares_transacted = models.IntegerField(initial=0)
-    trans_cost = models.IntegerField(initial=0)
-    cash_after_trade = models.IntegerField()
-    interest_earned = models.IntegerField()
-    dividend_earned = models.IntegerField()
+    trans_cost = models.CurrencyField(initial=0)
+    cash_after_trade = models.CurrencyField()
+    interest_earned = models.CurrencyField()
+    dividend_earned = models.CurrencyField()
 
     # Results
-    cash_result = models.IntegerField()
+    cash_result = models.CurrencyField()
     shares_result = models.IntegerField()
 
     # Forecasting Item

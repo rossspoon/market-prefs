@@ -100,14 +100,14 @@ class DataForPlayer:
         self.shares_transacted = sum(net_shares_per_order)
         self.shares_result = self.player.shares + self.shares_transacted
         self.new_position = self.player.shares + self.shares_transacted
-        self.trans_cost = -1 * int(self.shares_transacted) * int(market_price)
-        self.cash_after_trade = int(self.player.cash + self.trans_cost)
+        self.trans_cost = -1 * self.shares_transacted * market_price
+        self.cash_after_trade = self.player.cash + self.trans_cost
 
         # assign interest and dividends
         # if self.new_position is negative then the player pays out dividends
         self.dividend_earned = dividend * self.new_position
-        self.interest_earned = int(self.cash_after_trade * interest_rate)
-        self.cash_result = int(self.player.cash + self.interest_earned + self.trans_cost + self.dividend_earned)
+        self.interest_earned = self.cash_after_trade * interest_rate
+        self.cash_result = self.player.cash + self.interest_earned + self.trans_cost + self.dividend_earned
 
     def set_mv_short_future(self, margin_ratio, market_price):
         if self.shares_result >= 0 or market_price == 0:
@@ -116,7 +116,7 @@ class DataForPlayer:
 
         share_value = abs(market_price * self.shares_result)
 
-        b2 = (self.cash_result - share_value) / share_value <= margin_ratio
+        b2 = (float(self.cash_result) - share_value) / share_value <= margin_ratio
         self.mv_short_future = b2
 
     def is_buy_in_required(self):
@@ -129,18 +129,18 @@ class DataForPlayer:
         @return: DataForOrder
         """
         margin_premium = scf.get_margin_premium(self.player)
-        p = int(round(market_price * (1 + margin_premium)))  # premium of current market price
+        p = round(market_price * (1 + margin_premium), 2)  # premium of current market price
         tr = scf.get_margin_target_ratio(self.player)
         c = abs(self.player.cash)
         s = abs(self.player.shares)
 
-        number_of_shares = math.ceil(((1 + tr)*s*p - c) / (tr * p))
+        number_of_shares = int(math.ceil(((1 + tr)*s*p - c) / (tr * p)))
 
         player = self.player
         return DataForOrder(player=player,
                             group=player.group,
                             order_type=OrderType.BID.value,
-                            price=cu(p),
+                            price=p,
                             quantity=number_of_shares,
                             is_buy_in=True)
 
@@ -149,8 +149,8 @@ class DataForPlayer:
             self.mv_debt_future = False
             return
 
-        cash = abs(self.cash_result)
-        b2 = abs(self.shares_result * market_price - cash) / cash <= margin_ratio
+        cash = float(abs(self.cash_result))
+        b2 = abs(float(self.shares_result) * market_price - cash) / cash <= margin_ratio
         self.mv_debt_future = b2
 
     def is_sell_off_required(self):
@@ -164,7 +164,7 @@ class DataForPlayer:
          @return: DataForOrder
         """
         margin_premium = scf.get_margin_premium(self.player)
-        p = int(round(market_price * (1 - margin_premium)))  # premium of current market price
+        p = round(market_price * (1 - margin_premium), 2)  # premium of current market price
         tr = scf.get_margin_target_ratio(self.player)
         s = abs(self.player.shares)
         c = abs(self.player.cash)
@@ -176,7 +176,7 @@ class DataForPlayer:
         return DataForOrder(player=player,
                             group=player.group,
                             order_type=OrderType.OFFER.value,
-                            price=cu(p),
+                            price=p,
                             quantity=number_of_shares,
                             is_buy_in=True)
 
