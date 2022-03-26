@@ -1,6 +1,12 @@
 $(window).on('load', function () {
     ///////////////////////////
     // These are tasks to do when the page loads
+    $('.debug-info').detach();
+
+    if (js_vars.show_notes){
+        $('#notes_col').classList.remove('hidden')
+        $('#fulfilled_col').classList.remove('hidden')
+    }
     
     // This requests all the orders
     // If the page is reloaded then we need to see any existing orders
@@ -62,7 +68,7 @@ function cancel_order(elem){
         $("#submit-btn").removeClass("disabled");
         $("input").prop( "disabled", false);
         $("select").prop("disabled", false);
-        $(".order-form").removeClass("disabled");
+        $(".order-form").parents('.boxed_area').removeClass("disabled");
     }
 }
 
@@ -78,9 +84,12 @@ function remove_error_message(){
     }
 
 function get_order_details() {
-    o_type = $("#id_type").find(":selected").val();
-    o_price = $("#id_price").val();
-    o_quant = $("#id_quantity").val();
+    let o_type = $("#id_type").find(":selected").val();
+    let o_price = $("#id_price").val();
+    if (!isNaN(o_price)){
+        o_price = Number(o_price).toFixed(2)
+    }
+    let o_quant = $("#id_quantity").val();
     return {  'type': o_type
             , 'price': o_price
             , 'quantity': o_quant};
@@ -115,32 +124,79 @@ function add_orders_to_list(live_data) {
 }
 
 function add_order_to_list(oid, o_info){
-    var order_details_elem = document.createElement("span");
-    order_details_elem.classList.add( "order-details");
-    var o_type = (o_info.type == "-1") ? 'Buy' : 'Sell';
-    order_details_elem.innerHTML = o_type + "&nbsp;&nbsp;" + o_info.quantity + " shares @ " + o_info.price;
-
-    //make the close button
-    var close_btn_elem = document.createElement("div");
+    //make the close button TD
+    const close_btn_elem = document.createElement("span");
     close_btn_elem.classList.add( "close-button");
     close_btn_elem.id = "cb_" + oid;
     close_btn_elem.txt = "Cancel this order.";
     close_btn_elem.innerHTML = 'X';
     close_btn_elem.tabIndex = 0;
+    const cancel_td = document.createElement("td");
+    cancel_td.append(close_btn_elem);
+
+    // Order Details TD
+    const o_deats_td = document.createElement("td")
+
+    // Type Span
+    const type_span = document.createElement("span");
+    type_span.classList.add('order-details', 'type-col')
+    type_span.innerHTML = (o_info.type == "-1") ? 'Buy' : 'Sell';
+
+    // Quant Span
+    const quant_span = document.createElement("div");
+    quant_span.classList.add('order-details', 'quant-col');
+    quant_span.innerHTML="&nbsp;"
+    const q_span = document.createElement("span");
+    q_span.classList.add('r_just')
+    q_span.innerHTML = o_info.quantity;
+    quant_span.append(q_span)
+
+    // Shares @ TD
+    const shares_at_span = document.createElement("span");
+    shares_at_span.classList.add('order-details', 'shares-at-col')
+    shares_at_span.innerHTML = "shares @"
+
+    // Price TD
+    const price_span = document.createElement("span");
+    price_span.classList.add('order-details', 'price-col')
+    price_span.innerHTML="&nbsp;"
+    const p_span = document.createElement("span");
+    p_span.classList.add('r_just')
+    p_span.innerHTML = o_info.price;
+    price_span.append(p_span)
+
+    o_deats_td.append(type_span, quant_span, shares_at_span, price_span)
+
+    // Notes TD
+    const notes_td = document.createElement("td");
+    notes_td.classList.add("notes-col")
+    if (! js_vars.show_notes){
+        notes_td.classList.add("hidden")
+    }
+    notes_td.innerHTML = "&nbsp;"
+
+    // Fulfilled TD
+    const fulfilled_td = document.createElement("td");
+    fulfilled_td.classList.add("full-col")
+    if (! js_vars.show_notes){
+        fulfilled_td.classList.add("hidden")
+    }
+    fulfilled_td.innerHTML = "&nbsp;"
 
     //assemble order line and append to list
-    order_elem = document.createElement("div");
+    let order_elem = document.createElement("tr");
     order_elem.id = "order_" + oid;
     order_elem.classList.add( "order-list-item");
-    order_elem.append(close_btn_elem, order_details_elem)
+    order_elem.append(cancel_td, o_deats_td, notes_td, fulfilled_td)
     $('#order-list').append(order_elem);
 
+    // Disable the form is this is the sixth order
     num_orders += 1;
     if (num_orders >= 6){
         $("#submit-btn").addClass("disabled");
         $("input").prop( "disabled", true );
         $("select").prop("disabled", true);
-        $(".order-form").addClass("disabled");
+        $(".order-form").parents('.boxed_area').addClass("disabled");
     }
 }
 

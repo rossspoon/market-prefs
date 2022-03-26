@@ -13,7 +13,7 @@ def run_unit_tests():
     suite = unittest.defaultTestLoader.discover('rounds/test')
     print("\n===========================\nRUNNING UNIT TESTS")
     ttr = unittest.TextTestRunner(stream=sys.stdout)
-    kttr.run(suite)
+    ttr.run(suite)
     database.db.rollback()
     print("\n FINISHED UNIT TESTS\n===========================\n\n")
 

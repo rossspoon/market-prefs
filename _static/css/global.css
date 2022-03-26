@@ -1,6 +1,6 @@
 /* Otree styles that I hi-jacked*/
 .otree-body {
-    max-width: 90%;
+    max-width: 95%;
 }
 .page-header {
     margin-top: 0px;
@@ -8,11 +8,7 @@
     padding-top: 20px;
 }
 
-.btn-primary {
-    color: #fff;
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-
+.btn-primary:not(.no-anim){
     animation-name: pulse-button;
     animation-duration: 4s;
     animation-timing-function: ease-in-out;
@@ -62,4 +58,5 @@
     border: 1px solid transparent;
     border-radius: 1rem;
 }
+
 

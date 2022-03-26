@@ -81,7 +81,7 @@ class Group(BaseGroup):
         last_group = self.in_round_or_none(round_number - 1)
 
         if last_group:
-            return round(last_group.price)
+            return last_group.price
         else:
             init_price = scf.get_init_price(self)
             if init_price is not None:
@@ -216,6 +216,14 @@ class Player(BasePlayer):
             return self.in_round(round_number)
         except InvalidRoundError:
             return None
+
+    def get_holding_details(self, market_price):
+        value_of_stock = market_price * self.shares
+        equity = value_of_stock + self.cash
+        debt = min(self.cash, 0) + min(value_of_stock, 0)
+        margin = abs(equity / debt) if debt != 0 else None
+
+        return value_of_stock, equity, debt, margin
 
     def is_short_margin_violation(self):
         if self.is_bankrupt():

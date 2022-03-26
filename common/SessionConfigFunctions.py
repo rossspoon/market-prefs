@@ -142,7 +142,7 @@ def get_fundamental_value(obj):
     if r == 0:
         return 0
 
-    return round(exp / r, 2)
+    return cu(exp / r)
 
 
 def is_random_hist(obj):

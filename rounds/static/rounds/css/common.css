@@ -2,12 +2,24 @@
 .boxed_area {
     border: 3px solid #ddd;
     border-radius: 8px;
+    padding: 5px;
+}
+
+.boxed_area.disabled {
+     background: repeating-linear-gradient(
+        -45deg,
+        #ddd,
+        #ddd 5px,
+        #ccc 5px,
+        #ccc 10px
+    );
 }
 
 .box-header {
     font-weight:600;
-    font-size: 1.1em;
-    padding: 5px;
+    font-size: 1.5em;
+    padding-left: 50px;
+    color: #0d6efd;
 }
 
 .chart-history-area {
@@ -26,4 +38,70 @@
     width: 24%;
     text-align: center;
     font-size: 1.25em;
+}
+
+#timer_box {
+    margin-top: -9px;
+}
+#timer_box .alert p {
+    margin: auto;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.stat-value{
+    position: relative;
+    font-weight: 500;
+}
+.r_just {
+    position: absolute;
+    right: 5px;
+    bottom: 0px;
+}
+
+/* Order List Styles*/
+#order-list{
+    width: 100%;
+}
+
+#order-list td{
+    padding-top: 12px;
+}
+
+#button-col{
+    width: 25px;
+}
+#details-col{
+}
+#notes-col{
+}
+#fulfilled-col{
+}
+
+.type-col {
+    width: 30px;
+}
+.quant-col {
+    width: 50px;
+}
+.shares-at-col {
+    width: 120px;
+}
+.price-col {
+    width: 40px;
+}
+
+.order-list-item{
+    font-size: 1.3em;
+}
+.order-list-item:not(:last-child) td:not(:first-child){
+    border-bottom: 2px dotted lightgray;
+}
+
+.order-details{
+    display: inline-block;
+    position: relative;
+    margin-left: 10px;
 }

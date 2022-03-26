@@ -40,11 +40,15 @@ def creating_session(subsession):
         g.float = stock_float
 
 
-def get_js_vars_not_current(player: Player):
+def get_js_vars_forcast_page(player: Player):
     return get_js_vars(player, include_current=False)
 
 
-def get_js_vars(player: Player, include_current=True):
+def get_js_vars_round_results(player: Player):
+    return get_js_vars(player, show_notes=True)
+
+
+def get_js_vars(player: Player, include_current=True, show_notes=False, show_fulfilled=False):
     # Price History
     group = player.group
     if include_current:
@@ -57,7 +61,7 @@ def get_js_vars(player: Player, include_current=True):
 
     if scf.is_random_hist(player):
         show_rounds = 2 * Constants.num_rounds // 3
-        prices = random.choices(range(25.00, 32.00), k=show_rounds) + [init_price]
+        prices = random.choices(range(25, 32), k=show_rounds) + [init_price]
         volumes = random.choices(range(0, 11), k=show_rounds) + [4]
     else:
         prices = [init_price] + [g.price for g in groups]
@@ -71,7 +75,8 @@ def get_js_vars(player: Player, include_current=True):
         price_data=prices,
         volume_data=volumes,
         num_periods=Constants.num_rounds,
-        error_codes=error_codes
+        error_codes=error_codes,
+        show_notes=show_notes
     )
 
 
@@ -189,6 +194,8 @@ def create_order_from_live_submit(player, o_type: OrderType, price, quant, o_cls
 
 def get_orders_for_player_live(orders):
     orders_dicts = [o.to_dict() for o in orders]
+    for o in orders_dicts:
+        o['price'] = f"{o['price']:.2f}"
     return dict(func='order_list', orders=orders_dicts)
 
 
@@ -245,41 +252,40 @@ def get_orders_for_player(player, o_cls=Order):
 
 
 def standard_vars_for_template(player: Player):
-    return scf.ensure_config(player)
+    ret = scf.ensure_config(player)
+    price = player.group.get_last_period_price()
+    value_of_stock, equity, debt, margin = player.get_holding_details(price)
+    ret['value_of_stock'] = value_of_stock
+    ret['equity'] = equity
+    ret['debt'] = debt
+    ret['margin_raw'] = margin
+    ret['market_price'] = price
+    ret['interest_pct'] = f"{scf.get_interest_rate(player):.0%}"
+    ret['dividends'] = " or ".join(str(d) for d in scf.get_dividend_amounts(player))
+    ret['buy_back'] = scf.get_fundamental_value(player)
+
+    margin_pct = "N/A" if margin is None else f"{margin:.0%}"
+    ret['margin_pct'] = margin_pct
+
+    return ret
 
 
-def get_messages(player: Player):
+def get_messages(player: Player, template_vars):
     ret = []
     is_short = player.is_short()
     is_debt = player.is_debt()
-    is_bankrupt = player.is_bankrupt()
-    margin_target_ratio = scf.get_margin_target_ratio(player)
-    margin_ratio = scf.get_margin_ratio(player)
+    is_bankrupt = is_short and is_debt
+    margin_target_ratio = template_vars.get(scf.SK_MARGIN_TARGET_RATIO)
+    margin_ratio = template_vars.get(scf.SK_MARGIN_RATIO)
+    margin = template_vars.get('margin_raw')
 
-    price = player.group.get_last_period_price()
-    personal_stock_margin = player.get_personal_stock_margin(price)
-    personal_cash_margin = player.get_personal_cash_margin(price)
     round_number = player.round_number
-
-    # Current Market Price:
-    if scf.get_float_ratio_cap(player):
-        short_float_ratio = player.group.short / player.group.float
-        ret.append(dict(class_attr="",
-                        msg=f"""
-                            <span class="left-side">Current Market Price: <span class="bold-text"> 
-                            {price}</span></span>
-                            <span class="right-side">Percent of Float Shorted: 
-                            <span class="bold-text">{short_float_ratio:.0%}</span></span> 
-                        """))
-    else:
-        ret.append(dict(class_attr="",
-                        msg=f"""Current Market Price: <span class="bold-text"> {price}"""))
 
     # Messages / Warning for short position
     if is_short and not is_bankrupt:
         delay = player.periods_until_auto_buy
         class_attr, msg = get_short_message(margin_ratio, margin_target_ratio,
-                                            personal_stock_margin, delay, round_number)
+                                            margin, delay, round_number)
         if msg:
             ret.append(dict(class_attr=class_attr, msg=msg))
 
@@ -287,7 +293,7 @@ def get_messages(player: Player):
     if is_debt and not is_bankrupt:
         delay = player.periods_until_auto_sell
         class_attr, msg = get_debt_message(margin_ratio, margin_target_ratio,
-                                           personal_cash_margin, delay, round_number)
+                                           margin, delay, round_number)
         if msg:
             ret.append(dict(class_attr=class_attr, msg=msg))
 
@@ -310,32 +316,28 @@ def get_msg_which(delay, round_number):
 
 
 # noinspection DuplicatedCode
-def get_debt_message(margin_ratio, margin_target_ratio, personal_cash_margin, delay, round_number):
+def get_debt_message(margin_ratio, margin_target_ratio, margin, delay, round_number):
     # Determine margin sell messages
     msg = None
     class_attr = None
 
-    if personal_cash_margin > margin_target_ratio:
-        class_attr = ""
-        msg = f"""CASH Margin: <span class="bold-text">{personal_cash_margin:.0%}</span>"""
-
-    elif margin_ratio < personal_cash_margin <= margin_target_ratio:
+    if margin_ratio < margin <= margin_target_ratio:
         class_attr = "alert-warning"
-        msg = f"""<p>Warning:  CASH Margin: <span class="bold-text"> {personal_cash_margin:.0%} </span></p>
+        msg = f"""<p>Warning:  CASH Margin: <span class="bold-text"> {margin:.0%} </span></p>
                         <p> Your CASH margin is getting close to the minimum requirement of {margin_ratio:.0%}.
                         This most likely happened because the value of your STOCK has decreased.  If your
                         CASH margin becomes {margin_ratio:.0%} or lower, the system will sell off your STOCK to
                         satisfy the margin requirement.</p>
                         """
 
-    elif personal_cash_margin <= margin_ratio:
+    elif margin <= margin_ratio:
         # Skip if last period and sell is next period
         if round_number == Constants.num_rounds and delay > 0:
             return None, None
 
         which = get_msg_which(delay, round_number)
         class_attr = "alert-danger"
-        msg = f"""<p>Warning:  CASH Margin: <span class="bold-text"> {personal_cash_margin:.0%} </span></p>
+        msg = f"""<p>Warning:  CASH Margin: <span class="bold-text"> {margin:.0%} </span></p>
                         <p>You are advised to sell some of your STOCK to raise this margin in order to avoid an
                          automatic sell off.</p>                     
                         <p>An automatic sell-off will be generated at the end of {which} if your CASH margin
@@ -345,33 +347,29 @@ def get_debt_message(margin_ratio, margin_target_ratio, personal_cash_margin, de
 
 
 # noinspection DuplicatedCode
-def get_short_message(margin_ratio, margin_target_ratio, personal_stock_margin, delay, round_number):
+def get_short_message(margin_ratio, margin_target_ratio, margin, delay, round_number):
     msg = None
     class_attr = None
 
     # Determine short position messages
     # Normal condition
-    if personal_stock_margin > margin_target_ratio:
-        class_attr = ""
-        msg = f"""STOCK Margin: <span class="bold-text">{personal_stock_margin:.0%}</span>"""
-
-    elif margin_ratio < personal_stock_margin <= margin_target_ratio:
+    if margin_ratio < margin <= margin_target_ratio:
         class_attr = "alert-warning"
-        msg = f"""<p>Warning:  STOCK Margin: <span class="bold-text"> {personal_stock_margin:.0%} </span></p>
+        msg = f"""<p>Warning:  STOCK Margin: <span class="bold-text"> {margin:.0%} </span></p>
                             <p> Your STOCK margin is getting close to the minimum requirement of {margin_ratio:.0%}.
                             This most likely happened because the value of your shorted STOCK has increased.  If your
                             STOCK margin becomes {margin_ratio:.0%} or lower, the system will purchase STOCK on your
                             behalf to satisfy the margin requirement.</p>
                             """
 
-    elif personal_stock_margin <= margin_ratio:
+    elif margin <= margin_ratio:
         # Skip if last period and buy is next period
         if round_number == Constants.num_rounds and delay > 0:
             return None, None
 
         which = get_msg_which(delay, round_number)
         class_attr = "alert-danger"
-        msg = f"""<p>Warning: STOCK Margin: <span class="bold-text"> {personal_stock_margin:.0%} </span></p>
+        msg = f"""<p>Warning: STOCK Margin: <span class="bold-text"> {margin:.0%} </span></p>
                         <p>You are advised to purchase STOCK to raise this margin in order to avoid an
                          automatic buy-in.</p>                     
                         <p>An automatic purchase will be made on your behalf at the end of {which} if your 
@@ -383,7 +381,7 @@ def get_short_message(margin_ratio, margin_target_ratio, personal_stock_margin, 
 
 def vars_for_market_template(player: Player):
     ret = standard_vars_for_template(player)
-    ret['messages'] = get_messages(player)
+    ret['messages'] = get_messages(player, ret)
     ret['show_next'] = False
     return ret
 
@@ -519,6 +517,7 @@ class Market(Page):
     get_timeout_seconds = scf.get_market_time
     form_model = 'player'
     form_fields = ['type', 'price', 'quantity']
+    timer_text = 'Time Left:'
 
     # method bindings
     js_vars = get_js_vars
@@ -529,7 +528,7 @@ class Market(Page):
 class ForecastPage(Page):
     form_model = 'player'
 
-    js_vars = get_js_vars_not_current
+    js_vars = get_js_vars_forcast_page
     vars_for_template = vars_for_forecast_template
     get_timeout_seconds = scf.get_forecast_time
     is_displayed = not_displayed_for_simulation
@@ -579,7 +578,7 @@ class RoundResultsPage(Page):
 
 
 class FinalResultsPage(Page):
-    js_vars = get_js_vars
+    js_vars = get_js_vars_round_results
     form_model = 'player'
 
     @staticmethod

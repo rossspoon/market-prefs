@@ -3,6 +3,7 @@ window.onload = function() {
     var labels = js_vars.labels
     let price_data = js_vars.price_data
     let volume_data = js_vars.volume_data
+    let suggest_max = Math.max(...price_data) * 1.2;
 
     function pad_val(value, index, values) {
         let tick = ('' + value).padStart(4, ' ');
@@ -11,7 +12,7 @@ window.onload = function() {
     }
 
     function pad_val2(value, index, values) {
-        let tick = ('' + value).padStart(7, ' ');
+        let tick = ('' + value).padStart(5, ' ');
         tick.replace(' ', 'nbsp;');
         return tick;
     }
@@ -42,9 +43,8 @@ window.onload = function() {
                     },
                     ticks: {
                         callback: pad_val
-                        , suggestedMax: 20.00
+                        , suggestedMax: suggest_max
                         , suggestedMin: 0.00
-                        , stepSize: 1.00
                     }
                 }],
             },
