@@ -8,7 +8,6 @@ from otree.models import Session
 from rounds.models import *
 from unittest.mock import MagicMock
 import common.SessionConfigFunctions as scf
-from rounds.test.test_call_market import get_order
 
 
 class TestOrderErrorCodeMethods(unittest.TestCase):
@@ -668,7 +667,7 @@ class TestGroupMethods(unittest.TestCase):
         last_price = group.get_last_period_price()
 
         # Assert
-        self.assertEqual(last_price, 801)
+        self.assertEqual(last_price, 801.1)
         group.in_round.assert_called_with(1)
 
     def test_copy_results_from_previous_round_first(self):

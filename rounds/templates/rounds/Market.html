@@ -3,7 +3,8 @@
 {{ block content }}
 
 <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+{#<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>#}
+<script src="{{ static 'js/Chart.js' }}"></script>
 <script src="{{ static 'rounds/js/price_history.js' }}"></script>
 <script src="{{ static 'rounds/js/market_page.js' }}"></script>
 <script src="{{ static 'rounds/js/move_timer.js' }}"></script>
@@ -17,13 +18,13 @@
             <ul>
                 <li> <div id="timer_box"></div></li>
                 <li> Period: {{ player.round_number }}
-                <li> Number of Shares: {{ player.shares}}
-                <li> Current Cash: {{ player.cash }}
+                <li> Number of Shares: <span class="{{ attn_cls }}">{{ shares}}</span>
+                <li> Current Cash: <span class="{{ attn_cls }}">{{ cash }}</span>
             </ul>
         </div>
 
         <div class="chart-box boxed_area">
-            <p class="box-header"> Market History</p>
+            <p class="box-header lpad">Market History</p>
             <div class="chart-history-area">
                 <canvas id="gr_price" />
             </div>
@@ -33,22 +34,37 @@
         </div>
 
         <div class="order-form-box boxed_area">
-            <div class="order-form">
-                <div class="form-cell"> {{ formfield 'type' label='' }} </div>
-                <div class="form-cell"> {{ formfield 'quantity' label='' }}  </div>
-                <div class="form-cell"> @ </div>
-                <div class="form-cell"> {{ formfield 'price' label=''}}  </div>
-                <div class="form-cell"><div id="submit-btn" class="btn btn-primary no-anim" tabindex="0">Submit</div></div>
-            </div>
+            {{ if show_form == 'order' }}
+                <div class="order-form">
+                    <div class="form-cell"> {{ formfield 'type' label='' }} </div>
+                    <div class="form-cell"> {{ formfield 'quantity' label='' }}  </div>
+                    <div class="form-cell"> @ </div>
+                    <div class="form-cell"> {{ formfield 'price' label=''}}  </div>
+                    <div class="form-cell"><div id="submit-btn" class="btn btn-primary no-anim" tabindex="0">Submit</div></div>
+                </div>
+            {{ elif show_form == 'forecast' }}
+                <div id="forcast-form" class="attention">
+                    What do you think the market price will be this period?
+                    <div class="ilb lpad">{{ formfield 'f0' label='' }}</div>
+                    <div class="ilb">{{ next_button }}</div>
+                </div>
+            {{ elif show_form == 'results' }}
+                <div class="results-form">
+                    <div class="center">
+                        Market Period Results
+                        <div class="ilb lpad">{{ next_button }}</div>
+                    </div>
+                </div>
+            {{ endif }}
         </div>
         
         <div class="orders-box boxed_area">
             <table id="order-list">
                 <tr>
                     <th id="button-col">&nbsp;</th>
-                    <th id="details-col" class="box-header">Orders Submitted</th>
-                    <th id="notes-col", class="box-header hidden">Notes</th>
-                    <th id="fulfilled-col", class="box-header hidden">Fulfilled</th>
+                    <th id="details-col" class="box-header details-col">Orders Submitted</th>
+                    <th id="notes-col", class="box-header notes-col hidden">Notes</th>
+                    <th id="fulfilled-col", class="box-header full-col hidden">Fulfilled</th>
                 </tr>
             </table>
         </div>
@@ -64,28 +80,48 @@
 
         <div class="stats-box boxed_area">
             <div>
-                <p class="box-header"> Personal Stats </p>
                 <table class="left-tab">
                     <tr>
+                         <th colspan="2" class="box-header">Personal Stats</th>
+                     </tr>
+                    <tr>
                         <td>Equity</td>
-                        <td class="stat-value">&nbsp;<span class="r_just">{{ equity }}</span></td>
+                        <td class="stat-value">&nbsp;<span class="r_just {{ attn_cls }}">{{ equity }}</span></td>
                     </tr>
                     <tr>
                         <td>Debt</td>
-                        <td class="stat-value">&nbsp;<span class="r_just">{{ debt }}</span></td>
+                        <td class="stat-value">&nbsp;<span class="r_just {{ attn_cls }}">{{ debt }}</span></td>
                     </tr>
                     <tr>
                         <td>Margin</td>
-                        <td class="stat-value">&nbsp;<span class="r_just">{{ margin_pct }}</span></td>
+                        <td class="stat-value">&nbsp;<span class="r_just {{ attn_cls }}">{{ margin_pct }}</span></td>
                     </tr>
+                    {{ if for_results }}
+                    <tr>
+                        <td>Dividend Earned</td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ player.dividend_earned }}</span></td>
+                    </tr>
+                    <tr>
+                        <td>Interest Earned</td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ player.interest_earned }}</span></td>
+                    </tr>
+                   <tr>
+                        <td>Forecast Bonus</td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ player.forecast_reward }}</span></td>
+                    </tr>
+
+
+                    {{ endif }}
                 </table>
             </div>
             <div class="right-stat-div">
-                <p class="box-header"> Market Stats </p>
                  <table>
                      <tr>
+                         <th colspan="2" class="box-header">Market Stats</th>
+                     </tr>
+                     <tr>
                         <td>Market Price</td>
-                         <td class="stat-value">&nbsp;<span class="r_just">{{ market_price }}</span></td>
+                         <td class="stat-value">&nbsp;<span class="r_just">{{ market_price | cu }}</span></td>
                     </tr>
                     <tr>
                         <td>Float</td>
@@ -93,7 +129,7 @@
                     </tr>
                     <tr>
                         <td>Short</td>
-                        <td class="stat-value">&nbsp;<span class="r_just">{{ group.short }} shares </span></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ short }} shares </span></td>
                     </tr>
                     <tr>
                         <td>Interest Rate</td>

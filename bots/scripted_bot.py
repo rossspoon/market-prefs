@@ -293,7 +293,7 @@ class ScriptedBot(Bot):
             player.shares = this_round.shares
 
         yield Submission(Market, dict(), timeout_happened=True, check_html=False)
-        yield Submission(ForecastPage, dict(f0=0, f1=0, f2=0))
+        yield Submission(ForecastPage, dict(f0=0))
         yield RoundResultsPage
         if this_round:
             self.after_market_page_tests(actor_name, this_round)
@@ -430,6 +430,8 @@ def test_place_order(method, id_, type_, price, quant, valid=True, code_expect=N
 
 
 def call_live_method(method, **kwargs):
+    if kwargs.get('page_class') != Market:
+        return
     round_number = kwargs.get('round_number')
     group: Group = kwargs.get('group')
 

@@ -140,9 +140,7 @@ class Player(BasePlayer):
     shares_result = models.IntegerField()
 
     # Forecasting Item
-    f0 = models.CurrencyField()
-    f1 = models.CurrencyField()
-    f2 = models.CurrencyField()
+    f0 = models.CurrencyField(blank=True)
     forecast_error = models.CurrencyField()
     forecast_reward = models.CurrencyField(initial=0)
 
@@ -217,10 +215,13 @@ class Player(BasePlayer):
         except InvalidRoundError:
             return None
 
-    def get_holding_details(self, market_price):
-        value_of_stock = market_price * self.shares
-        equity = value_of_stock + self.cash
-        debt = min(self.cash, 0) + min(value_of_stock, 0)
+    def get_holding_details(self, market_price, results=False):
+        s = self.shares_result if results else self.shares
+        c = self.cash_result if results else self.cash
+
+        value_of_stock = market_price * s
+        equity = value_of_stock + c
+        debt = min(c, 0) + min(value_of_stock, 0)
         margin = abs(equity / debt) if debt != 0 else None
 
         return value_of_stock, equity, debt, margin
@@ -318,6 +319,7 @@ class Order(ExtraModel):
     is_buy_in = models.BooleanField(initial=False)  # is this order an automatic buy-in?
 
     def to_dict(self):
+        requested_quant = self.original_quantity if self.original_quantity else self.quantity
         return dict(
             oid=self.id,
             p_id=self.player.id_in_group,
@@ -325,4 +327,8 @@ class Order(ExtraModel):
             type=self.order_type,
             price=self.price,
             quantity=self.quantity,
-            original_quantity=self.original_quantity)
+            original_quantity=self.original_quantity,
+            quantity_final=self.quantity_final,
+            requested_quant=requested_quant,
+            is_buy_in=self.is_buy_in
+        )

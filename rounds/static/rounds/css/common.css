@@ -18,7 +18,7 @@
 .box-header {
     font-weight:600;
     font-size: 1.5em;
-    padding-left: 50px;
+
     color: #0d6efd;
 }
 
@@ -63,21 +63,27 @@
 
 /* Order List Styles*/
 #order-list{
-    width: 100%;
+    width: 90%;
+    margin: auto;
 }
 
 #order-list td{
-    padding-top: 12px;
+    padding-top: 25px;
 }
 
-#button-col{
-    width: 25px;
+#button-col {
+    width: 50px;
 }
-#details-col{
+.details-col {
+    width: 40%;
+    text-align: center;
 }
-#notes-col{
+.notes-col {
+    text-align: center;
 }
-#fulfilled-col{
+.full-col {
+    position: relative;
+    width: 10%;
 }
 
 .type-col {
@@ -94,7 +100,7 @@
 }
 
 .order-list-item{
-    font-size: 1.3em;
+    font-size: 1.4em;
 }
 .order-list-item:not(:last-child) td:not(:first-child){
     border-bottom: 2px dotted lightgray;
@@ -104,4 +110,8 @@
     display: inline-block;
     position: relative;
     margin-left: 10px;
+}
+
+.lpad {
+    margin-left: 50px;
 }

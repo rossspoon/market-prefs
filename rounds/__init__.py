@@ -11,7 +11,7 @@ from otree import database
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
-    num_rounds = 35
+    num_rounds = 1
 
 
 # assign treatments
@@ -41,16 +41,16 @@ def creating_session(subsession):
 
 
 def get_js_vars_forcast_page(player: Player):
-    return get_js_vars(player, include_current=False)
+    return get_js_vars(player, include_current=False, show_cancel=False)
 
 
 def get_js_vars_round_results(player: Player):
-    return get_js_vars(player, show_notes=True)
+    return get_js_vars(player, show_notes=True, show_cancel=False)
 
 
-def get_js_vars(player: Player, include_current=True, show_notes=False, show_fulfilled=False):
+def get_js_vars(player: Player, include_current=True, show_notes=False, show_cancel=True):
     # Price History
-    group = player.group
+    group: Group = player.group
     if include_current:
         # TODO: Try doing this with player.round_number
         groups = list(filter(lambda g: g.field_maybe_none('price') is not None, group.in_all_rounds()))
@@ -76,7 +76,9 @@ def get_js_vars(player: Player, include_current=True, show_notes=False, show_ful
         volume_data=volumes,
         num_periods=Constants.num_rounds,
         error_codes=error_codes,
-        show_notes=show_notes
+        show_notes=show_notes,
+        show_cancel=show_cancel,
+        market_price=group.get_last_period_price(),
     )
 
 
@@ -192,10 +194,25 @@ def create_order_from_live_submit(player, o_type: OrderType, price, quant, o_cls
     return {'func': 'order_confirmed', 'order_id': o.id}
 
 
-def get_orders_for_player_live(orders):
+def get_orders_for_player_live(orders, show_notes):
     orders_dicts = [o.to_dict() for o in orders]
+
     for o in orders_dicts:
+        # Format price to two decimals
         o['price'] = f"{o['price']:.2f}"
+
+        o['note'] = '&nbsp;'
+        if show_notes:
+            quant_orig = o.get('original_quantity')
+            quant = o.get('quantity')
+
+            if o.get('is_buy_in'):
+                o['note'] = "<span class='auto-order'>Automatic</span>"
+            elif quant_orig != 0 and quant == 0:
+                o['note'] = "<span class='canceled-order'>Canceled</span>"
+            elif quant_orig is not None and quant_orig != quant:
+                o['note'] = f"Capped to {quant}"
+
     return dict(func='order_list', orders=orders_dicts)
 
 
@@ -206,7 +223,15 @@ def delete_order(player, oid, o_cls=Order):
         o_cls.delete(o)
 
 
-def market_page_live_method(player, d, o_cls=Order):
+def result_page_live_method(player, d, o_cls=Order):
+    return market_page_live_method(player, d, o_cls=o_cls, show_warnings=False, show_notes=True)
+
+
+def forecast_page_live_method(player, d, o_cls=Order):
+    return market_page_live_method(player, d, o_cls=o_cls, show_warnings=False)
+
+
+def market_page_live_method(player, d, o_cls=Order, show_warnings=True, show_notes=False):
     func = d['func']
 
     # Do delete first.  it might change the outcome of get_orders_for_player
@@ -234,11 +259,12 @@ def market_page_live_method(player, d, o_cls=Order):
             ret.update({'func': 'order_rejected', 'error_code': error_code})
 
     elif func == 'get_orders_for_player':
-        ret.update(get_orders_for_player_live(orders_for_player))
+        ret.update(get_orders_for_player_live(orders_for_player, show_notes))
 
     # generate warnings
-    warnings = get_order_warnings(player, this_order_t, this_order_p, this_order_q, orders_by_type)
-    ret['warnings'] = warnings
+    if show_warnings:
+        warnings = get_order_warnings(player, this_order_t, this_order_p, this_order_q, orders_by_type)
+        ret['warnings'] = warnings
 
     return {player.id_in_group: ret}
 
@@ -253,6 +279,10 @@ def get_orders_for_player(player, o_cls=Order):
 
 def standard_vars_for_template(player: Player):
     ret = scf.ensure_config(player)
+    ret['for_results'] = False
+    ret['cash'] = player.cash
+    ret['shares'] = player.shares
+
     price = player.group.get_last_period_price()
     value_of_stock, equity, debt, margin = player.get_holding_details(price)
     ret['value_of_stock'] = value_of_stock
@@ -263,9 +293,13 @@ def standard_vars_for_template(player: Player):
     ret['interest_pct'] = f"{scf.get_interest_rate(player):.0%}"
     ret['dividends'] = " or ".join(str(d) for d in scf.get_dividend_amounts(player))
     ret['buy_back'] = scf.get_fundamental_value(player)
+    ret['short'] = player.group.short
 
     margin_pct = "N/A" if margin is None else f"{margin:.0%}"
     ret['margin_pct'] = margin_pct
+    ret['messages'] = []  # The market page will populate this
+    ret['show_next'] = False
+    ret['attn_cls'] = ''
 
     return ret
 
@@ -382,25 +416,33 @@ def get_short_message(margin_ratio, margin_target_ratio, margin, delay, round_nu
 def vars_for_market_template(player: Player):
     ret = standard_vars_for_template(player)
     ret['messages'] = get_messages(player, ret)
+    ret['show_form'] = 'order'
     ret['show_next'] = False
     return ret
 
 
-def vars_for_forecast_template(player: Player, num_rounds=Constants.num_rounds):
+def vars_for_forecast_template(player: Player):
     ret = standard_vars_for_template(player)
-    round_number = player.round_number
-    include_f1 = round_number < num_rounds
-    include_f2 = round_number < num_rounds - 1
-
-    ret['period_f1_prompt'] = "What do you think the market price will be in period {}?".format(round_number + 1)
-    ret['period_f2_prompt'] = "What do you think the market price will be in period {}?".format(round_number + 2)
-    ret['include_f1'] = include_f1
-    ret['include_f2'] = include_f2
+    ret['show_form'] = 'forecast'
     return ret
 
 
 def vars_for_round_results_template(player: Player):
     ret = standard_vars_for_template(player)
+    ret['for_results'] = True
+    ret['cash'] = player.cash_result
+    ret['shares'] = player.shares_result
+
+    price = player.group.price
+    value_of_stock, equity, debt, margin = player.get_holding_details(price, results=True)
+    ret['value_of_stock'] = value_of_stock
+    ret['equity'] = equity
+    ret['debt'] = debt
+    ret['margin_raw'] = margin
+    ret['market_price'] = price
+
+    short = abs(sum([p.shares_result for p in player.group.get_players() if p.shares_result < 0]))
+    ret['short'] = short
 
     filled_amount = abs(player.shares_transacted)
     orders = get_orders_for_player(player)
@@ -420,7 +462,8 @@ def vars_for_round_results_template(player: Player):
     ret['trans_type'] = trans_type
     ret['trans_cost'] = filled_amount * player.group.price
     ret['bankrupt'] = player.shares_result < 0 and player.cash_result < 0
-
+    ret['show_form'] = 'results'
+    ret['attn_cls'] = 'attention_slow'
     return ret
 
 
@@ -452,46 +495,6 @@ def calculate_market(group: Group):
     for p in group.get_players():
         # Process current round forecasts
         p.determine_forecast_reward(group.price)
-
-
-#######################################
-# CHOICES FOR the drop-downs on the forecasting page
-def get_forecasters_choices(player: Player, attr):
-    current_mp = player.group.get_last_period_price()
-    setattr(player, attr, current_mp)
-    step = Currency(500)
-    current_mp_nearest_step = (current_mp // step) * step
-    num_choices = 20
-
-    # choices below
-    below_start = current_mp_nearest_step - num_choices * step
-    working_price = max(Currency(0), below_start)
-    choices_below = []
-    while working_price < current_mp:
-        choices_below.append(working_price)
-        working_price += step
-
-    # choices_above
-    above_stop = current_mp_nearest_step + num_choices * step
-    working_price = current_mp_nearest_step + step
-    choices_above = []
-    while working_price <= above_stop:
-        choices_above.append(working_price)
-        working_price += step
-
-    return choices_below + [current_mp] + choices_above
-
-
-def f0_choices(player: Player):
-    return get_forecasters_choices(player, 'f0')
-
-
-def f1_choices(player: Player):
-    return get_forecasters_choices(player, 'f1')
-
-
-def f2_choices(player: Player):
-    return get_forecasters_choices(player, 'f2')
 
 
 def not_displayed_for_simulation(player: Player):
@@ -526,22 +529,20 @@ class Market(Page):
 
 
 class ForecastPage(Page):
+    template_name = 'rounds/Market.html'
     form_model = 'player'
+    form_fields = ['f0']
 
     js_vars = get_js_vars_forcast_page
     vars_for_template = vars_for_forecast_template
     get_timeout_seconds = scf.get_forecast_time
     is_displayed = not_displayed_for_simulation
+    live_method = forecast_page_live_method
 
     @staticmethod
-    def get_form_fields(player):
-        round_number = player.round_number
-        if round_number == Constants.num_rounds:
-            return ['f0']
-        elif round_number == Constants.num_rounds - 1:
-            return ['f0', 'f1']
-        else:
-            return ['f0', 'f1', 'f2']
+    def before_next_page(player: Player, timeout_happened):
+        if player.field_maybe_none('f0') is None:
+            player.f0 = player.group.get_last_period_price()
 
 
 class MarketWaitPage(WaitPage):
@@ -549,11 +550,14 @@ class MarketWaitPage(WaitPage):
 
 
 class RoundResultsPage(Page):
+    template_name = 'rounds/Market.html'
     form_model = 'player'
-    js_vars = get_js_vars
+
+    js_vars = get_js_vars_round_results
     vars_for_template = vars_for_round_results_template
     get_timeout_seconds = scf.get_summary_time
     is_displayed = not_displayed_for_simulation_except_last_round
+    live_method = result_page_live_method
 
     @staticmethod
     def app_after_this_page(player: Player, upcoming_apps):

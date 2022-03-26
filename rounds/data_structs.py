@@ -1,9 +1,9 @@
+import math
+
 import numpy as np
 
 from common import SessionConfigFunctions as scf
 from rounds.models import Order, Player, OrderType
-import math
-from otree.api import *
 
 
 class DataForOrder:
@@ -129,7 +129,7 @@ class DataForPlayer:
         @return: DataForOrder
         """
         margin_premium = scf.get_margin_premium(self.player)
-        p = round(market_price * (1 + margin_premium), 2)  # premium of current market price
+        p = market_price * (1 + margin_premium)  # premium of current market price
         tr = scf.get_margin_target_ratio(self.player)
         c = abs(self.player.cash)
         s = abs(self.player.shares)
@@ -164,7 +164,7 @@ class DataForPlayer:
          @return: DataForOrder
         """
         margin_premium = scf.get_margin_premium(self.player)
-        p = round(market_price * (1 - margin_premium), 2)  # premium of current market price
+        p = market_price * (1 - margin_premium)  # premium of current market price
         tr = scf.get_margin_target_ratio(self.player)
         s = abs(self.player.shares)
         c = abs(self.player.cash)

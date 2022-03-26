@@ -26,10 +26,12 @@ T_RAT = .7
 class TestInitFunctions(unittest.TestCase):
     def test_debt_msg_no_worries(self):
         cls, msg = get_debt_message(M_RAT, T_RAT, .701, 0, 1)
-        self.assertEqual(cls, '')
+        self.assertIsNone(cls)
+        self.assertIsNone(msg)
 
         cls, msg = get_debt_message(M_RAT, T_RAT, .78, 0, 1)
-        self.assertEqual(cls, '')
+        self.assertIsNone(cls)
+        self.assertIsNone(msg)
 
     def test_debt_msg_no_warning(self):
         cls, msg = get_debt_message(M_RAT, T_RAT, .7, 0, 1)
@@ -75,10 +77,12 @@ class TestInitFunctions(unittest.TestCase):
 
     def test_short_msg_no_worries(self):
         cls, msg = get_short_message(M_RAT, T_RAT, .701, 0, 1)
-        self.assertEqual(cls, '')
+        self.assertIsNone(cls)
+        self.assertIsNone(msg)
 
         cls, msg = get_short_message(M_RAT, T_RAT, .78, 0, 1)
-        self.assertEqual(cls, '')
+        self.assertIsNone(cls)
+        self.assertIsNone(msg)
 
     def test_short_msg_no_warning(self):
         cls, msg = get_short_message(M_RAT, T_RAT, .7, 0, 1)
@@ -362,7 +366,7 @@ class TestInitFunctions(unittest.TestCase):
         buy = get_order(oid=33, player=player, group=group, order_type=-1, price=3999, quantity=4, original_quantity=5)
 
         # Test
-        d = rounds.get_orders_for_player_live([sell, buy])
+        d = rounds.get_orders_for_player_live([sell, buy], False)
 
         # Assert
 
@@ -698,7 +702,7 @@ class TestInitFunctions(unittest.TestCase):
         is_vf_m.assert_not_called()
         is_v_m.assert_not_called()
         create_m.assert_not_called()
-        o4pl_m.assert_called_once_with([9, 8, 7])
+        o4pl_m.assert_called_once_with([9, 8, 7], False)
         warn_m.assert_called_once_with(player, 'no_order', 0, 0, {})
         self.assertEqual(d.keys(), {66})
         sub_d = d[66]

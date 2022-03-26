@@ -26,6 +26,7 @@ def get_order(**kwargs):
     o.quantity_final = kwargs.get('quantity_final')
     o.is_buy_in = kwargs.get('is_buy_in')
     o.original_quantity = kwargs.get('original_quantity')
+    o.to_dict = MagicMock(return_value={'price': kwargs.get('price')})
     return o
 
 

@@ -4,8 +4,8 @@ $(window).on('load', function () {
     $('.debug-info').detach();
 
     if (js_vars.show_notes){
-        $('#notes_col').classList.remove('hidden')
-        $('#fulfilled_col').classList.remove('hidden')
+        $('#notes-col').removeClass('hidden')
+        $('#fulfilled-col').removeClass('hidden')
     }
     
     // This requests all the orders
@@ -16,9 +16,10 @@ $(window).on('load', function () {
     //var timer = $('.otree-timer').detach();
     //$('.message-box').prepend(timer);
 
-    //Add place holder on the order form
+    //Add placeholder on the order form
     $('#id_quantity').attr('placeholder', 'Quantity')
     $('#id_price').attr('placeholder', 'Price')
+    $('#id_f0').attr('placeholder', js_vars.market_price)
 
     ///////////////////////////
     // EVENT HANDLERS
@@ -92,7 +93,8 @@ function get_order_details() {
     let o_quant = $("#id_quantity").val();
     return {  'type': o_type
             , 'price': o_price
-            , 'quantity': o_quant};
+            , 'quantity': o_quant
+            , 'requested_quant': o_quant};
 }
 
 function clear_order_form() {
@@ -126,13 +128,18 @@ function add_orders_to_list(live_data) {
 function add_order_to_list(oid, o_info){
     //make the close button TD
     const close_btn_elem = document.createElement("span");
-    close_btn_elem.classList.add( "close-button");
+    close_btn_elem.classList.add("close-button");
     close_btn_elem.id = "cb_" + oid;
     close_btn_elem.txt = "Cancel this order.";
     close_btn_elem.innerHTML = 'X';
     close_btn_elem.tabIndex = 0;
+
     const cancel_td = document.createElement("td");
-    cancel_td.append(close_btn_elem);
+    if (js_vars.show_cancel) {
+        cancel_td.append(close_btn_elem);
+    } else {
+        cancel_td.innerHTML = "&nbsp;";
+    }
 
     // Order Details TD
     const o_deats_td = document.createElement("td")
@@ -148,7 +155,7 @@ function add_order_to_list(oid, o_info){
     quant_span.innerHTML="&nbsp;"
     const q_span = document.createElement("span");
     q_span.classList.add('r_just')
-    q_span.innerHTML = o_info.quantity;
+    q_span.innerHTML = o_info.requested_quant;
     quant_span.append(q_span)
 
     // Shares @ TD
@@ -172,16 +179,25 @@ function add_order_to_list(oid, o_info){
     notes_td.classList.add("notes-col")
     if (! js_vars.show_notes){
         notes_td.classList.add("hidden")
+        notes_td.innerHTML = "&nbsp;"
+   } else {
+        const notes_span = document.createElement("span")
+        notes_span.innerHTML=o_info.note
+        notes_td.append(notes_span)
     }
-    notes_td.innerHTML = "&nbsp;"
 
     // Fulfilled TD
     const fulfilled_td = document.createElement("td");
     fulfilled_td.classList.add("full-col")
-    if (! js_vars.show_notes){
-        fulfilled_td.classList.add("hidden")
-    }
     fulfilled_td.innerHTML = "&nbsp;"
+    if (! js_vars.show_notes) {
+        fulfilled_td.classList.add("hidden")
+    } else {
+        const f_fill_span = document.createElement("span")
+        f_fill_span.classList.add("r_just")
+        f_fill_span.innerHTML = o_info.quantity_final
+        fulfilled_td.append(f_fill_span)
+    }
 
     //assemble order line and append to list
     let order_elem = document.createElement("tr");

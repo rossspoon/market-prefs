@@ -2,7 +2,7 @@
 .layout-box {
     display: grid;
     grid-template-columns: 4fr 4fr;
-    grid-template-rows: 50px 80px auto 300px;
+    grid-template-rows: 50px 120px auto 300px;
     gap: 10px;
 }
 .vitals{
@@ -20,7 +20,6 @@
 .order-form-box{
     grid-column: 2/3;
     grid-row: 2;
-    height: 80px;
 }
 
 .stats-box {
@@ -51,7 +50,7 @@
     display: grid;
     grid-template-columns: 5fr 8fr 1fr 5fr 5fr;
     grid-auto-rows: minmax(5px, auto);
-    margin-top: -10px;
+    margin-top: auto;
  }
 
  .form-cell{
@@ -75,6 +74,30 @@
 }
 
 /* Element styles */
+
+/* BEGIN - Forecast Form*/
+#forcast-form{
+    font-size: 1.3em;
+    margin-top: 15px;
+    margin-left: 20px;
+}
+
+.ilb{
+    display: inline-block;
+}
+/* END - Forecast Form*/
+
+.center {
+    margin: auto;
+    width: 50%;
+}
+.results-form div{
+    font-size: 1.6em;
+}
+.results-form{
+    padding-top: 10px;
+}
+
 .stats-box table {
     width: 85%;
     margin: auto;
@@ -83,6 +106,9 @@
     font-size: 1.3em;
     width: 50%;
     padding-top: 5px;
+}
+.stats-box th {
+    text-align: center;
 }
 
 .close-button {
@@ -155,6 +181,8 @@
 }
 .message {
     position: relative;
+    margin: auto;
+    padding: 3px;
 }
 
 .left-side{
@@ -170,5 +198,13 @@
     margin-top:10px;
     position: relative;
     width: 100%;
+}
+
+.canceled-order{
+    color: white;
+    background-color: tomato;
+    border: 2px solid #ffa08e;
+    border-radius: 8px;
+    padding: 4px;
 }
 

@@ -54,9 +54,50 @@
 .alert {
     position: relative;
     padding: 5px;
-    margin-bottom: .7rem;
     border: 1px solid transparent;
     border-radius: 1rem;
 }
 
+
+.attention{
+    animation-name: attn;
+    animation-duration: 2s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+}
+@keyframes attn {
+    30% {
+        box-shadow: 0 0 0 0rem rgb(9 132 253 / 40%)
+    }
+    50%{
+        box-shadow: 0 0 0 1rem rgb(9 132 253 / 40%);
+    }
+    60%{
+        box-shadow: 0 0 0 0;
+    }
+}
+ .attention_slow {
+     animation-name: attn_s;
+     animation-duration: 5s;
+     animation-timing-function: ease-in-out;
+     animation-fill-mode: forwards;
+     border-radius: 3px;
+     padding: 1px;
+ }
+
+@keyframes attn_s {
+    15% {
+        box-shadow: 0 0 0 0rem rgb(9 132 253 / 40%)
+    }
+    25%{
+        box-shadow: 0 0 0 .25rem rgb(9 132 253 / 40%);
+        background-color: #88b1fa;
+    }
+    30%{
+        box-shadow: 0 0 0 0;
+    }
+    100%{
+        background-color: white;
+    }
+}
 
