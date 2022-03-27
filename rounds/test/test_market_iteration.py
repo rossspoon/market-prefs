@@ -15,10 +15,15 @@ BID = OrderType.BID.value
 OFFER = OrderType.OFFER.value
 
 
-def basic_player(pid=None, id_in_group=None, shares=0, cash=0):
+def basic_player(pid=None, id_in_group=None, **kwargs):
     player = MagicMock(spec=Player)
-    player.shares = shares
-    player.cash = cash
+    s = kwargs.get('shares', 0)
+    c = kwargs.get('cash', 0)
+
+    player.shares = s
+    player.cash = c
+    player.shares_result = kwargs.get('shares_result', 0)
+    player.cash_result = kwargs.get('cash_result', 0)
     if pid:
         player.id = pid
     if id_in_group:

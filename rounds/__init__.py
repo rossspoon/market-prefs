@@ -468,7 +468,7 @@ def vars_for_round_results_template(player: Player):
     return ret
 
 
-def get_round_result_messages(player: Player, d: dict, o_cls=Order):
+def get_round_result_messages(player: Player, d: dict):
     messages = []
 
     # Determine the "you bought/sold" message

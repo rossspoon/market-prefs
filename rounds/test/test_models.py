@@ -1,13 +1,9 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 import unittest
+from unittest.mock import MagicMock
 
 from otree.models import Session
 
 from rounds.models import *
-from unittest.mock import MagicMock
-import common.SessionConfigFunctions as scf
 
 
 class TestOrderErrorCodeMethods(unittest.TestCase):
@@ -42,17 +38,12 @@ class TestOrderMethods(unittest.TestCase):
         g = Group()
         g.id = 78
 
-        o = Order.create(
-            player=p,
-            group=g,
-            order_type=-1,
-            price=79,
-            quantity=80
-        )
-
-        # Some initializing tests
-        self.assertEqual(o.quantity_final, 0)
-        self.assertFalse(o.is_buy_in)
+        o = Order()
+        o.player = p
+        o.group = g
+        o.order_type = -1
+        o.price = 79
+        o.quantity = 80
 
         # Continue setup
         o.id = 76
@@ -484,7 +475,7 @@ class TestPlayerMethods(unittest.TestCase):
             self.assertEqual(getattr(p, prop), test_values.get(prop), msg=f"testing {prop}")
 
     def assert_equal_or_none(self, exp, actual):
-        if actual is not None:
+        if exp is not None:
             self.assertEqual(exp, actual)
         else:
             self.assertIsNone(actual)
@@ -700,6 +691,94 @@ class TestGroupMethods(unittest.TestCase):
         p.in_round.assert_called_with(3)
         self.assertEqual(p.cash, 123)
         self.assertEqual(p.shares, 456)
+
+    def test_get_holding_details(self):
+        # Setup-up
+        player = Player()
+        player.shares = 2
+        player.cash = 100
+
+        # Test
+        v, e, d, m = player.get_holding_details(4)
+
+        # Assert
+        self.assertEqual(v, 8)
+        self.assertEqual(e, 108)
+        self.assertEqual(d, 0)
+        self.assertIsNone(m)
+
+    def test_get_holding_details_debt(self):
+        # Setup-up
+        player = Player()
+        player.shares = 2
+        player.cash = -100
+
+        # Test
+        v, e, d, m = player.get_holding_details(4)
+
+        # Assert
+        self.assertEqual(v, 8)
+        self.assertEqual(e, -92)
+        self.assertEqual(d, -100)
+        self.assertEqual(m, 92 / 100)
+
+    def test_get_holding_details_short(self):
+        # Setup-up
+        player = Player()
+        player.shares = -2
+        player.cash = 100
+
+        # Test
+        v, e, d, m = player.get_holding_details(4)
+
+        # Assert
+        self.assertEqual(v, -8)
+        self.assertEqual(e, 92)
+        self.assertEqual(d, -8)
+        self.assertEqual(m, 92 / 8)
+
+    def test_get_holding_details_result(self):
+        # Setup-up
+        player = Player()
+        player.shares_result = -2
+        player.cash_result = 100
+
+        # Test
+        v, e, d, m = player.get_holding_details(4, results=True)
+
+        # Assert
+        self.assertEqual(v, -8)
+        self.assertEqual(e, 92)
+        self.assertEqual(d, -8)
+        self.assertEqual(m, 92 / 8)
+
+    def test_is_auto_sell(self):
+        # Set-up
+        p = Player()
+        p.periods_until_auto_sell = 1
+
+        # Test / Assert
+        self.assertFalse(p.is_auto_sell())
+
+        # Set-up
+        p.periods_until_auto_sell = 0
+
+        # Test / Assert
+        self.assertTrue(p.is_auto_sell())
+
+    def test_is_auto_buy(self):
+        # Set-up
+        p = Player()
+        p.periods_until_auto_buy = 1
+
+        # Test / Assert
+        self.assertFalse(p.is_auto_buy())
+
+        # Set-up
+        p.periods_until_auto_buy = 0
+
+        # Test / Assert
+        self.assertTrue(p.is_auto_buy())
 
 
 if __name__ == '__main__':
