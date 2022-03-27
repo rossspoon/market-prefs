@@ -11,7 +11,7 @@ from otree import database
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
-    num_rounds = 1
+    num_rounds = 35
 
 
 # assign treatments
@@ -417,7 +417,7 @@ def vars_for_market_template(player: Player):
     ret = standard_vars_for_template(player)
     ret['messages'] = get_messages(player, ret)
     ret['show_form'] = 'order'
-    ret['show_next'] = False
+    ret['show_next'] = True
     return ret
 
 
@@ -464,7 +464,27 @@ def vars_for_round_results_template(player: Player):
     ret['bankrupt'] = player.shares_result < 0 and player.cash_result < 0
     ret['show_form'] = 'results'
     ret['attn_cls'] = 'attention_slow'
+    ret['messages'] = get_round_result_messages(player, ret)
     return ret
+
+
+def get_round_result_messages(player: Player, d: dict, o_cls=Order):
+    messages = []
+
+    # Determine the "you bought/sold" message
+    which = "bought" if player.trans_cost < 0 else "sold"
+    quant = player.shares_transacted
+    if quant == 0:
+        msg = f"You did not trade any shares this period."
+    else:
+        msg = f"You {which} {quant} shares at {d.get('market_price')}"
+    messages.append(dict(class_attr='result-msg', msg=msg))
+
+    # Volume message
+    msg = f"Market volume this period: {player.group.volume} shares"
+    messages.append(dict(class_attr='result-msg', msg=msg))
+
+    return messages
 
 
 def pre_round_tasks(group: Group):
