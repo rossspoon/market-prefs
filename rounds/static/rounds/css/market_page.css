@@ -4,6 +4,7 @@
     grid-template-columns: 4fr 4fr;
     grid-template-rows: 50px 120px auto 300px;
     gap: 10px;
+    margin-top: 40px;
 }
 .vitals{
     grid-column: 1/3;
