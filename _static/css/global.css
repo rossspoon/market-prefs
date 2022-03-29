@@ -120,7 +120,8 @@
 
 /* Tooltip text */
 .tool-tip-text {
-    font-size: 15px;
+    font-size: 18px;
+    font-weight: 350;
     visibility: hidden;
     width: 400px;
     background-color: lightyellow;
@@ -132,12 +133,12 @@
     z-index: 1;
 }
 .tool-tip .tt-left {
-    top: -10%;
+    top: -60px;
     right: 120%;
 }
 
 .tool-tip .tt-right {
-    top: -10%;
+    bottom: -20px;
     left: 120%;
 }
 
@@ -146,6 +147,7 @@
   visibility: visible;
 }
 
+/*Base class for Tool-tip arrow*/
 .tool-tip .tool-tip-text::after {
   content: " ";
   position: absolute;
@@ -153,15 +155,15 @@
   border-width: 10px;
   border-style: solid;
 }
-
+/*Position of the arrows*/
 .tt-left::after{
-    top: 15px;
+    top: 70px;
     left: 100%;
     border-color: transparent transparent transparent #555599;
 }
-
+/*Position of the arrows*/
 .tt-right::after{
-  top: 15px;
+  bottom: 20px;
   right: 100%;
   border-color: transparent #555599 transparent transparent;
 }
