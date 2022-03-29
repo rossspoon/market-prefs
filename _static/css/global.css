@@ -82,22 +82,105 @@
      animation-timing-function: ease-in-out;
      animation-fill-mode: forwards;
      border-radius: 3px;
-     padding: 1px;
+     padding: 3px;
  }
 
 @keyframes attn_s {
     15% {
-        box-shadow: 0 0 0 0rem rgb(9 132 253 / 40%)
+        box-shadow: 0 0 0 0rem rgb(9 132 253 / 40%);
+        background-color: white;
     }
-    25%{
-        box-shadow: 0 0 0 .25rem rgb(9 132 253 / 40%);
+    20%{
+        box-shadow: 0 0 0 .20rem rgb(9 132 253 / 40%);
         background-color: #88b1fa;
     }
-    30%{
+    22%{
         box-shadow: 0 0 0 0;
     }
     100%{
         background-color: white;
     }
 }
+
+/*BEGIN Tooltip Stuff */
+.tool-tip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.tool-tip p {
+    margin: auto;
+    width: 90%;
+}
+.tool-tip ul {
+    margin: auto;
+    width: 90%;
+}
+
+/* Tooltip text */
+.tool-tip-text {
+    font-size: 15px;
+    visibility: hidden;
+    width: 400px;
+    background-color: lightyellow;
+    color: #559;
+    padding: 10px;
+    border-radius: 10px;
+    border: 2px dashed #555599;
+    position: absolute;
+    z-index: 1;
+}
+.tool-tip .tt-left {
+    top: -10%;
+    right: 120%;
+}
+
+.tool-tip .tt-right {
+    top: -10%;
+    left: 120%;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tool-tip:hover .tool-tip-text {
+  visibility: visible;
+}
+
+.tool-tip .tool-tip-text::after {
+  content: " ";
+  position: absolute;
+  margin-top: -5px;
+  border-width: 10px;
+  border-style: solid;
+}
+
+.tt-left::after{
+    top: 15px;
+    left: 100%;
+    border-color: transparent transparent transparent #555599;
+}
+
+.tt-right::after{
+  top: 15px;
+  right: 100%;
+  border-color: transparent #555599 transparent transparent;
+}
+/*END Tooltip Stuff */
+
+
+
+/*.tool-tip::before {*/
+/*    content: '?';*/
+/*    position: absolute;*/
+/*    left: -15px;*/
+/*    -webkit-text-stroke: 1px #999;*/
+/*    -webkit-text-fill-color: #bbb;*/
+/*}*/
+
+/*.tool-tip:hover::before{*/
+/*    content: "\01F4A1";*/
+/*    left: -20px;*/
+/*    -webkit-text-stroke: unset;*/
+/*    -webkit-text-fill-color: unset;*/
+/*}*/
 

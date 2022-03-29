@@ -63,8 +63,30 @@
                 <tr>
                     <th id="button-col">&nbsp;</th>
                     <th id="details-col" class="box-header details-col">Orders Submitted</th>
-                    <th id="notes-col", class="box-header notes-col hidden">Notes</th>
-                    <th id="fulfilled-col", class="box-header full-col hidden">Fulfilled</th>
+                    <th id="notes-col", class="box-header notes-col hidden">
+                        <div class="tool-tip">Notes
+                            <span class="tool-tip-text tt-left">
+                                <p>Special actions taken with your orders.</p>
+                                <ul>
+                                    <li>Short sell orders may be limited if they can cause the market to be
+                                         shorted beyond the limit.</li>
+                                    <li>An entire short sell order can be canceled because of a shorting limit</li>
+                                    <li>An automatic SELL order will cancel your BUY orders</li>
+                                    <li>An automatic BUY order will cancel your SELL orders</li>
+                                </ul>
+                            </span>
+                        </div>
+                    </th>
+                    <th id="fulfilled-col", class="box-header full-col hidden">
+                        <div class="tool-tip">
+                            Fulfilled
+                            <span class="tool-tip-text tt-left">
+                                <p>The number of shares actually traded for this order.  This depends on
+                                market conditions.  You can only buy shares if there is someone willing to sell
+                                and vise versa.</p>
+                            </span>
+                        </div>
+                    </th>
                 </tr>
             </table>
         </div>
@@ -73,7 +95,9 @@
 
             {{ for msg in messages }}
                 <div class="alert {{ msg.class_attr }}">
-                    <p class = "message"> {{ msg.msg }}</p>
+                    <div class="message">
+                        {{ msg.msg }}
+                    </div>
                 </div>
             {{  endfor }}
         </div>
@@ -85,28 +109,65 @@
                          <th colspan="2" class="box-header">Personal Stats</th>
                      </tr>
                     <tr>
-                        <td>Equity</td>
+                        <td>
+                            <div class="tool-tip">Equity
+                                <span class="tool-tip-text tt-right">
+                                    <p> The value of your portfolio.
+                                        It is the value of your STOCK at the current market price plus your CASH.</p>
+                                    <p>It is OK for your equity to be negative, as long as you are still within the
+                                        margin requirement.</p>
+                                </span></div>
+                        </td>
                         <td class="stat-value">&nbsp;<span class="r_just {{ attn_cls }}">{{ equity }}</span></td>
                     </tr>
                     <tr>
-                        <td>Debt</td>
+                        <td>
+                            <div class="tool-tip">Debt
+                                <span class="tool-tip-text tt-right">
+                                    <p>The value of shorted STOCK or borrowed CASH.</p>
+                                    <p>If you short STOCK, we consider the value of that STOCK as debt.</p>
+                                </span>
+                            </div>
+                        </td>
                         <td class="stat-value">&nbsp;<span class="r_just {{ attn_cls }}">{{ debt }}</span></td>
                     </tr>
                     <tr>
-                        <td>Margin</td>
+                        <td>
+                            <div class="tool-tip">Margin
+                               <span class="tool-tip-text tt-right">
+                                    <p>Equity divided by Debt.</p>
+                                    <p>This is the ratio of your equity to your debt.  If this number gets
+                                    below {{ marg_req_pct }} we will make a trade on your behalf to try to increase
+                                    you margin.</p>
+                                </span>
+                            </div>
+                        </td>
                         <td class="stat-value">&nbsp;<span class="r_just {{ attn_cls }}">{{ margin_pct }}</span></td>
                     </tr>
                     {{ if for_results }}
                     <tr>
-                        <td>Dividend Earned</td>
+                        <td><div class="tool-tip">Dividend Earned
+                            <span class="tool-tip-text tt-right">
+                                <p>The amount or dividend payments you earned or paid out this market period</p>
+                            </span>
+                        </div></td>
                         <td class="stat-value">&nbsp;<span class="r_just">{{ player.dividend_earned }}</span></td>
                     </tr>
                     <tr>
-                        <td>Interest Earned</td>
+                        <td><div class="tool-tip">Interest Earned
+                            <span class="tool-tip-text tt-right">
+                                <p>The amount of interest you earned or paid out this market period</p>
+                            </span>
+                        </div></td>
                         <td class="stat-value">&nbsp;<span class="r_just">{{ player.interest_earned }}</span></td>
                     </tr>
                    <tr>
-                        <td>Forecast Bonus</td>
+                        <td><div class="tool-tip">Forecast Bonus
+                            <span class="tool-tip-text tt-right">
+                                <p>The amount awarded to you for guessing the market price within in
+                                {{ forecast_thold | cu }}</p>
+                            </span>
+                        </div></td>
                         <td class="stat-value">&nbsp;<span class="r_just">{{ player.forecast_reward }}</span></td>
                     </tr>
 
@@ -124,23 +185,54 @@
                          <td class="stat-value">&nbsp;<span class="r_just">{{ market_price | cu }}</span></td>
                     </tr>
                     <tr>
-                        <td>Float</td>
+                        <td><div class="tool-tip">Float
+                                <span class="tool-tip-text tt-right">
+                                    The amount of shares available to trade in the market.
+                                </span>
+                            </div>
+                        </td>
                         <td class="stat-value">&nbsp;<span class="r_just">{{ group.float }} shares</span></td>
                     </tr>
                     <tr>
-                        <td>Short</td>
+                        <td><div class="tool-tip">Total Shorted
+                            <span class="tool-tip-text tt-right">
+                                <p>The amount of shares shorted by all traders in the market.</p>
+                                {{ if float_ratio_cap }}
+                                    <p>Short sells will be limited to ensure that no more than {{ group.float }} shares
+                                        are shorted.</p>
+                                {{ endif }}
+                            </span></div>
+                        </td>
                         <td class="stat-value">&nbsp;<span class="r_just">{{ short }} shares </span></td>
                     </tr>
                     <tr>
-                        <td>Interest Rate</td>
+                        <td><div class="tool-tip">Interest Rate
+                            <span class="tool-tip-text tt-right">
+                                <p>Interest on CASH earned at the end of the market period.</p>
+                                <p>If you have borrowed CASH, you will pay interest at this rate.</p>
+                            </span>
+                        </div></td>
                         <td class="stat-value">&nbsp;<span class="r_just">{{ interest_pct }}</span></td>
                     </tr>
                     <tr>
-                        <td>Dividends</td>
+                        <td><div class="tool-tip">Dividends
+                            <span class="tool-tip-text tt-right">
+                                <p>The dividend paid out on STOCK.</p>
+                                <p>Each share of stock that you own will earn either 0.40 or 1.00 points.
+                                Each amount is equally likely.  If you have shorted STOCK then you will payout
+                                that amount.</p>
+                            </span>
+                        </div></td>
                         <td class="stat-value">&nbsp;<span class="r_just">{{ dividends }}</span></td>
                     </tr>
                    <tr>
-                        <td>Stock Buy Back</td>
+                        <td><div class="tool-tip">Stock Buy Back
+                            <span class="tool-tip-text tt-right">
+                                <p>After the last market period each share of STOCK that you own will be bought
+                                back at this price ({{ buy_back }}).  If you have shorted stock, you will
+                                pay out this amount for each share of STOCK that you have borrowed.</p>
+                            </span>
+                        </div></td>
                        <td class="stat-value">&nbsp;<span class="r_just">{{ buy_back }}</span></td>
                     </tr>
                 </table>

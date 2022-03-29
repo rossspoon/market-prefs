@@ -279,6 +279,8 @@ def get_orders_for_player(player, o_cls=Order):
 
 def standard_vars_for_template(player: Player):
     ret = scf.ensure_config(player)
+    marg_req = ret.get(scf.SK_MARGIN_RATIO)
+    ret['marg_req_pct'] = f"{marg_req :.0%}"
     ret['for_results'] = False
     ret['cash'] = player.cash
     ret['shares'] = player.shares
@@ -439,6 +441,7 @@ def vars_for_round_results_template(player: Player):
     ret['equity'] = equity
     ret['debt'] = debt
     ret['margin_raw'] = margin
+    ret['margin_pct'] = f"{margin:.0%}" if margin else 'N/A'
     ret['market_price'] = price
 
     short = abs(sum([p.shares_result for p in player.group.get_players() if p.shares_result < 0]))

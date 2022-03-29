@@ -68,7 +68,7 @@
 }
 
 #order-list td{
-    padding-top: 25px;
+    padding-top: 12px;
 }
 
 #button-col {
@@ -104,6 +104,7 @@
 }
 .order-list-item:not(:last-child) td:not(:first-child){
     border-bottom: 2px dotted lightgray;
+    padding-bottom: 13px;
 }
 
 .order-details{

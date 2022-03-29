@@ -38,7 +38,13 @@ class CallMarket:
         # If we made it this far then there is buy_in demand or sell_off supply
 
         cnt = 0
+        running_price = iteration.market_price
         while iteration.recommend_iteration() and cnt < 100:
+            bi = [f"{o.quantity}@{o.price}" for o in buy_ins]
+            supply = sum(o.quantity for o in self.offers)
+            print("Try buy-ins:", bi)
+            print("Try buy-ins:", supply)
+
             iteration = MarketIteration(self.bids, self.offers, self.group, dividend,
                                         buy_ins=buy_ins, sell_offs=sell_offs)
             buy_ins, sell_offs = iteration.run_iteration()
@@ -48,6 +54,10 @@ class CallMarket:
         # If the loop exited because of a lack of supply
         # Run the market one last time with the last set of buy ins
         if not iteration.enough_demand() or not iteration.enough_supply():
+            bi = [f"{o.quantity} @ {o.price}" for o in buy_ins]
+            supply = sum(o.quantity for o in self.offers)
+            print("not enough supply:", bi)
+            print("not enough supply:", supply)
             iteration = MarketIteration(self.bids, self.offers, self.group, dividend,
                                         buy_ins=buy_ins, sell_offs=sell_offs)
             iteration.run_iteration()

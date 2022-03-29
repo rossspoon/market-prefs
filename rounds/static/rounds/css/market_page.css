@@ -190,7 +190,11 @@
     position: relative;
     width: 90%;
     margin: auto;
-    padding: 3px;
+    padding-top: 3px;
+    padding-top: 3px;
+}
+.message p {
+    margin-bottom: 3px;
 }
 
 .left-side{
@@ -214,5 +218,12 @@
     border: 2px solid #ffa08e;
     border-radius: 8px;
     padding: 4px;
+    font-size: .8em;
 }
-
+.auto-order{
+    color: white;
+    background-color: #0d6efd;
+    border-radius: 8px;
+    padding: 4px;
+    font-size: .8em;
+}
