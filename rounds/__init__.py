@@ -1,5 +1,6 @@
 import random
 from collections import defaultdict
+from decimal import Decimal
 
 from rounds.call_market import CallMarket
 from .models import *
@@ -136,7 +137,7 @@ def is_order_form_valid(data):
     quant = None
     o_type = None
     try:
-        price = float(raw_price)
+        price = cu(raw_price)
     except ValueError:
         error_code = OrderErrorCode.PRICE_NOT_NUM.combine(error_code)
 
