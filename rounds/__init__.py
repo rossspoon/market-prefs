@@ -42,14 +42,14 @@ def creating_session(subsession):
 
 
 def get_js_vars_forcast_page(player: Player):
-    return get_js_vars(player, include_current=False, show_cancel=False)
+    return get_js_vars(player, show_cancel=False)
 
 
 def get_js_vars_round_results(player: Player):
-    return get_js_vars(player, show_notes=True, show_cancel=False)
+    return get_js_vars(player, include_current=True, show_notes=True, show_cancel=False)
 
 
-def get_js_vars(player: Player, include_current=True, show_notes=False, show_cancel=True):
+def get_js_vars(player: Player, include_current=False, show_notes=False, show_cancel=True):
     # Price History
     group: Group = player.group
     if include_current:
@@ -71,6 +71,9 @@ def get_js_vars(player: Player, include_current=True, show_notes=False, show_can
     # Error Codes
     error_codes = {e.value: e.to_dict() for e in OrderErrorCode}
 
+    market_price = group.price if include_current else group.get_last_period_price()
+    mp_str = f"{market_price:.2f}"
+
     return dict(
         labels=list(range(0, Constants.num_rounds + 1)),
         price_data=prices,
@@ -79,7 +82,8 @@ def get_js_vars(player: Player, include_current=True, show_notes=False, show_can
         error_codes=error_codes,
         show_notes=show_notes,
         show_cancel=show_cancel,
-        market_price=group.get_last_period_price(),
+        market_price=market_price,
+        market_price_str=mp_str,
     )
 
 
@@ -481,7 +485,7 @@ def get_round_result_messages(player: Player, d: dict):
     if quant == 0:
         msg = f"You did not trade any shares this period."
     else:
-        msg = f"You {which} {quant} shares at {d.get('market_price')}"
+        msg = f"You {which} {abs(quant)} shares at {d.get('market_price')}"
     messages.append(dict(class_attr='result-msg', msg=msg))
 
     # Volume message

@@ -147,7 +147,7 @@ function add_order_to_list(oid, o_info){
     // Type Span
     const type_span = document.createElement("span");
     type_span.classList.add('order-details', 'type-col')
-    type_span.innerHTML = (o_info.type == "-1") ? 'Buy' : 'Sell';
+    type_span.innerHTML = (o_info.type === "-1") ? 'Buy' : 'Sell';
 
     // Quant Span
     const quant_span = document.createElement("div");
@@ -193,10 +193,7 @@ function add_order_to_list(oid, o_info){
     if (! js_vars.show_notes) {
         fulfilled_td.classList.add("hidden")
     } else {
-        const f_fill_span = document.createElement("span")
-        f_fill_span.classList.add("r_just")
-        f_fill_span.innerHTML = o_info.quantity_final
-        fulfilled_td.append(f_fill_span)
+        fulfilled_td.innerHTML = o_info.quantity_final + " @ " + js_vars.market_price_str;
     }
 
     //assemble order line and append to list

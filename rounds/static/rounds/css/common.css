@@ -83,7 +83,8 @@
 }
 .full-col {
     position: relative;
-    width: 10%;
+    text-align: center;
+    width: 25%;
 }
 
 .type-col {
