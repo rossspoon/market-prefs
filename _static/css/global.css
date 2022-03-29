@@ -114,6 +114,7 @@
     width: 90%;
 }
 .tool-tip ul {
+    text-align: left;
     margin: auto;
     width: 90%;
 }
@@ -134,12 +135,12 @@
 }
 .tool-tip .tt-left {
     top: -60px;
-    right: 120%;
+    left: -415px;
 }
 
 .tool-tip .tt-right {
     bottom: -20px;
-    left: 120%;
+    right: -415px;
 }
 
 /* Show the tooltip text when you mouse over the tooltip container */
