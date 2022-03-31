@@ -1,6 +1,6 @@
+import decimal
 import random
 from collections import defaultdict
-from decimal import Decimal
 
 from rounds.call_market import CallMarket
 from .models import *
@@ -142,7 +142,7 @@ def is_order_form_valid(data):
     o_type = None
     try:
         price = cu(raw_price)
-    except ValueError:
+    except (ValueError, decimal.InvalidOperation):
         error_code = OrderErrorCode.PRICE_NOT_NUM.combine(error_code)
 
     if not raw_quant.lstrip('-').isnumeric():
