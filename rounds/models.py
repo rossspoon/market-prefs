@@ -306,6 +306,14 @@ class Player(BasePlayer):
     def is_auto_sell(self):
         return self.periods_until_auto_sell == 0
 
+    def __str__(self):
+        c = self.field_maybe_none('cash')
+        p = self.field_maybe_none('shares')
+        return f"Player: {self.id_in_group}; Cash: {c}; Shares: {p}"
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class Order(ExtraModel):
     player = models.Link(Player)
@@ -332,3 +340,11 @@ class Order(ExtraModel):
             requested_quant=requested_quant,
             is_buy_in=self.is_buy_in
         )
+
+    def __str__(self):
+        t = "BUY" if self.order_type == -1 else "SELL"
+        a = "(AUTO)" if self.is_buy_in else ""
+        return f"{t} {self.quantity} @ {self.price} {a}"
+
+    def __repr__(self):
+        return self.__str__()
