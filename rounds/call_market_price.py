@@ -371,12 +371,12 @@ class OrderFill:
 
     def select_offers(self, thold_price):
         """
-        Select orders with a price greater than or equal to the threshold price.
+        Select offres with a price less than or equal to the threshold price.
         Parameters:
             thold_price (number):  The threshold price
             
         Returns:
-            (list: Order): A list of orders with price greater than or equal to the threshold price
+            (list: Order): A list of offers with price less than or equal to the threshold price
         """
         return list(filter(lambda o: o.price <= thold_price, self.offers))
 
