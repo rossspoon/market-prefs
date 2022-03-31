@@ -78,6 +78,14 @@ class DataForOrder:
     def is_sell(self):
         return self.order_type == OrderType.OFFER.value
 
+    def __str__(self):
+        t = "BUY" if self.order_type == -1 else "SELL"
+        a = "(AUTO)" if self.is_buy_in else ""
+        return f"D4O:{t} {self.quantity} @ {self.price} {a}::  Final: {self.quantity_final}; Original: {self.original_quantity}"
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class DataForPlayer:
     def __init__(self, player: Player):
@@ -134,7 +142,7 @@ class DataForPlayer:
         c = abs(self.player.cash)
         s = abs(self.player.shares)
 
-        number_of_shares = int(math.ceil(((1 + tr)*s*p - c) / (tr * p)))
+        number_of_shares = int(math.ceil(((1 + tr) * s * p - c) / (tr * p)))
 
         player = self.player
         return DataForOrder(player=player,
@@ -204,6 +212,12 @@ class DataForPlayer:
             eq_with_none(self.mv_short_future, other.mv_short_future),
             eq_with_none(self.mv_debt_future, other.mv_debt_future)
         ))
+
+    def __str__(self):
+        return f"D4P: {self.player}; Cash_result: {self.cash_result}; Shares_result: {self.shares_result}"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 def eq_with_none(o1, o2):
