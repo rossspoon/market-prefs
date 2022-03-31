@@ -18,12 +18,17 @@ class MarketIteration:
         self.dividend = dividend
         self.last_price = group.get_last_period_price()
         self.group = group
+        self.is_first_time = True
 
         # artifacts to communicate back to the CallMarket
         self.market_price = None
         self.market_volume = None
         self.pending_buy_ins = None
         self.pending_sell_offs = None
+        self.buy_in_price = None
+        self.sell_off_price = None
+        self.buy_recommended = False
+        self.sell_recommended = False
 
         # get session parameters
         # These dict references will cause ValueErrors if they are missing
@@ -58,6 +63,15 @@ class MarketIteration:
         self.market_volume = market_volume
         self.fill_orders(market_price)
 
+        # Update buy-in and sell off price
+        if self.buy_in_price is None:
+            self.buy_in_price = market_price
+        self.buy_in_price = self.buy_in_price * (1 + self.margin_premium)
+
+        if self.sell_off_price is None:
+            self.sell_off_price = market_price
+        self.sell_off_price = self.sell_off_price * (1 - self.margin_premium)
+
         # Compute new player positions
         auto_buys = []
         auto_sells = []
@@ -70,7 +84,8 @@ class MarketIteration:
 
         self.pending_sell_offs = auto_sells
         self.pending_buy_ins = auto_buys
-        return auto_buys, auto_sells
+        self.buy_recommended = self.recommend_buy_iteration()
+        self.sell_recommended = self.recommend_sell_iteration()
 
     def cancel_orders_for_players(self, players, order_type):
         orders = self.get_orders_for_players(players, order_type)
@@ -99,50 +114,83 @@ class MarketIteration:
         # add them to the proper lists
         buy_in_order = None
         if data_for_player.is_buy_in_required():
-            buy_in_order = data_for_player.generate_buy_in_order(market_price)
+            buy_in_order = data_for_player.generate_buy_in_order(self.buy_in_price)
 
         sell_off_order = None
         if data_for_player.is_sell_off_required():
-            sell_off_order = data_for_player.generate_sell_off_order(market_price)
+            sell_off_order = data_for_player.generate_sell_off_order(self.sell_off_price)
 
         return buy_in_order, sell_off_order
 
     def get_all_orders(self):
-        return concat_or_null([self.bids, self.offers, self.buy_ins, self.sell_offs])
+        base_orders = concat_or_null([self.bids, self.offers, self.buy_ins, self.sell_offs])
+        return base_orders
+
+    def recommend_buy_iteration(self):
+        # If this iteration didn't generate any buy_ins then there is no need to iterate
+        if not self.pending_buy_ins:
+            return False
+        elif self.is_first_time:
+            return True
+
+        demand = self.get_total_quantity(self.bids) + \
+                 self.get_total_quantity(self.buy_ins)
+        supply = self.get_total_quantity(self.offers) + \
+                 self.get_total_quantity(self.sell_offs)
+
+        any_unfilled_buy_ins = any(o.quantity != o.quantity_final for o in self.buy_ins)
+        any_filled_bids = any(o.quantity_final != 0 for o in self.bids)
+        any_unfilled_sells = any(o.quantity != o.quantity_final for o
+                                 in concat_or_null([self.offers, self.sell_offs]))
+
+        if demand <= supply and any_unfilled_buy_ins:
+            return True
+
+        elif demand > supply and (any_filled_bids or any_unfilled_sells):
+            return True
+
+        return False
+
+    def recommend_sell_iteration(self):
+        # If this iteration didn't generate any sell_offs then there is no need to iterate
+        if not self.pending_sell_offs:
+            return False
+        elif self.is_first_time:
+            return True
+
+        demand = self.get_total_quantity(self.bids) + \
+                 self.get_total_quantity(self.buy_ins)
+        supply = self.get_total_quantity(self.offers) + \
+                 self.get_total_quantity(self.sell_offs)
+
+        any_unfilled_sell_offs = any(o.quantity != o.quantity_final for o in self.sell_offs)
+        any_filled_offers = any(o.quantity_final != 0 for o in self.offers)
+
+        if supply <= demand and any_unfilled_sell_offs:
+            return True
+
+        elif supply > demand and any_unfilled_sell_offs and any_filled_offers:
+            return True
+
+        return False
 
     def recommend_iteration(self):
-        auto_buy_still_required = len(self.pending_buy_ins) > 0
-        auto_sell_still_required = len(self.pending_sell_offs) > 0
+        return self.sell_recommended or self.buy_recommended
 
-        enough_supply = self.enough_supply()
-        enough_demand = self.enough_demand()
-        auto_trans_required = auto_buy_still_required and enough_supply or auto_sell_still_required and enough_demand
-        return auto_trans_required
-
-    def enough_supply(self):
-        buy_in_demand = self.get_total_quantity(self.pending_buy_ins)
-        sell_off_supply = self.get_total_quantity(self.pending_sell_offs)
-
-        total_base_supply = self.get_total_quantity(self.offers)
-        supply_with_sell_off = total_base_supply + sell_off_supply
-        enough_supply = buy_in_demand <= supply_with_sell_off
-        return enough_supply
-
-    def enough_demand(self):
-        buy_in_demand = self.get_total_quantity(self.pending_buy_ins)
-        sell_off_supply = self.get_total_quantity(self.pending_sell_offs)
-
-        total_base_demand = self.get_total_quantity(self.bids)
-        demand_with_buy_in = total_base_demand + buy_in_demand
-        enough_demand = sell_off_supply <= demand_with_buy_in
-        return enough_demand
+    def next_iteration(self):
+        next_itr = MarketIteration(self.bids, self.offers, self.group, self.dividend
+                                   , self.pending_buy_ins, self.pending_sell_offs)
+        next_itr.sell_off_price = self.sell_off_price
+        next_itr.buy_in_price = self.buy_in_price
+        next_itr.is_first_time = False
+        return next_itr
 
     @staticmethod
-    def get_total_quantity(offers):
-        if offers is None:
+    def get_total_quantity(orders):
+        if orders is None:
             return 0
 
-        return sum((o.quantity for o in offers))
+        return sum((o.quantity for o in orders))
 
     def screen_orders_for_over_shorting(self):
         """

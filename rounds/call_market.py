@@ -9,6 +9,7 @@ class CallMarket:
     def __init__(self, group: Group):
         self.group = group
         self.bids, self.offers = self.get_orders_for_group()
+        self.auto_trans_premium = scf.get_margin_premium(group)
 
     def get_orders_for_group(self):
         group_orders = Order.filter(group=self.group)
@@ -26,45 +27,27 @@ class CallMarket:
     def calculate_market(self):
         dividend = self.get_dividend()
 
-        # Run the market without buy in.  It might be the case that everything clears up.
-        iteration = MarketIteration(self.bids, self.offers, self.group, dividend)
-        buy_ins, sell_offs = iteration.run_iteration()
-
-        # Quick out if everything clears up
-        if not len(buy_ins) and not len(sell_offs):
-            self.final_updates(iteration)
-            return
-
-        # If we made it this far then there is buy_in demand or sell_off supply
-
         cnt = 0
-        running_price = iteration.market_price
-        while iteration.recommend_iteration() and cnt < 100:
-            bi = [f"{o.quantity}@{o.price}" for o in buy_ins]
-            supply = sum(o.quantity for o in self.offers)
-            print("Try buy-ins:", bi)
-            print("Try buy-ins:", supply)
+        iteration = None
+        while (iteration is None or iteration.recommend_iteration()) and cnt < 100:
+            if iteration is None:
+                iteration = MarketIteration(self.bids, self.offers, self.group, dividend)
+            else:
+                iteration = iteration.next_iteration()
 
-            iteration = MarketIteration(self.bids, self.offers, self.group, dividend,
-                                        buy_ins=buy_ins, sell_offs=sell_offs)
-            buy_ins, sell_offs = iteration.run_iteration()
-
-            cnt += 1
-
-        # If the loop exited because of a lack of supply
-        # Run the market one last time with the last set of buy ins
-        if not iteration.enough_demand() or not iteration.enough_supply():
-            bi = [f"{o.quantity} @ {o.price}" for o in buy_ins]
-            supply = sum(o.quantity for o in self.offers)
-            print("not enough supply:", bi)
-            print("not enough supply:", supply)
-            iteration = MarketIteration(self.bids, self.offers, self.group, dividend,
-                                        buy_ins=buy_ins, sell_offs=sell_offs)
             iteration.run_iteration()
+            cnt += 1
+            print("ITR:", cnt)
 
         # Preform final updates
         # with the last completed iteration.
         self.final_updates(iteration)
+
+    def get_buy_in_price(self, current_price):
+        return current_price * (1 + self.auto_trans_premium)
+
+    def get_sell_off_price(self, current_price):
+        return current_price * (1 - self.auto_trans_premium)
 
     def final_updates(self, iteration):
         # Final Updates

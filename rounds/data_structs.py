@@ -122,14 +122,14 @@ class DataForPlayer:
     def is_buy_in_required(self):
         return self.player.is_auto_buy() and self.mv_short_future
 
-    def generate_buy_in_order(self, market_price):
+    def generate_buy_in_order(self, buy_in_price):
         """
         Generate a buy-in order.
-        @param market_price: The market price
+        @param buy_in_price: The market price
         @return: DataForOrder
         """
         margin_premium = scf.get_margin_premium(self.player)
-        p = market_price * (1 + margin_premium)  # premium of current market price
+        p = buy_in_price  # premium of current market price
         tr = scf.get_margin_target_ratio(self.player)
         c = abs(self.player.cash)
         s = abs(self.player.shares)
@@ -156,15 +156,15 @@ class DataForPlayer:
     def is_sell_off_required(self):
         return self.player.is_auto_sell() and self.mv_debt_future
 
-    def generate_sell_off_order(self, market_price):
+    def generate_sell_off_order(self, sell_off_price):
         """
         Generate a sell-off order.  The order is capped to the number of shares the plays owns.
         This should never be reached, but it's a backstop just in case.
-        @param market_price: The market price
+        @param sell_off_price: The market price
          @return: DataForOrder
         """
         margin_premium = scf.get_margin_premium(self.player)
-        p = market_price * (1 - margin_premium)  # premium of current market price
+        p = sell_off_price  # premium of current market price
         tr = scf.get_margin_target_ratio(self.player)
         s = abs(self.player.shares)
         c = abs(self.player.cash)
