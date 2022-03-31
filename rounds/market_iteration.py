@@ -102,7 +102,7 @@ class MarketIteration:
         o = concat_or_null([self.offers, self.sell_offs])
         mp = MarketPrice(b, o)
         market_price, market_volume = mp.get_market_price(last_price=self.last_price)
-        return market_price, market_volume
+        return cu(market_price), market_volume
 
     def compute_player_position(self, data_for_player, market_price):
         orders = self.orders_by_player[data_for_player.player]
