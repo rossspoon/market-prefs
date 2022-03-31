@@ -33,13 +33,13 @@ class CallMarket:
             if iteration is None:
                 iteration = MarketIteration(self.bids, self.offers, self.group, dividend)
             else:
-                iteration = iteration.next_iteration()
+                iteration = iteration.next_iteration(self.bids, self.offers)
 
             iteration.run_iteration()
             cnt += 1
             print("ITR:", cnt)
 
-        # Preform final updates
+        # Perform final updates
         # with the last completed iteration.
         self.final_updates(iteration)
 

@@ -177,9 +177,17 @@ class MarketIteration:
     def recommend_iteration(self):
         return self.sell_recommended or self.buy_recommended
 
-    def next_iteration(self):
-        next_itr = MarketIteration(self.bids, self.offers, self.group, self.dividend
-                                   , self.pending_buy_ins, self.pending_sell_offs)
+    def next_iteration(self, bids, offers):
+        """
+        Create the next market iteration.  Copy the pending buy_ins and sells_offs created this iteration to
+        the actual buys_in and sell_offs of the next iteration.  Also, be sure to pass in fresh bids and offers.
+        These will get transformed to DataForOrder objects and mutated.  These should be reset each iteration.
+        @param bids: The bids - best to be actual Order model objects, so they won't get mutated.
+        @param offers: The offers - best to be actual Order model objects, so they won't get mutated.
+        @return: The next iteration.
+        """
+        next_itr = MarketIteration(bids, offers, self.group, self.dividend,
+                                   self.pending_buy_ins, self.pending_sell_offs)
         next_itr.sell_off_price = self.sell_off_price
         next_itr.buy_in_price = self.buy_in_price
         next_itr.is_first_time = False
