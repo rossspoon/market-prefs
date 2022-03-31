@@ -169,21 +169,3 @@
   border-color: transparent #555599 transparent transparent;
 }
 /*END Tooltip Stuff */
-
-
-
-/*.tool-tip::before {*/
-/*    content: '?';*/
-/*    position: absolute;*/
-/*    left: -15px;*/
-/*    -webkit-text-stroke: 1px #999;*/
-/*    -webkit-text-fill-color: #bbb;*/
-/*}*/
-
-/*.tool-tip:hover::before{*/
-/*    content: "\01F4A1";*/
-/*    left: -20px;*/
-/*    -webkit-text-stroke: unset;*/
-/*    -webkit-text-fill-color: unset;*/
-/*}*/
-
