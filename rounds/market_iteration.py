@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+from otree.api import cu
+
 from rounds.call_market_price import MarketPrice, OrderFill
 from rounds.models import Player, Order, Group, OrderType, NO_SHORT_LIMIT
 from rounds.data_structs import DataForOrder, DataForPlayer
@@ -165,11 +167,13 @@ class MarketIteration:
 
         any_unfilled_sell_offs = any(o.quantity != o.quantity_final for o in self.sell_offs)
         any_filled_offers = any(o.quantity_final != 0 for o in self.offers)
+        any_unfilled_buys = any(o.quantity != o.quantity_final for o
+                                 in concat_or_null([self.bids, self.buy_ins]))
 
         if supply <= demand and any_unfilled_sell_offs:
             return True
 
-        elif supply > demand and any_unfilled_sell_offs and any_filled_offers:
+        elif supply > demand and (any_filled_offers or any_unfilled_buys):
             return True
 
         return False
