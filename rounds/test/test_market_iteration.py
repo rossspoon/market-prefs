@@ -287,6 +287,8 @@ class TestMarketIteration(unittest.TestCase):
         group = get_group([])
 
         mi = MarketIteration(None, None, group, 4)
+        mi.buy_in_price = 67
+        mi.sell_off_price = 89
 
         # Execute
         buy_order, sell_order = mi.compute_player_position(d4p, 44)
@@ -297,7 +299,7 @@ class TestMarketIteration(unittest.TestCase):
         d4p.get_new_player_position.assert_called_with([], 4, .1, 44)
         d4p.set_mv_short_future.assert_called_with(.2, 44)
         d4p.is_buy_in_required.assert_called_once()
-        d4p.generate_buy_in_order.assert_called_with(44)
+        d4p.generate_buy_in_order.assert_called_with(67)
         group.get_players.assert_called_once()
         group.get_last_period_price.assert_called_once()
         self.assertEqual(mi.last_price, 98)
@@ -313,11 +315,11 @@ class TestMarketIteration(unittest.TestCase):
         mi.compute_player_position.side_effect = [(buy_in_data, None), (None, None)]
 
         # Execute
-        buy_ins, sell_offs = mi.run_iteration()
+        mi.run_iteration()
 
         # Assert
-        self.assertEqual(buy_ins, ensure_order_data([buy_in_p1]))
-        self.assertEqual(sell_offs, [])
+        self.assertEqual(mi.pending_buy_ins, ensure_order_data([buy_in_p1]))
+        self.assertEqual(mi.pending_sell_offs, [])
         mi.get_market_price.assert_called_once()
         mi.fill_orders.assert_called_with(200)
         self.assertEqual(mi.compute_player_position.call_count, 2)
@@ -351,11 +353,11 @@ class TestMarketIteration(unittest.TestCase):
         mi.compute_player_position = MagicMock(return_value=(None, None))
 
         # Execute
-        buy_ins, sell_offs = mi.run_iteration()
+        mi.run_iteration()
 
         # Assert
-        self.assertEqual(buy_ins, [])
-        self.assertEqual(sell_offs, [])
+        self.assertEqual(mi.pending_buy_ins, [])
+        self.assertEqual(mi.pending_sell_offs, [])
         mi.get_market_price.assert_called_once()
         mi.fill_orders.assert_called_with(200)
         self.assertEqual(mi.compute_player_position.call_count, 4)
@@ -400,7 +402,7 @@ class TestMarketIteration(unittest.TestCase):
         mi.compute_player_position = MagicMock(return_value=(None, None))
 
         # Execute
-        _, _ = mi.run_iteration()
+        mi.run_iteration()
 
         # Assert
         for o in mi.get_all_orders():
@@ -599,3 +601,315 @@ class TestMarketIteration(unittest.TestCase):
         self.assertEqual(o1.quantity, 0)
         self.assertEqual(o2.original_quantity, 2)
         self.assertEqual(o2.quantity, 0)
+
+    def test_recommend_iteration(self):
+        # Set-up
+        mi = MarketIteration(None, None, get_group([]), None)
+        mi.buy_recommended = False
+        mi.sell_recommended = False
+
+        # test / assert
+        self.assertFalse(mi.recommend_iteration())
+
+        # Set-up
+        mi.buy_recommended = True
+        mi.sell_recommended = False
+
+        # test / assert
+        self.assertTrue(mi.recommend_iteration())
+
+        # Set-up
+        mi.buy_recommended = False
+        mi.sell_recommended = True
+
+        # test / assert
+        self.assertTrue(mi.recommend_iteration())
+
+        # Set-up
+        mi.buy_recommended = False
+        mi.sell_recommended = True
+
+        # test / assert
+        self.assertTrue(mi.recommend_iteration())
+
+    ##########################
+    # TEST RECOMMEND BUY - END
+    def test_recommend_buy_none_pending(self):
+        # Set-up
+        mi = MarketIteration(None, None, get_group([]), None)
+        mi.pending_buy_ins = None
+
+        # Test
+        self.assertFalse(mi.recommend_buy_iteration())
+
+        # Set-up
+        mi.pending_buy_ins = []
+        self.assertFalse(mi.recommend_buy_iteration())
+
+    def test_recommend_buy_first_time(self):
+        # Set-up
+        mi = MarketIteration(None, None, get_group([]), None)
+        pending_buy = get_order(quantity=1)
+        mi.pending_buy_ins = [pending_buy]
+
+        # Test
+        self.assertTrue(mi.recommend_buy_iteration())
+
+    def test_recommend_buy_demand_less_supply_unfilled_buy_in(self):
+        # Set-up
+        # This set up should result in a return of True, unless the initial checks pass
+        buy_in = get_order(quantity=2, quantity_final=1)
+        bid = get_order(quantity=1, quantity_final=1)
+        offer = get_order(quantity=1)
+        sell_off = get_order(quantity=2)
+
+        mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        pending_buy = get_order(quantity=1)
+        mi.pending_buy_ins = [pending_buy]
+        mi.is_first_time = False
+
+        # Test
+        self.assertTrue(mi.recommend_buy_iteration())
+
+    def test_recommend_buy_demand_less_supply_filled_by_in(self):
+        # Set-up
+        # This set up should result in a return of True, unless the initial checks pass
+        buy_in = get_order(quantity=2, quantity_final=2)
+        bid = get_order(quantity=1, quantity_final=0)
+        offer = get_order(quantity=1)
+        sell_off = get_order(quantity=2)
+
+        mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        pending_buy = get_order(quantity=1)
+        mi.pending_buy_ins = [pending_buy]
+        mi.is_first_time = False
+
+        # Test
+        self.assertFalse(mi.recommend_buy_iteration())
+
+    def test_recommend_buy_demand_great_supply_filled_bids(self):
+        # Set-up
+        # This set up should result in a return of True, unless the initial checks pass
+        buy_in = get_order(quantity=2, quantity_final=2)
+        bid = get_order(quantity=2, quantity_final=1)
+        offer = get_order(quantity=1, quantity_final=2)
+        sell_off = get_order(quantity=2, quantity_final=2)
+
+        mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        pending_buy = get_order(quantity=1)
+        mi.pending_buy_ins = [pending_buy]
+        mi.is_first_time = False
+
+        # Test
+        self.assertTrue(mi.recommend_buy_iteration())
+
+    def test_recommend_buy_demand_great_supply_unfilled_sells(self):
+        # Set-up
+        # This set up should result in a return of True, unless the initial checks pass
+        buy_in = get_order(quantity=2, quantity_final=2)
+        bid = get_order(quantity=2, quantity_final=1)
+        offer = get_order(quantity=1, quantity_final=1)
+        sell_off = get_order(quantity=2, quantity_final=1)
+
+        mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        pending_buy = get_order(quantity=1)
+        mi.pending_buy_ins = [pending_buy]
+        mi.is_first_time = False
+
+        # Test
+        self.assertTrue(mi.recommend_buy_iteration())
+
+    def test_recommend_buy_demand_great_supply_unfilled_sells2(self):
+        # Set-up
+        # This set up should result in a return of True, unless the initial checks pass
+        buy_in = get_order(quantity=2, quantity_final=2)
+        bid = get_order(quantity=2, quantity_final=1)
+        offer = get_order(quantity=1, quantity_final=0)
+        sell_off = get_order(quantity=2, quantity_final=2)
+
+        mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        pending_buy = get_order(quantity=1)
+        mi.pending_buy_ins = [pending_buy]
+        mi.is_first_time = False
+
+        # Test
+        self.assertTrue(mi.recommend_buy_iteration())
+
+    def test_recommend_buy_demand_great_no_bid_fill_all_sells_fill(self):
+        # Set-up
+        # This set up should result in a return of True, unless the initial checks pass
+        buy_in = get_order(quantity=2, quantity_final=2)
+        bid = get_order(quantity=2, quantity_final=0)
+        offer = get_order(quantity=1, quantity_final=1)
+        sell_off = get_order(quantity=2, quantity_final=2)
+
+        mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        pending_buy = get_order(quantity=1)
+        mi.pending_buy_ins = [pending_buy]
+        mi.is_first_time = False
+
+        # Test
+        self.assertFalse(mi.recommend_buy_iteration())
+
+    # TEST RECOMMEND BUY - END
+    ##########################
+
+    ##########################
+    # TEST RECOMMEND SELL - END
+    def test_recommend_sell_none_pending(self):
+        # Set-up
+        mi = MarketIteration(None, None, get_group([]), None)
+        mi.pending_sell_offs = None
+
+        # Test
+        self.assertFalse(mi.recommend_buy_iteration())
+
+        # Set-up
+        mi.pending_sell_offs = []
+        self.assertFalse(mi.recommend_buy_iteration())
+
+    def test_recommend_sell_first_time(self):
+        # Set-up
+        mi = MarketIteration(None, None, get_group([]), None)
+        pending_sell = get_order(quantity=1)
+        mi.pending_sell_offs = [pending_sell]
+
+        # Test
+        self.assertTrue(mi.recommend_sell_iteration())
+
+    def test_recommend_sell_supply_less_demand_unfilled_sell_off(self):
+        # Set-up
+        # This set up should result in a return of True, unless the initial checks pass
+        buy_in = get_order(quantity=2)
+        bid = get_order(quantity=1)
+        offer = get_order(quantity=1)
+        sell_off = get_order(quantity=2)
+
+        mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        pending_sell = get_order(quantity=1)
+        mi.pending_sell_offs = [pending_sell]
+        mi.is_first_time = False
+
+        # Test
+        self.assertTrue(mi.recommend_sell_iteration())
+
+    def test_recommend_sell_supply_less_demand_filled_sell_off(self):
+        # Set-up
+        # This set up should result in a return of True, unless the initial checks pass
+        buy_in = get_order(quantity=2)
+        bid = get_order(quantity=1, quantity_final=0)
+        offer = get_order(quantity=1)
+        sell_off = get_order(quantity=2, quantity_final=2)
+
+        mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        pending_sell = get_order(quantity=1)
+        mi.pending_sell_offs = [pending_sell]
+        mi.is_first_time = False
+
+        # Test
+        self.assertFalse(mi.recommend_sell_iteration())
+
+    def test_recommend_sell_supply_great_demand_filled_sells(self):
+        # Set-up
+        # This set up should result in a return of True, unless the initial checks pass
+        buy_in = get_order(quantity=2, quantity_final=2)
+        bid = get_order(quantity=1, quantity_final=2)
+        offer = get_order(quantity=2, quantity_final=1)
+        sell_off = get_order(quantity=2, quantity_final=0)
+
+        mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        pending_sell = get_order(quantity=1)
+        mi.pending_sell_offs = [pending_sell]
+        mi.is_first_time = False
+
+        # Test
+        self.assertTrue(mi.recommend_sell_iteration())
+
+    def test_recommend_sell_supply_great_demand_unfilled_buys(self):
+        # Set-up
+        # This set up should result in a return of True, unless the initial checks pass
+        buy_in = get_order(quantity=2, quantity_final=2)
+        bid = get_order(quantity=1, quantity_final=0)
+        offer = get_order(quantity=2, quantity_final=0)
+        sell_off = get_order(quantity=2, quantity_final=1)
+
+        mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        pending_sell = get_order(quantity=1)
+        mi.pending_sell_offs = [pending_sell]
+        mi.is_first_time = False
+
+        # Test
+        self.assertTrue(mi.recommend_sell_iteration())
+
+    def test_recommend_sell_supply_great_demand_unfilled_buys2(self):
+        # Set-up
+        # This set up should result in a return of True, unless the initial checks pass
+        buy_in = get_order(quantity=2, quantity_final=1)
+        bid = get_order(quantity=1, quantity_final=1)
+        offer = get_order(quantity=2, quantity_final=0)
+        sell_off = get_order(quantity=2, quantity_final=2)
+
+        mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        pending_sell = get_order(quantity=1)
+        mi.pending_sell_offs = [pending_sell]
+        mi.is_first_time = False
+
+        # Test
+        self.assertTrue(mi.recommend_sell_iteration())
+
+    def test_recommend_sell_demand_great_no_offer_fill_all_buys_fill(self):
+        # Set-up
+        # This set up should result in a return of True, unless the initial checks pass
+        buy_in = get_order(quantity=2, quantity_final=2)
+        bid = get_order(quantity=1, quantity_final=1)
+        offer = get_order(quantity=2, quantity_final=0)
+        sell_off = get_order(quantity=2, quantity_final=2)
+
+        mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        pending_sell = get_order(quantity=1)
+        mi.pending_sell_offs = [pending_sell]
+        mi.is_first_time = False
+
+        # Test
+        self.assertFalse(mi.recommend_sell_iteration())
+
+    # TEST RECOMMEND SELL - END
+    ##########################
+
+    @staticmethod
+    def key_it(o):
+        return f"{o.quantity}@{o.price}:"
+
+    @staticmethod
+    def key_em(orders):
+        return [TestMarketIteration.key_it(o) for o in orders]
+
+    def test_next_iteration(self):
+        # Set-up
+        b1 = get_order(price=1, quantity=2)
+        o1 = get_order(price=3, quantity=4)
+        bi1 = get_order(price=5, quantity=6)
+        so1 = get_order(price=7, quantity=8)
+        pend_b = get_order(price=9, quantity=10)
+        pend_o = get_order(price=11, quantity=12)
+        g = get_group([], market_price=33)
+
+        mi = MarketIteration([b1], [o1], g, 4, buy_ins=[bi1], sell_offs=[so1])
+        mi.pending_buy_ins = [pend_b]
+        mi.pending_sell_offs = [pend_o]
+
+        b2 = get_order(price=13, quantity=14)
+        o2 = get_order(price=15, quantity=16)
+
+        # Test
+        next_mi = mi.next_iteration([b2], [o2])
+
+        # Assert
+        self.assertEqual(self.key_em(next_mi.bids), self.key_em([b2]))
+        self.assertEqual(self.key_em(next_mi.offers), self.key_em([o2]))
+        self.assertEqual(self.key_em(next_mi.buy_ins), self.key_em([pend_b]))
+        self.assertEqual(self.key_em(next_mi.sell_offs), self.key_em([pend_o]))
+        self.assertFalse(next_mi.is_first_time)
+        self.assertEqual(next_mi.dividend, 4)
+        self.assertEqual(next_mi.group, g)
+
