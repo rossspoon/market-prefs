@@ -627,17 +627,18 @@ class TestGroupMethods(unittest.TestCase):
         player.shares = 2
         player.cash = 100
         session = Session()
-        session.config = {scf.SK_MARGIN_RATIO: 0.6}
+        session.config = {scf.SK_MARGIN_RATIO: 0.6, scf.SK_MARGIN_TARGET_RATIO: 0.7}
         player.session = session
 
         # Test
-        v, e, d, lim = player.get_holding_details(4)
+        v, e, d, lim, close = player.get_holding_details(4)
 
         # Assert
         self.assertEqual(v, 8)
         self.assertEqual(e, 108)
         self.assertEqual(d, 0)
         self.assertIsNone(lim)
+        self.assertIsNone(close)
 
     def test_get_holding_details_debt(self):
         # Setup-up
@@ -645,17 +646,18 @@ class TestGroupMethods(unittest.TestCase):
         player.shares = 2
         player.cash = -100
         session = Session()
-        session.config = {scf.SK_MARGIN_RATIO: 0.6}
+        session.config = {scf.SK_MARGIN_RATIO: 0.6, scf.SK_MARGIN_TARGET_RATIO: 0.7}
         player.session = session
 
         # Test
-        v, e, d, lim = player.get_holding_details(4)
+        v, e, d, lim, close = player.get_holding_details(4)
 
         # Assert
         self.assertEqual(v, 8)
         self.assertEqual(e, -92)
         self.assertEqual(d, -100)
-        self.assertEqual(lim, cu(8 / 1.6))
+        self.assertEqual(lim, -1 * cu(8 / 1.6))
+        self.assertEqual(close, -1 * cu(8 / 1.7))
 
     def test_get_holding_details_short(self):
         # Setup-up
@@ -663,17 +665,18 @@ class TestGroupMethods(unittest.TestCase):
         player.shares = -2
         player.cash = 100
         session = Session()
-        session.config = {scf.SK_MARGIN_RATIO: 0.6}
+        session.config = {scf.SK_MARGIN_RATIO: 0.6, scf.SK_MARGIN_TARGET_RATIO: 0.7}
         player.session = session
 
         # Test
-        v, e, d, lim = player.get_holding_details(4)
+        v, e, d, lim, close = player.get_holding_details(4)
 
         # Assert
         self.assertEqual(v, -8)
         self.assertEqual(e, 92)
         self.assertEqual(d, -8)
-        self.assertEqual(lim, cu(100 / 1.6))
+        self.assertEqual(lim, -1 * cu(100 / 1.6))
+        self.assertEqual(close, -1 * cu(100 / 1.7))
 
     def test_get_holding_details_result(self):
         # Setup-up
@@ -681,17 +684,18 @@ class TestGroupMethods(unittest.TestCase):
         player.shares_result = -2
         player.cash_result = 100
         session = Session()
-        session.config = {scf.SK_MARGIN_RATIO: 0.6}
+        session.config = {scf.SK_MARGIN_RATIO: 0.6, scf.SK_MARGIN_TARGET_RATIO: 0.7}
         player.session = session
 
         # Test
-        v, e, d, lim = player.get_holding_details(4, results=True)
+        v, e, d, lim, close = player.get_holding_details(4, results=True)
 
         # Assert
         self.assertEqual(v, -8)
         self.assertEqual(e, 92)
         self.assertEqual(d, -8)
-        self.assertEqual(lim, cu(100/1.6))
+        self.assertEqual(lim, -1 * cu(100/1.6))
+        self.assertEqual(close, -1 * cu(100/1.7))
 
     def test_is_auto_sell(self):
         # Set-up

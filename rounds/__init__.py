@@ -286,24 +286,29 @@ def standard_vars_for_template(player: Player):
     ret = scf.ensure_config(player)
     marg_req = ret.get(scf.SK_MARGIN_RATIO)
     ret['marg_req_pct'] = f"{marg_req :.0%}"
+    ret['margin_buffer_pct'] = f"{1 + marg_req:.0%}"
     ret['for_results'] = False
     ret['cash'] = player.cash
     ret['shares'] = player.shares
 
     price = player.group.get_last_period_price()
-    value_of_stock, equity, debt, margin = player.get_holding_details(price)
-    ret['value_of_stock'] = value_of_stock
+    value_of_stock, equity, debt, limit, close = player.get_holding_details(price)
+    ret['stock_val'] = value_of_stock
+    ret['vos_neg_cls'] = 'neg-val' if value_of_stock < 0 else ''
     ret['equity'] = equity
     ret['debt'] = debt
-    ret['margin_raw'] = margin
+    ret['dbt_neg_cls'] = 'neg-val' if debt < 0 else ''
+    ret['limit'] = limit
+    ret['lim_neg_cls'] = 'neg-val' if limit and limit < 0 else ''
+    ret['close_limit'] = close
+    ret['is_short'] = player.is_short()
+    ret['is_debt'] = player.is_debt()
     ret['market_price'] = price
     ret['interest_pct'] = f"{scf.get_interest_rate(player):.0%}"
     ret['dividends'] = " or ".join(str(d) for d in scf.get_dividend_amounts(player))
     ret['buy_back'] = scf.get_fundamental_value(player)
     ret['short'] = player.group.short
 
-    margin_pct = "N/A" if margin is None else f"{margin:.0%}"
-    ret['margin_pct'] = margin_pct
     ret['messages'] = []  # The market page will populate this
     ret['show_next'] = False
     ret['attn_cls'] = ''
@@ -316,25 +321,23 @@ def get_messages(player: Player, template_vars):
     is_short = player.is_short()
     is_debt = player.is_debt()
     is_bankrupt = is_short and is_debt
-    margin_target_ratio = template_vars.get(scf.SK_MARGIN_TARGET_RATIO)
-    margin_ratio = template_vars.get(scf.SK_MARGIN_RATIO)
-    margin = template_vars.get('margin_raw')
+    limit = template_vars['limit']
+    close = template_vars['close_limit']
+    debt = template_vars['debt']
 
     round_number = player.round_number
 
     # Messages / Warning for short position
     if is_short and not is_bankrupt:
         delay = player.periods_until_auto_buy
-        class_attr, msg = get_short_message(margin_ratio, margin_target_ratio,
-                                            margin, delay, round_number)
+        class_attr, msg = get_short_message(limit, close, debt, delay, round_number)
         if msg:
             ret.append(dict(class_attr=class_attr, msg=msg))
 
     # Messages / Warning for negative cash holding
     if is_debt and not is_bankrupt:
         delay = player.periods_until_auto_sell
-        class_attr, msg = get_debt_message(margin_ratio, margin_target_ratio,
-                                           margin, delay, round_number)
+        class_attr, msg = get_debt_message(limit, close, debt, delay, round_number)
         if msg:
             ret.append(dict(class_attr=class_attr, msg=msg))
 
@@ -357,65 +360,57 @@ def get_msg_which(delay, round_number):
 
 
 # noinspection DuplicatedCode
-def get_debt_message(margin_ratio, margin_target_ratio, margin, delay, round_number):
+def get_debt_message(limit, close, debt, delay, round_number):
     # Determine margin sell messages
     msg = None
     class_attr = None
 
-    if margin_ratio < margin <= margin_target_ratio:
+    if limit < debt <= close:
         class_attr = "alert-warning"
-        msg = f"""<p>Warning:  CASH Margin: <span class="bold-text"> {margin:.0%} </span></p>
-                        <p> Your CASH margin is getting close to the minimum requirement of {margin_ratio:.0%}.
-                        This most likely happened because the value of your STOCK has decreased.  If your
-                        CASH margin becomes {margin_ratio:.0%} or lower, the system will sell off your STOCK to
-                        satisfy the margin requirement.</p>
-                        """
+        msg = f"""<p>Warning:  The the amount of CASH that you have is getting close to your borrowing limit.
+                This might have happened because the value of you STOCK holdings has decreased.  You are advised
+                to sell STOCK to decrease your debt, to avoid an automatic sell.</p>
+                """
 
-    elif margin <= margin_ratio:
+    elif debt <= limit:
         # Skip if last period and sell is next period
         if round_number == Constants.num_rounds and delay > 0:
             return None, None
 
         which = get_msg_which(delay, round_number)
         class_attr = "alert-danger"
-        msg = f"""<p>Warning:  CASH Margin: <span class="bold-text"> {margin:.0%} </span></p>
-                        <p>You are advised to sell some of your STOCK to raise this margin in order to avoid an
-                         automatic sell off.</p>                     
-                        <p>An automatic sell-off will be generated at the end of {which} if your CASH margin
-                         is still less than or equal to <span class="bold-text">{margin_ratio:.0%}</span></p>"""
+        msg = f"""<p>Warning:  You are over your borrowing limit.  You are advised to sell STOCK to raise CASH.</p>                   
+                        <p>An automatic sell-off will be generated at the end of {which} if your borrowed CASH 
+                        is still over the limit.</p>"""
 
     return class_attr, msg
 
 
 # noinspection DuplicatedCode
-def get_short_message(margin_ratio, margin_target_ratio, margin, delay, round_number):
+def get_short_message(limit, close, debt, delay, round_number):
     msg = None
     class_attr = None
 
     # Determine short position messages
     # Normal condition
-    if margin_ratio < margin <= margin_target_ratio:
+    if limit < debt <= close:
         class_attr = "alert-warning"
-        msg = f"""<p>Warning:  STOCK Margin: <span class="bold-text"> {margin:.0%} </span></p>
-                            <p> Your STOCK margin is getting close to the minimum requirement of {margin_ratio:.0%}.
-                            This most likely happened because the value of your shorted STOCK has increased.  If your
-                            STOCK margin becomes {margin_ratio:.0%} or lower, the system will purchase STOCK on your
-                            behalf to satisfy the margin requirement.</p>
-                            """
+        msg = f"""<p>Warning:  The the value of you shorted STOCK is getting close to your limit.
+                This might have happened because the value of you STOCK price has increased.  You are advised
+                to buy STOCK to decrease your debt, to avoid an automatic buy.</p>
+                """
 
-    elif margin <= margin_ratio:
+    elif debt <= limit:
         # Skip if last period and buy is next period
         if round_number == Constants.num_rounds and delay > 0:
             return None, None
 
         which = get_msg_which(delay, round_number)
         class_attr = "alert-danger"
-        msg = f"""<p>Warning: STOCK Margin: <span class="bold-text"> {margin:.0%} </span></p>
-                        <p>You are advised to purchase STOCK to raise this margin in order to avoid an
-                         automatic buy-in.</p>                     
-                        <p>An automatic purchase will be made on your behalf at the end of {which} if your 
-                        STOCK margin is still less than or equal to 
-                        <span class="bold-text">{margin_ratio:.0%}</span></p>"""
+        msg = f"""<p>Warning:  You are over your shorting limit.  You are advised to buy STOCK to decrease the value of
+                        your short position.</p>                   
+                    <p>An automatic buy-in will be generated at the end of {which} if your shorted STOCK value 
+                        is still over the limit.</p>"""
 
     return class_attr, msg
 
@@ -441,12 +436,17 @@ def vars_for_round_results_template(player: Player):
     ret['shares'] = player.shares_result
 
     price = player.group.price
-    value_of_stock, equity, debt, margin = player.get_holding_details(price, results=True)
-    ret['value_of_stock'] = value_of_stock
+    value_of_stock, equity, debt, limit, close = player.get_holding_details(price, results=True)
+    ret['stock_val'] = value_of_stock
+    ret['vos_neg_cls'] = 'neg-val' if value_of_stock < 0 else ''
     ret['equity'] = equity
     ret['debt'] = debt
-    ret['margin_raw'] = margin
-    ret['margin_pct'] = f"{margin:.0%}" if margin else 'N/A'
+    ret['dbt_neg_cls'] = 'neg-val' if debt < 0 else ''
+    ret['limit'] = limit
+    ret['lim_neg_cls'] = 'neg-val' if limit and limit < 0 else ''
+    ret['close_limit'] = close
+    ret['is_short'] = player.is_short()
+    ret['is_debt'] = player.is_debt()
     ret['market_price'] = price
 
     short = abs(sum([p.shares_result for p in player.group.get_players() if p.shares_result < 0]))

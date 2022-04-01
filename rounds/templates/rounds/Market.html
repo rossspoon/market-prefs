@@ -110,15 +110,13 @@
                      </tr>
                     <tr>
                         <td>
-                            <div class="tool-tip">Equity
+                            <div class="tool-tip">STOCK Value
                                 <span class="tool-tip-text tt-right">
-                                    <p> The value of your portfolio.
-                                        It is the value of your STOCK at the current market price plus your CASH.</p>
-                                    <p>It is OK for your equity to be negative, as long as you are still within the
-                                        margin requirement.</p>
+                                    <p>The value of your STOCK at the current market value</p>
+                                    <p>If you have shorted STOCK, this will appear as negative and be subject to a shorting limit.</p>
                                 </span></div>
                         </td>
-                        <td class="stat-value">&nbsp;<span class="r_just {{ attn_cls }}">{{ equity }}</span></td>
+                        <td class="stat-value">&nbsp;<span class="r_just {{ vos_neg_cls }} {{ attn_cls }}">{{ stock_val }}</span></td>
                     </tr>
                     <tr>
                         <td>
@@ -129,20 +127,41 @@
                                 </span>
                             </div>
                         </td>
-                        <td class="stat-value">&nbsp;<span class="r_just {{ attn_cls }}">{{ debt }}</span></td>
+                        <td class="stat-value">&nbsp;<span class="r_just {{ dbt_neg_cls }} {{ attn_cls }}">{{ debt }}</span></td>
                     </tr>
                     <tr>
                         <td>
-                            <div class="tool-tip">Margin
+                            {{ if is_short }}
+                            <div class="tool-tip">Limit
                                <span class="tool-tip-text tt-right">
-                                    <p>Equity divided by Debt.</p>
-                                    <p>This is the ratio of your equity to your debt.  If this number gets
-                                    below {{ marg_req_pct }} we will make a trade on your behalf to try to increase
-                                    you margin.</p>
+                                   <p>The limit of the value of shorted STOCK.  The limit is based on the
+                                   amount of CASH that you hold and the value of your STOCK.</p>
+                                   <p>When you short the STOCK, you must maintain an appropriate margin of CASH.
+                                       The amount of CASH you need to have is {{ margin_buffer_pct }} of the
+                                       value of you shorted STOCK. </p>
                                 </span>
                             </div>
+                            {{ elif is_debt }}
+                            <div class="tool-tip">Limit
+                               <span class="tool-tip-text tt-right">
+                                    <p>This is the limit of the value of the amount of CASH that you may borrow.
+                                    The limit is based on the amount of CASH that you borrowed and the value of your
+                                        STOCK.</p>
+                                    <p>When you borrow CASH, you must have sufficient STOCK holdings as a buffer.
+                                    The value of your stock as the current market price must be {{ margin_buffer_pct }}
+                                    of your borrowed CASH.</p>
+                                </span>
+                            </div>
+                            {{ else }}
+                             <div class="tool-tip">Limit
+                               <span class="tool-tip-text tt-right">
+                                   <p>You currently have no debt, and so there is no limit.</p>
+                                   <p>If you decide to short the STOCK or borrow CASH you will be subject to a limit.</p>
+                                </span>
+                            </div>
+                           {{ endif }}
                         </td>
-                        <td class="stat-value">&nbsp;<span class="r_just {{ attn_cls }}">{{ margin_pct }}</span></td>
+                        <td class="stat-value">&nbsp;<span class="r_just {{ lim_neg_cls }} {{ attn_cls }}">{{ limit }}</span></td>
                     </tr>
                     {{ if for_results }}
                     <tr>

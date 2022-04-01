@@ -117,3 +117,7 @@
 .lpad {
     margin-left: 50px;
 }
+
+.neg-val {
+    color: tomato;
+}

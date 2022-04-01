@@ -18,33 +18,33 @@ from rounds.test.test_call_market import get_order
 from rounds.test.test_market_iteration import basic_player, get_group
 import common.SessionConfigFunctions as scf
 
-M_RAT = .6
-T_RAT = .7
+LIMIT = -600
+CLOSE = -500
 
 
 # noinspection DuplicatedCode
 class TestInitFunctions(unittest.TestCase):
     def test_debt_msg_no_worries(self):
-        cls, msg = get_debt_message(M_RAT, T_RAT, .701, 0, 1)
+        cls, msg = get_debt_message(LIMIT, CLOSE, -499, 0, 1)
         self.assertIsNone(cls)
         self.assertIsNone(msg)
 
-        cls, msg = get_debt_message(M_RAT, T_RAT, .78, 0, 1)
+        cls, msg = get_debt_message(LIMIT, CLOSE, -420, 0, 1)
         self.assertIsNone(cls)
         self.assertIsNone(msg)
 
     def test_debt_msg_no_warning(self):
-        cls, msg = get_debt_message(M_RAT, T_RAT, .7, 0, 1)
+        cls, msg = get_debt_message(LIMIT, CLOSE, -500, 0, 1)
         self.assertEqual(cls, 'alert-warning')
 
-        cls, msg = get_debt_message(M_RAT, T_RAT, .699, 0, 1)
+        cls, msg = get_debt_message(LIMIT, CLOSE, -501, 0, 1)
         self.assertEqual(cls, 'alert-warning')
 
-        cls, msg = get_debt_message(M_RAT, T_RAT, .601, 0, 1)
+        cls, msg = get_debt_message(LIMIT, CLOSE, -599, 0, 1)
         self.assertEqual(cls, 'alert-warning')
 
     def test_debt_msg_no_error_last_round_delay(self):
-        cls, msg = get_debt_message(M_RAT, T_RAT, .6, 1, Constants.num_rounds)
+        cls, msg = get_debt_message(LIMIT, CLOSE, -600, 1, Constants.num_rounds)
         self.assertIsNone(cls)
         self.assertIsNone(msg)
 
@@ -52,50 +52,50 @@ class TestInitFunctions(unittest.TestCase):
         # Last round tests - Need to see a message if there is no delay
         num_rounds = Constants.num_rounds
 
-        cls, msg = get_debt_message(M_RAT, T_RAT, .6, 0, num_rounds)
+        cls, msg = get_debt_message(LIMIT, CLOSE, -600, 0, num_rounds)
         self.assertEqual(cls, 'alert-danger')
         self.assertRegex(msg, 'this period')
 
-        cls, msg = get_debt_message(M_RAT, T_RAT, .1, 0, num_rounds)
+        cls, msg = get_debt_message(LIMIT, CLOSE, -1000, 0, num_rounds)
         self.assertEqual(cls, 'alert-danger')
         self.assertRegex(msg, 'this period')
 
         # Not last round, no delay
-        cls, msg = get_debt_message(M_RAT, T_RAT, .6, 0, num_rounds - 1)
+        cls, msg = get_debt_message(LIMIT, CLOSE, -600, 0, num_rounds - 1)
         self.assertEqual(cls, 'alert-danger')
         self.assertRegex(msg, 'this period')
 
         # Not last round, delay
-        cls, msg = get_debt_message(M_RAT, T_RAT, .6, 1, num_rounds - 1)
+        cls, msg = get_debt_message(LIMIT, CLOSE, -600, 1, num_rounds - 1)
         self.assertEqual(cls, 'alert-danger')
         self.assertRegex(msg, f"next period \\(Period {num_rounds}\\)")
 
         # Not last round, long delay - should never happen, but test it for coverage
-        cls, msg = get_debt_message(M_RAT, T_RAT, .6, 2, num_rounds - 1)
+        cls, msg = get_debt_message(LIMIT, CLOSE, -600, 2, num_rounds - 1)
         self.assertEqual(cls, 'alert-danger')
         self.assertRegex(msg, "a future period")
 
     def test_short_msg_no_worries(self):
-        cls, msg = get_short_message(M_RAT, T_RAT, .701, 0, 1)
+        cls, msg = get_short_message(LIMIT, CLOSE, -499, 0, 1)
         self.assertIsNone(cls)
         self.assertIsNone(msg)
 
-        cls, msg = get_short_message(M_RAT, T_RAT, .78, 0, 1)
+        cls, msg = get_short_message(LIMIT, CLOSE, -420, 0, 1)
         self.assertIsNone(cls)
         self.assertIsNone(msg)
 
     def test_short_msg_no_warning(self):
-        cls, msg = get_short_message(M_RAT, T_RAT, .7, 0, 1)
+        cls, msg = get_short_message(LIMIT, CLOSE, -500, 0, 1)
         self.assertEqual(cls, 'alert-warning')
 
-        cls, msg = get_short_message(M_RAT, T_RAT, .699, 0, 1)
+        cls, msg = get_short_message(LIMIT, CLOSE, -501, 0, 1)
         self.assertEqual(cls, 'alert-warning')
 
-        cls, msg = get_short_message(M_RAT, T_RAT, .601, 0, 1)
+        cls, msg = get_short_message(LIMIT, CLOSE, -599, 0, 1)
         self.assertEqual(cls, 'alert-warning')
 
     def test_short_msg_no_error_last_round_delay(self):
-        cls, msg = get_short_message(M_RAT, T_RAT, .6, 1, Constants.num_rounds)
+        cls, msg = get_short_message(LIMIT, CLOSE, -600, 1, Constants.num_rounds)
         self.assertIsNone(cls)
         self.assertIsNone(msg)
 
@@ -103,26 +103,26 @@ class TestInitFunctions(unittest.TestCase):
         # Last round tests - Need to see a message if there is no delay
         num_rounds = Constants.num_rounds
 
-        cls, msg = get_short_message(M_RAT, T_RAT, .6, 0, num_rounds)
+        cls, msg = get_short_message(LIMIT, CLOSE, -600, 0, num_rounds)
         self.assertEqual(cls, 'alert-danger')
         self.assertRegex(msg, 'this period')
 
-        cls, msg = get_short_message(M_RAT, T_RAT, .1, 0, num_rounds)
+        cls, msg = get_short_message(LIMIT, CLOSE, -1000, 0, num_rounds)
         self.assertEqual(cls, 'alert-danger')
         self.assertRegex(msg, 'this period')
 
         # Not last round, no delay
-        cls, msg = get_short_message(M_RAT, T_RAT, .6, 0, num_rounds - 1)
+        cls, msg = get_short_message(LIMIT, CLOSE, -600, 0, num_rounds - 1)
         self.assertEqual(cls, 'alert-danger')
         self.assertRegex(msg, 'this period')
 
         # Not last round, delay
-        cls, msg = get_short_message(M_RAT, T_RAT, .6, 1, num_rounds - 1)
+        cls, msg = get_short_message(LIMIT, CLOSE, -600, 1, num_rounds - 1)
         self.assertEqual(cls, 'alert-danger')
         self.assertRegex(msg, f"next period \\(Period {num_rounds}\\)")
 
         # Not last round, long delay - should never happen, but test it for coverage
-        cls, msg = get_short_message(M_RAT, T_RAT, .6, 2, num_rounds - 1)
+        cls, msg = get_short_message(LIMIT, CLOSE, -600, 2, num_rounds - 1)
         self.assertEqual(cls, 'alert-danger')
         self.assertRegex(msg, "a future period")
 

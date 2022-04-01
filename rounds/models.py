@@ -200,25 +200,29 @@ class Player(BasePlayer):
         s = self.shares_result if results else self.shares
         c = self.cash_result if results else self.cash
         mr = scf.get_margin_ratio(self)
-        value_of_stock = market_price * s
+        mtr = scf.get_margin_target_ratio(self)
+        value_of_stock = cu(market_price * s)
 
         limit = None
+        close_lim = None
         if s < 0:  # Shorting
-            limit = cu(c / (1+mr))
+            limit = -1 * cu(c / (1+mr))
+            close_lim = -1 * cu(c / (1 + mtr))
         elif c < 0:  # Borrowing
-            limit = cu(value_of_stock / (1+mr))
+            limit = -1 * cu(value_of_stock / (1+mr))
+            close_lim = -1 * cu(value_of_stock / (1 + mtr))
 
         equity = value_of_stock + c
-        debt = min(c, 0) + min(value_of_stock, 0)
+        debt = cu(min(c, 0) + min(value_of_stock, 0))
 
-        return value_of_stock, equity, debt, limit
+        return value_of_stock, equity, debt, limit, close_lim
 
     def is_short_margin_violation(self):
         if self.is_bankrupt() or not self.is_short():
             return False
 
         price = self.group.get_last_period_price()
-        _, _, debt, limit = self.get_holding_details(price)
+        _, _, debt, limit, _ = self.get_holding_details(price)
 
         return abs(debt) >= abs(limit)
 
@@ -227,7 +231,7 @@ class Player(BasePlayer):
             return False
 
         price = self.group.get_last_period_price()
-        _, _, debt, limit = self.get_holding_details(price)
+        _, _, debt, limit, _ = self.get_holding_details(price)
 
         return abs(debt) >= abs(limit)
 
