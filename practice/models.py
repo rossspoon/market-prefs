@@ -1,10 +1,9 @@
-from otree.api import *
 from enum import Enum
 
+from otree.api import *
 from otree.common import InvalidRoundError
 
 import common.SessionConfigFunctions as scf
-from rounds.models import NO_AUTO_TRANS
 
 
 class OrderType(Enum):
@@ -15,11 +14,53 @@ class OrderType(Enum):
     OFFER = 1
 
 
+class OrderField(Enum):
+    """
+        Enumeration representing fields on the order form
+    """
+    PRICE = 1
+    QUANTITY = 2
+    TYPE = 3
+
+
+class OrderErrorCode(Enum):
+    """
+        Enumeration representing error codes for order submission
+    """
+
+    def __new__(cls, val, field, desc):
+        obj = object.__new__(cls)
+        obj._value_ = val
+        obj.field = field
+        obj.desc = desc
+        return obj
+
+    PRICE_NEGATIVE = (1, OrderField.PRICE, 'Must be greater than zero')
+    PRICE_NOT_NUM = (2, OrderField.PRICE, 'Must be a number')
+    QUANT_NEGATIVE = (4, OrderField.QUANTITY, 'Must be greater than zero')
+    QUANT_NOT_NUM = (8, OrderField.QUANTITY, 'Must be an integer number')
+    BAD_TYPE = (16, OrderField.TYPE, 'Select a type')
+    BID_GREATER_THAN_ASK = (32, OrderField.PRICE, 'Buy price must be less than all sell orders')
+    ASK_LESS_THAN_BID = (64, OrderField.PRICE, 'Sell price must be greater than all buy orders')
+
+    def combine(self, code):
+        if type(code) is OrderErrorCode:
+            code = code.value
+        return self.value | code
+
+    def to_dict(self):
+        return dict(value=self.value,
+                    field=self.field.value,
+                    desc=self.desc)
+
+
 class Subsession(BaseSubsession):
     pass
 
 
-# noinspection DuplicatedCode
+NO_SHORT_LIMIT = -199
+
+
 class Group(BaseGroup):
     price = models.CurrencyField()
     volume = models.IntegerField()
@@ -40,13 +81,31 @@ class Group(BaseGroup):
         last_group = self.in_round_or_none(round_number - 1)
 
         if last_group:
-            return round(last_group.price)
+            return last_group.price
         else:
             init_price = scf.get_init_price(self)
-            if init_price:
+            if init_price is not None:
                 return init_price
             else:
                 return scf.get_fundamental_value(self)
+
+    def get_short_limit(self):
+        """
+        Determine the number of shorted shares allowed this round.  This is the limit of the
+        combined number of shares this round.   All sell order made this round that will be a
+        short sale for the player, when combined must be equal to or below this amount.
+        @return: int number of shares.
+        """
+        cap_ratio = scf.get_float_ratio_cap(self)
+        if not cap_ratio:
+            return NO_SHORT_LIMIT
+
+        max_short_shares = int(cap_ratio * self.float)
+        allowable = max_short_shares - self.short
+        return max(allowable, 0)
+
+
+NO_AUTO_TRANS = -99
 
 
 # noinspection DuplicatedCode
@@ -63,7 +122,7 @@ class Player(BasePlayer):
         ],
         blank=True
     )
-    price = models.IntegerField(blank=True)
+    price = models.CurrencyField(blank=True)
     quantity = models.IntegerField(blank=True)
 
     periods_until_auto_buy = models.IntegerField(initial=NO_AUTO_TRANS)
@@ -71,21 +130,31 @@ class Player(BasePlayer):
 
     # Market Movement
     shares_transacted = models.IntegerField(initial=0)
-    trans_cost = models.IntegerField(initial=0)
-    cash_after_trade = models.IntegerField()
-    interest_earned = models.IntegerField()
-    dividend_earned = models.IntegerField()
+    trans_cost = models.CurrencyField(initial=0)
+    cash_after_trade = models.CurrencyField()
+    interest_earned = models.CurrencyField()
+    dividend_earned = models.CurrencyField()
 
     # Results
-    cash_result = models.IntegerField()
+    cash_result = models.CurrencyField()
     shares_result = models.IntegerField()
 
     # Forecasting Item
-    f0 = models.CurrencyField()
-    f1 = models.CurrencyField()
-    f2 = models.CurrencyField()
+    f0 = models.CurrencyField(blank=True)
     forecast_error = models.CurrencyField()
     forecast_reward = models.CurrencyField(initial=0)
+
+    # Per-round Survey
+    # emotion = models.IntegerField(
+    #    label='How do you feel about these results?',
+    #    choices=[
+    #        [1, '<img src="/static/rounds/img/angry.png" style="width:50px;height:50px;"/>'],
+    #        [2, '<img src="/static/rounds/img/annoyed.jpeg" style="width:50px;height:50px;"/>'],
+    #        [3, '<img src="/static/rounds/img/meh.jpeg" style="width:50px;height:50px;"/>'],
+    #        [4, '<img src="/static/rounds/img/happy.png" style="width:50px;height:50px;"/>'],
+    #        [5, '<img src="/static/rounds/img/big_grin.jpeg" style="width:50px;height:50px;"/>']],
+    #    widget=widgets.RadioSelectHorizontal
+    # )
 
     def to_dict(self):
         d = {'cash': self.field_maybe_none('cash'),
@@ -112,25 +181,6 @@ class Player(BasePlayer):
         self.periods_until_auto_buy = d.get('periods_until_auto_buy')
         self.periods_until_auto_sell = d.get('periods_until_auto_sell')
 
-    def get_personal_stock_margin(self, price):
-        # ABS te short value to make the formula work
-        stock_pos_value = abs(float(self.shares * price))
-        if stock_pos_value == 0:
-            personal_stock_margin = 0
-        else:
-            cash_float = float(self.cash)
-            personal_stock_margin = abs((cash_float - stock_pos_value) / stock_pos_value)
-        return personal_stock_margin
-
-    def get_personal_cash_margin(self, price):
-        stock_pos_value = abs(self.shares * price)
-        if self.cash == 0:
-            personal_cash_margin = 0
-        else:
-            cash_float = abs(float(self.cash))
-            personal_cash_margin = abs((stock_pos_value - cash_float) / cash_float)
-        return personal_cash_margin
-
     def is_short(self):
         return self.shares < 0
 
@@ -146,21 +196,44 @@ class Player(BasePlayer):
         except InvalidRoundError:
             return None
 
+    def get_holding_details(self, market_price, results=False):
+        s = self.shares_result if results else self.shares
+        c = self.cash_result if results else self.cash
+        mr = scf.get_margin_ratio(self)
+        mtr = scf.get_margin_target_ratio(self)
+        value_of_stock = cu(market_price * s)
+
+        limit = None
+        close_lim = None
+        if s < 0:  # Shorting
+            limit = -1 * cu(c / (1+mr))
+            close_lim = -1 * cu(c / (1 + mtr))
+        elif c < 0:  # Borrowing
+            limit = -1 * cu(value_of_stock / (1+mr))
+            close_lim = -1 * cu(value_of_stock / (1 + mtr))
+
+        equity = value_of_stock + c
+        debt = cu(min(c, 0) + min(value_of_stock, 0))
+
+        return value_of_stock, equity, debt, limit, close_lim
+
     def is_short_margin_violation(self):
-        if self.is_bankrupt():
+        if self.is_bankrupt() or not self.is_short():
             return False
 
         price = self.group.get_last_period_price()
-        margin_ratio = scf.get_margin_ratio(self)
-        return self.is_short() and self.get_personal_stock_margin(price) <= margin_ratio
+        _, _, debt, limit, _ = self.get_holding_details(price)
+
+        return abs(debt) >= abs(limit)
 
     def is_debt_margin_violation(self):
-        if self.is_bankrupt():
+        if self.is_bankrupt() or not self.is_debt():
             return False
 
         price = self.group.get_last_period_price()
-        margin_ratio = scf.get_margin_ratio(self)
-        return self.is_debt() and self.get_personal_cash_margin(price) <= margin_ratio
+        _, _, debt, limit, _ = self.get_holding_details(price)
+
+        return abs(debt) >= abs(limit)
 
     def copy_results_from_previous_round(self):
         r_num = self.round_number
@@ -226,6 +299,14 @@ class Player(BasePlayer):
     def is_auto_sell(self):
         return self.periods_until_auto_sell == 0
 
+    def __str__(self):
+        c = self.field_maybe_none('cash')
+        p = self.field_maybe_none('shares')
+        return f"Player: {self.id_in_group}; Cash: {c}; Shares: {p}"
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class Order(ExtraModel):
     player = models.Link(Player)
@@ -239,6 +320,7 @@ class Order(ExtraModel):
     is_buy_in = models.BooleanField(initial=False)  # is this order an automatic buy-in?
 
     def to_dict(self):
+        requested_quant = self.original_quantity if self.original_quantity else self.quantity
         return dict(
             oid=self.id,
             p_id=self.player.id_in_group,
@@ -246,4 +328,16 @@ class Order(ExtraModel):
             type=self.order_type,
             price=self.price,
             quantity=self.quantity,
-            original_quantity=self.original_quantity)
+            original_quantity=self.original_quantity,
+            quantity_final=self.quantity_final,
+            requested_quant=requested_quant,
+            is_buy_in=self.is_buy_in
+        )
+
+    def __str__(self):
+        t = "BUY" if self.order_type == -1 else "SELL"
+        a = "(AUTO)" if self.is_buy_in else ""
+        return f"{t} {self.quantity} @ {self.price} {a}"
+
+    def __repr__(self):
+        return self.__str__()

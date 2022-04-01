@@ -41,40 +41,16 @@ def creating_session(subsession):
         p.shares = 2
 
 
-def practice_round_results_vars(player: Player):
-    ret = rounds.vars_for_round_results_template(player)
-    filled_amount = ret.get('filled_amount')
-    orders = rounds.get_orders_for_player(player, o_cls=Order)
-
-    # All transaction types should be the same for a given player
-    trans_type = 0
-    if filled_amount > 0:
-        # get the order type
-        o_types = list(set(o.order_type for o in orders if o.quantity_final > 0))
-
-        if len(o_types) != 1:
-            trans_type = 0
-        else:
-            trans_type = o_types[0]
-
-    ret['trans_type'] = trans_type
-    return ret
-
-
-def f0_choices(player: Player):
-    return rounds.get_forecasters_choices(player, 'f0')
-
-
-def f1_choices(player: Player):
-    return rounds.get_forecasters_choices(player, 'f1')
-
-
-def f2_choices(player: Player):
-    return rounds.get_forecasters_choices(player, 'f2')
-
-
 def practice_market_page_live_method(player, d):
     return rounds.market_page_live_method(player, d, o_cls=Order)
+
+
+def practice_forecast_page_live_method(player, d):
+    return rounds.forecast_page_live_method(player, d, o_cls=Order)
+
+
+def practice_results_page_live_method(player, d):
+    return rounds.result_page_live_method(player, d, o_cls=Order)
 
 
 # PAGES
@@ -85,35 +61,22 @@ class PracticeMarketPage(Page):
     get_timeout_seconds = scf.get_market_time
 
     # method bindings
-    js_vars = rounds.get_js_vars_not_current
+    js_vars = rounds.get_js_vars
     live_method = practice_market_page_live_method
-
-    @staticmethod
-    def vars_for_template(player: Player):
-        ret = rounds.vars_for_market_template(player)
-        ret['show_next'] = False
-        return ret
+    vars_for_template = rounds.vars_for_market_template
 
 
 class PracticeForecastPage(Page):
-    template_name = 'rounds/ForecastPage.html'
+    template_name = 'rounds/Market.html'
+    form_fields = ['f0']
     form_model = 'player'
     get_timeout_seconds = scf.get_forecast_time
-    js_vars = rounds.get_js_vars_not_current
+    js_vars = rounds.get_js_vars_forcast_page
+    live_method = practice_forecast_page_live_method
 
     @staticmethod
     def vars_for_template(player: Player):
-        return rounds.vars_for_forecast_template(player, num_rounds=C.NUM_ROUNDS)
-
-    @staticmethod
-    def get_form_fields(player):
-        round_number = player.round_number
-        if round_number == C.NUM_ROUNDS:
-            return ['f0']
-        elif round_number == C.NUM_ROUNDS - 1:
-            return ['f0', 'f1']
-        else:
-            return ['f0', 'f1', 'f2']
+        return rounds.vars_for_forecast_template(player)
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
@@ -137,12 +100,12 @@ class PracticeForecastPage(Page):
 
 
 class PracticeRoundResultsPage(Page):
-    template_name = 'rounds/RoundResultsPage.html'
+    template_name = 'rounds/Market.html'
     form_model = 'player'
-    js_vars = rounds.get_js_vars
+    js_vars = rounds.get_js_vars_round_results
     get_timeout_seconds = scf.get_summary_time
-
-    vars_for_template = practice_round_results_vars
+    vars_for_template = rounds.vars_for_round_results_template
+    live_method = practice_results_page_live_method
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
