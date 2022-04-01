@@ -124,7 +124,7 @@
     font-size: 18px;
     font-weight: 350;
     visibility: hidden;
-    width: 400px;
+    width: 500px;
     background-color: lightyellow;
     color: #559;
     padding: 10px;
@@ -135,12 +135,12 @@
 }
 .tool-tip .tt-left {
     top: -60px;
-    left: -415px;
+    left: -515px;
 }
 
 .tool-tip .tt-right {
     bottom: -20px;
-    right: -415px;
+    right: -515px;
 }
 
 /* Show the tooltip text when you mouse over the tooltip container */
