@@ -37,7 +37,6 @@ class CallMarket:
 
             iteration.run_iteration()
             cnt += 1
-            print("ITR:", cnt)
 
         # Perform final updates
         # with the last completed iteration.
