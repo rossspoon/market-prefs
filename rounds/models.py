@@ -181,25 +181,6 @@ class Player(BasePlayer):
         self.periods_until_auto_buy = d.get('periods_until_auto_buy')
         self.periods_until_auto_sell = d.get('periods_until_auto_sell')
 
-    def get_personal_stock_margin(self, price):
-        # ABS te short value to make the formula work
-        stock_pos_value = abs(float(self.shares * price))
-        if stock_pos_value == 0:
-            personal_stock_margin = 0
-        else:
-            cash_float = float(self.cash)
-            personal_stock_margin = abs((cash_float - stock_pos_value) / stock_pos_value)
-        return personal_stock_margin
-
-    def get_personal_cash_margin(self, price):
-        stock_pos_value = abs(self.shares * price)
-        if self.cash == 0:
-            personal_cash_margin = 0
-        else:
-            cash_float = abs(float(self.cash))
-            personal_cash_margin = abs((stock_pos_value - cash_float) / cash_float)
-        return personal_cash_margin
-
     def is_short(self):
         return self.shares < 0
 
@@ -218,29 +199,37 @@ class Player(BasePlayer):
     def get_holding_details(self, market_price, results=False):
         s = self.shares_result if results else self.shares
         c = self.cash_result if results else self.cash
-
+        mr = scf.get_margin_ratio(self)
         value_of_stock = market_price * s
+
+        limit = None
+        if s < 0:  # Shorting
+            limit = cu(c / (1+mr))
+        elif c < 0:  # Borrowing
+            limit = cu(value_of_stock / (1+mr))
+
         equity = value_of_stock + c
         debt = min(c, 0) + min(value_of_stock, 0)
-        margin = abs(equity / debt) if debt != 0 else None
 
-        return value_of_stock, equity, debt, margin
+        return value_of_stock, equity, debt, limit
 
     def is_short_margin_violation(self):
-        if self.is_bankrupt():
+        if self.is_bankrupt() or not self.is_short():
             return False
 
         price = self.group.get_last_period_price()
-        margin_ratio = scf.get_margin_ratio(self)
-        return self.is_short() and self.get_personal_stock_margin(price) <= margin_ratio
+        _, _, debt, limit = self.get_holding_details(price)
+
+        return abs(debt) >= abs(limit)
 
     def is_debt_margin_violation(self):
-        if self.is_bankrupt():
+        if self.is_bankrupt() or not self.is_debt():
             return False
 
         price = self.group.get_last_period_price()
-        margin_ratio = scf.get_margin_ratio(self)
-        return self.is_debt() and self.get_personal_cash_margin(price) <= margin_ratio
+        _, _, debt, limit = self.get_holding_details(price)
+
+        return abs(debt) >= abs(limit)
 
     def copy_results_from_previous_round(self):
         r_num = self.round_number

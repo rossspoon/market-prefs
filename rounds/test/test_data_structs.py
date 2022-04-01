@@ -218,7 +218,7 @@ class TestDataForPlayer(unittest.TestCase):
         d4p = DataForPlayer(p)
 
         # Execute
-        o = d4p.generate_buy_in_order(60)
+        o = d4p.generate_buy_in_order(75)
 
         # Assert
         self.assertTrue(o.is_buy_in)
@@ -234,7 +234,7 @@ class TestDataForPlayer(unittest.TestCase):
         d4p = DataForPlayer(p)
 
         # Execute
-        o = d4p.generate_sell_off_order(60)  # price is 60
+        o = d4p.generate_sell_off_order(45)  # price is 60
 
         # Assert
         self.assertTrue(o.is_buy_in)

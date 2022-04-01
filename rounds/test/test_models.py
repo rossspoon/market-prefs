@@ -94,77 +94,6 @@ def set_up_trans_status_tests(ratio=.4, delay=2, price=None, shares=None, cash=N
 
 
 class TestPlayerMethods(unittest.TestCase):
-    def test_personal_stock_margin_0(self):
-        # Setup
-        p = Player()
-        p.cash = 1500
-        p.shares = 0
-
-        # Run
-        pm = p.get_personal_stock_margin(1000)
-
-        # Assert
-        self.assertEqual(0, pm)
-
-    def test_personal_stock_margin_neg_shares(self):
-        # Setup
-        p = Player()
-        p.cash = 1500
-        p.shares = -1
-
-        # Run
-        pm = p.get_personal_stock_margin(1000)
-
-        # Assert
-        self.assertEqual(0.5, pm)
-
-    def test_personal_stock_margin_pos_shares(self):
-        # Setup
-        p = Player()
-        p.cash = 1500
-        p.shares = 1
-
-        # Run
-        pm = p.get_personal_stock_margin(1000)
-
-        # Assert
-        self.assertEqual(.5, pm)
-
-    def test_personal_cash_margin_0(self):
-        # Setup
-        p = Player()
-        p.cash = 0
-        p.shares = 1000
-
-        # Run
-        pm = p.get_personal_cash_margin(2000)
-
-        # Assert
-        self.assertEqual(0, pm)
-
-    def test_personal_cash_margin_neg_cash(self):
-        # Setup
-        p = Player()
-        p.cash = -1000
-        p.shares = 1
-
-        # Run
-        pm = p.get_personal_cash_margin(1500)
-
-        # Assert
-        self.assertEqual(0.5, pm)
-
-    def test_personal_cash_margin_pos_cash(self):
-        # Setup
-        p = Player()
-        p.cash = 1000
-        p.shares = 1
-
-        # Run
-        pm = p.get_personal_cash_margin(1500)
-
-        # Assert
-        self.assertEqual(0.5, pm)
 
     def test_is_short(self):
         # Setup  ------------  TEST 1
@@ -697,60 +626,72 @@ class TestGroupMethods(unittest.TestCase):
         player = Player()
         player.shares = 2
         player.cash = 100
+        session = Session()
+        session.config = {scf.SK_MARGIN_RATIO: 0.6}
+        player.session = session
 
         # Test
-        v, e, d, m = player.get_holding_details(4)
+        v, e, d, lim = player.get_holding_details(4)
 
         # Assert
         self.assertEqual(v, 8)
         self.assertEqual(e, 108)
         self.assertEqual(d, 0)
-        self.assertIsNone(m)
+        self.assertIsNone(lim)
 
     def test_get_holding_details_debt(self):
         # Setup-up
         player = Player()
         player.shares = 2
         player.cash = -100
+        session = Session()
+        session.config = {scf.SK_MARGIN_RATIO: 0.6}
+        player.session = session
 
         # Test
-        v, e, d, m = player.get_holding_details(4)
+        v, e, d, lim = player.get_holding_details(4)
 
         # Assert
         self.assertEqual(v, 8)
         self.assertEqual(e, -92)
         self.assertEqual(d, -100)
-        self.assertEqual(m, 92 / 100)
+        self.assertEqual(lim, cu(8 / 1.6))
 
     def test_get_holding_details_short(self):
         # Setup-up
         player = Player()
         player.shares = -2
         player.cash = 100
+        session = Session()
+        session.config = {scf.SK_MARGIN_RATIO: 0.6}
+        player.session = session
 
         # Test
-        v, e, d, m = player.get_holding_details(4)
+        v, e, d, lim = player.get_holding_details(4)
 
         # Assert
         self.assertEqual(v, -8)
         self.assertEqual(e, 92)
         self.assertEqual(d, -8)
-        self.assertEqual(m, 92 / 8)
+        self.assertEqual(lim, cu(100 / 1.6))
 
     def test_get_holding_details_result(self):
         # Setup-up
         player = Player()
         player.shares_result = -2
         player.cash_result = 100
+        session = Session()
+        session.config = {scf.SK_MARGIN_RATIO: 0.6}
+        player.session = session
 
         # Test
-        v, e, d, m = player.get_holding_details(4, results=True)
+        v, e, d, lim = player.get_holding_details(4, results=True)
 
         # Assert
         self.assertEqual(v, -8)
         self.assertEqual(e, 92)
         self.assertEqual(d, -8)
-        self.assertEqual(m, 92 / 8)
+        self.assertEqual(lim, cu(100/1.6))
 
     def test_is_auto_sell(self):
         # Set-up
