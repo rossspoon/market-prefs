@@ -65,7 +65,7 @@ NO_SHORT_LIMIT = -199
 class Group(BaseGroup):
     price = models.CurrencyField()
     volume = models.IntegerField()
-    dividend = models.IntegerField(initial=0)
+    dividend = models.CurrencyField(initial=0)
 
     float = models.IntegerField()
     short = models.IntegerField()
@@ -137,8 +137,8 @@ class Player(BasePlayer):
     dividend_earned = models.CurrencyField()
 
     # Results
-    cash_result = models.CurrencyField()
-    shares_result = models.IntegerField()
+    cash_result = models.CurrencyField(initial=0)
+    shares_result = models.IntegerField(initial=0)
 
     # Forecasting Item
     f0 = models.CurrencyField(blank=True)
