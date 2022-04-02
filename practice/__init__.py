@@ -13,6 +13,8 @@ class C(BaseConstants):
     NAME_IN_URL = 'practice'
     PLAYERS_PER_GROUP = None
     NUM_ROUNDS = 3
+    SHORT = 5
+    FLOAT = 10
 
 
 prices = [-1, 30.00, 25.00, 14.00]
@@ -25,8 +27,8 @@ def creating_session(subsession):
 
     # Stuff for all rounds
     for g in subsession.get_groups():
-        g.float = 10
-        g.short = 5
+        g.float = C.FLOAT
+        g.short = C.SHORT
         g.price = prices[round_number]
         g.volume = volumes[round_number]
         g.dividend = dividends[round_number]
@@ -37,20 +39,38 @@ def creating_session(subsession):
 
     generate_participant_ids(subsession)
     for p in subsession.get_players():
-        p.cash = 10000
-        p.shares = 2
+        p.cash = 100
+        p.shares = 6
 
 
 def practice_market_page_live_method(player, d):
     return rounds.market_page_live_method(player, d, o_cls=Order)
 
 
+def practice_market_variables(player):
+    ret = rounds.vars_for_market_template(player)
+    ret['short'] = C.SHORT
+    return ret
+
+
 def practice_forecast_page_live_method(player, d):
     return rounds.forecast_page_live_method(player, d, o_cls=Order)
 
 
+def practice_forecast_variables(player):
+    ret = rounds.vars_for_forecast_template(player)
+    ret['short'] = C.SHORT
+    return ret
+
+
 def practice_results_page_live_method(player, d):
     return rounds.result_page_live_method(player, d, o_cls=Order)
+
+
+def practice_results_variables(player):
+    ret = rounds.vars_for_round_results_template(player)
+    ret['short'] = C.SHORT
+    return ret
 
 
 # PAGES
@@ -63,7 +83,7 @@ class PracticeMarketPage(Page):
     # method bindings
     js_vars = rounds.get_js_vars
     live_method = practice_market_page_live_method
-    vars_for_template = rounds.vars_for_market_template
+    vars_for_template = practice_market_variables
 
 
 class PracticeForecastPage(Page):
@@ -73,22 +93,46 @@ class PracticeForecastPage(Page):
     get_timeout_seconds = scf.get_forecast_time
     js_vars = rounds.get_js_vars_forcast_page
     live_method = practice_forecast_page_live_method
-
-    @staticmethod
-    def vars_for_template(player: Player):
-        return rounds.vars_for_forecast_template(player)
+    vars_for_template = practice_forecast_variables
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
         g = player.group  # price, volume, and dividend are already set on the group
 
         orders = [DataForOrder(o) for o in Order.filter(player=player)]
+        # cap orders
+        short_lim = C.FLOAT
+        short = C.SHORT
+        supply = sum([o.quantity for o in orders if o.order_type == 1])
+        shorting_this_round = max(supply - max(player.shares, 0), 0)
+        print("supply", supply)
+        print("shorting_this_round:", shorting_this_round)
+        print("player.shares: ", player.shares)
+        if short + shorting_this_round > short_lim:
+            cap_amt = short + shorting_this_round - short_lim
+            print("capp amt", cap_amt)
+            for o in sorted(orders, key=lambda x: x.price):
+                if o.quantity <= cap_amt:
+                    cap_amt -= o.quantity
+                    o.original_quantity = o.quantity
+                    o.quantity = 0
+                    print("c>=q:", o)
+                else:
+                    o.original_quantity = o.quantity
+                    o.quantity = o.quantity - cap_amt
+                    cap_amt = 0
+                    print("c<q:", o)
+
         # "fill" orders
-        for o in orders:
+        sell_fill_amt = 2
+        buy_fill_amt = False
+        for o in filter(lambda x: x.quantity > 0, orders):
             if o.order_type == OrderType.BID.value and o.price >= g.price:
-                o.quantity_final = min(4, o.quantity)
+                o.quantity_final = min(buy_fill_amt, o.quantity)
+                buy_fill_amt = 0
             elif o.order_type == OrderType.OFFER.value and o.price <= g.price:
-                o.quantity_final = min(2, o.quantity)
+                o.quantity_final = min(sell_fill_amt, o.quantity)
+                sell_fill_amt = 0
 
         d4p = DataForPlayer(player)
         d4p.get_new_player_position(orders, g.dividend, 0.05, g.price)
@@ -104,7 +148,7 @@ class PracticeRoundResultsPage(Page):
     form_model = 'player'
     js_vars = rounds.get_js_vars_round_results
     get_timeout_seconds = scf.get_summary_time
-    vars_for_template = rounds.vars_for_round_results_template
+    vars_for_template = practice_results_variables
     live_method = practice_results_page_live_method
 
     @staticmethod

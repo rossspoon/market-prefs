@@ -6,6 +6,7 @@ from otree.common import InvalidRoundError
 import common.SessionConfigFunctions as scf
 
 
+# noinspection DuplicatedCode
 class OrderType(Enum):
     """
         Enumeration representing the order type BID/OFFER
@@ -213,7 +214,7 @@ class Player(BasePlayer):
             close_lim = -1 * cu(value_of_stock / (1 + mtr))
 
         equity = value_of_stock + c
-        debt = cu(min(c, 0) + min(value_of_stock, 0))
+        debt = cu(min(c, 0) + min(value_of_stock, cu(0)))
 
         return value_of_stock, equity, debt, limit, close_lim
 
@@ -308,6 +309,7 @@ class Player(BasePlayer):
         return self.__str__()
 
 
+# noinspection DuplicatedCode
 class Order(ExtraModel):
     player = models.Link(Player)
     group = models.Link(Group)

@@ -213,7 +213,7 @@ class Player(BasePlayer):
             close_lim = -1 * cu(value_of_stock / (1 + mtr))
 
         equity = value_of_stock + c
-        debt = cu(min(c, 0) + min(value_of_stock, 0))
+        debt = cu(min(c, 0) + min(value_of_stock, cu(0)))
 
         return value_of_stock, equity, debt, limit, close_lim
 
