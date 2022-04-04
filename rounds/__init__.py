@@ -3,6 +3,7 @@ import random
 from collections import defaultdict
 
 from rounds.call_market import CallMarket
+from . import tool_tip
 from .models import *
 import common.SessionConfigFunctions as scf
 from common.ParticipantFuctions import generate_participant_ids
@@ -39,6 +40,7 @@ def creating_session(subsession):
     stock_float = sum(p.shares for p in subsession.get_players())
     for g in subsession.get_groups():
         g.float = stock_float
+    tool_tip.get_tool_tip_data(subsession)  # Initialize tool tips in a non-concurrent context.
 
 
 def get_js_vars_forcast_page(player: Player):
@@ -84,6 +86,7 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
         show_cancel=show_cancel,
         market_price=market_price,
         market_price_str=mp_str,
+        tt=tool_tip.get_tool_tip_data(player),
     )
 
 

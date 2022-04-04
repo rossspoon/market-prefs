@@ -21,6 +21,8 @@ $(window).on('load', function () {
     $('#id_price').attr('placeholder', 'Price')
     $('#id_f0').attr('placeholder', js_vars.market_price)
 
+    set_tool_tips();
+
     ///////////////////////////
     // EVENT HANDLERS
 

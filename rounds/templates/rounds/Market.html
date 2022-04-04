@@ -8,6 +8,7 @@
 <script src="{{ static 'rounds/js/price_history.js' }}"></script>
 <script src="{{ static 'rounds/js/market_page.js' }}"></script>
 <script src="{{ static 'rounds/js/move_timer.js' }}"></script>
+<script src="{{ static 'rounds/js/set_tool_tip.js' }}"></script>
 
 <link rel="stylesheet" href="{{ static 'css/global.css' }}">
 <link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
@@ -38,7 +39,7 @@
                 <div class="order-form">
                     <div class="form-cell"> {{ formfield 'type' label='' }} </div>
                     <div class="form-cell"> {{ formfield 'quantity' label='' }}  </div>
-                    <div class="form-cell"> @ </div>
+                    <div class="form-cell at"> @ </div>
                     <div class="form-cell"> {{ formfield 'price' label=''}}  </div>
                     <div class="form-cell"><div id="submit-btn" class="btn btn-primary no-anim" tabindex="0">Submit</div></div>
                 </div>
@@ -64,29 +65,9 @@
                     <th id="button-col">&nbsp;</th>
                     <th id="details-col" class="box-header details-col">Orders Submitted</th>
                     <th id="notes-col", class="box-header notes-col hidden">
-                        <div class="tool-tip">Notes
-                            <span class="tool-tip-text tt-left">
-                                <p>Special actions taken with your orders.</p>
-                                <ul>
-                                    <li>Short sell orders may be limited if they can cause the market to be
-                                         shorted beyond the limit.</li>
-                                    <li>An entire short sell order can be canceled because of a shorting limit</li>
-                                    <li>An automatic SELL order will cancel your BUY orders</li>
-                                    <li>An automatic BUY order will cancel your SELL orders</li>
-                                </ul>
-                            </span>
-                        </div>
-                    </th>
+                        <div id="tip_notes">Notes</div></th>
                     <th id="fulfilled-col", class="box-header full-col hidden">
-                        <div class="tool-tip">
-                            Filled
-                            <span class="tool-tip-text tt-left">
-                                <p>The number of shares actually traded for this order.  This depends on
-                                market conditions.  You can only buy shares if there is someone willing to sell
-                                and vise versa.</p>
-                            </span>
-                        </div>
-                    </th>
+                        <div id="tip_fill">Filled</div></th>
                 </tr>
             </table>
         </div>
@@ -110,55 +91,23 @@
                      </tr>
                     <tr>
                         <td>
-                            <div class="tool-tip">STOCK Value
-                                <span class="tool-tip-text tt-right">
-                                    <p>The value of your STOCK at the current market value</p>
-                                    <p>If you have shorted STOCK, this will appear as negative and be subject to a shorting limit.</p>
-                                </span></div>
+                            <div id="stat_stock_value">STOCK Value</div>
                         </td>
                         <td class="stat-value">&nbsp;<span class="r_just {{ vos_neg_cls }} {{ attn_cls }}">{{ stock_val }}</span></td>
                     </tr>
                     <tr>
                         <td>
-                            <div class="tool-tip">Debt
-                                <span class="tool-tip-text tt-right">
-                                    <p>The value of shorted STOCK or borrowed CASH.</p>
-                                    <p>If you short STOCK, we consider the value of that STOCK as debt.</p>
-                                </span>
-                            </div>
-                        </td>
+                            <div id="stat_debt">Debt</div></td>
                         <td class="stat-value">&nbsp;<span class="r_just {{ dbt_neg_cls }} {{ attn_cls }}">{{ debt }}</span></td>
                     </tr>
                     <tr>
                         <td>
                             {{ if is_short }}
-                            <div class="tool-tip">Limit
-                               <span class="tool-tip-text tt-right">
-                                   <p>The limit of the value of shorted STOCK.  The limit is based on the
-                                   amount of CASH that you hold and the value of your STOCK.</p>
-                                   <p>When you short the STOCK, you must maintain an appropriate margin of CASH.
-                                       The amount of CASH you need to have is {{ margin_buffer_pct }} of the
-                                       value of you shorted STOCK. </p>
-                                </span>
-                            </div>
+                            <div id="stat_limit_short">Limit</div>
                             {{ elif is_debt }}
-                            <div class="tool-tip">Limit
-                               <span class="tool-tip-text tt-right">
-                                    <p>This is the limit of the value of the amount of CASH that you may borrow.
-                                    The limit is based on the amount of CASH that you borrowed and the value of your
-                                        STOCK.</p>
-                                    <p>When you borrow CASH, you must have sufficient STOCK holdings as a buffer.
-                                    The value of your stock as the current market price must be {{ margin_buffer_pct }}
-                                    of your borrowed CASH.</p>
-                                </span>
-                            </div>
+                            <div id="stat_limit_cash">Limit</div>
                             {{ else }}
-                             <div class="tool-tip">Limit
-                               <span class="tool-tip-text tt-right">
-                                   <p>You currently have no debt, and so there is no limit.</p>
-                                   <p>If you decide to short the STOCK or borrow CASH you will be subject to a limit.</p>
-                                </span>
-                            </div>
+                             <div id="stat_limit_none">Limit</div>
                            {{ endif }}
                         </td>
                         <td class="stat-value">&nbsp;<span class="r_just {{ lim_neg_cls }} {{ attn_cls }}">{{ limit }}</span></td>
@@ -200,58 +149,27 @@
                          <th colspan="2" class="box-header">Market Stats</th>
                      </tr>
                      <tr>
-                        <td>Market Price</td>
+                         <td><div id="stat_market_price">Market Price</div></td>
                          <td class="stat-value">&nbsp;<span class="r_just">{{ market_price | cu }}</span></td>
                     </tr>
                     <tr>
-                        <td><div class="tool-tip">Float
-                                <span class="tool-tip-text tt-right">
-                                    The amount of shares available to trade in the market.
-                                </span>
-                            </div>
-                        </td>
+                        <td><div id="stat_stock_float">Float</div></td>
                         <td class="stat-value">&nbsp;<span class="r_just">{{ group.float }} shares</span></td>
                     </tr>
                     <tr>
-                        <td><div class="tool-tip">Total Shorted
-                            <span class="tool-tip-text tt-right">
-                                <p>The amount of shares shorted by all traders in the market.</p>
-                                {{ if float_ratio_cap }}
-                                    <p>Short sells will be limited to ensure that no more than {{ group.float }} shares
-                                        are shorted.</p>
-                                {{ endif }}
-                            </span></div>
-                        </td>
+                        <td><div id="stat_total_short">Total Shorted</div></td>
                         <td class="stat-value">&nbsp;<span class="r_just">{{ short }} shares </span></td>
                     </tr>
                     <tr>
-                        <td><div class="tool-tip">Interest Rate
-                            <span class="tool-tip-text tt-right">
-                                <p>Interest on CASH earned at the end of the market period.</p>
-                                <p>If you have borrowed CASH, you will pay interest at this rate.</p>
-                            </span>
-                        </div></td>
+                        <td><div id="stat_int_rate">Interest Rate</div></td>
                         <td class="stat-value">&nbsp;<span class="r_just">{{ interest_pct }}</span></td>
                     </tr>
                     <tr>
-                        <td><div class="tool-tip">Dividends
-                            <span class="tool-tip-text tt-right">
-                                <p>The dividend paid out on STOCK.</p>
-                                <p>Each share of stock that you own will earn either 0.40 or 1.00 points.
-                                Each amount is equally likely.  If you have shorted STOCK then you will payout
-                                that amount.</p>
-                            </span>
-                        </div></td>
+                        <td><div id="stat_dividends">Dividends</div></td>
                         <td class="stat-value">&nbsp;<span class="r_just">{{ dividends }}</span></td>
                     </tr>
                    <tr>
-                        <td><div class="tool-tip">Stock Buy Back
-                            <span class="tool-tip-text tt-right">
-                                <p>After the last market period each share of STOCK that you own will be bought
-                                back at this price ({{ buy_back }}).  If you have shorted stock, you will
-                                pay out this amount for each share of STOCK that you have borrowed.</p>
-                            </span>
-                        </div></td>
+                        <td><div id="stat_buy_back">Stock Buy Back</div></td>
                        <td class="stat-value">&nbsp;<span class="r_just">{{ buy_back }}</span></td>
                     </tr>
                 </table>
