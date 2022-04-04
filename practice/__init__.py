@@ -73,6 +73,52 @@ def practice_results_variables(player):
     return ret
 
 
+def is_last_round(player: Player):
+    return player.round_number == C.NUM_ROUNDS
+
+
+# noinspection PyUnusedLocal
+def forecast_before_next_page(player: Player, timeout_happened):
+    g = player.group  # price, volume, and dividend are already set on the group
+
+    orders = [DataForOrder(o) for o in Order.filter(player=player)]
+    # cap orders
+    short_lim = C.FLOAT
+    short = C.SHORT
+    supply = sum([o.quantity for o in orders if o.order_type == 1])
+    shorting_this_round = max(supply - max(player.shares, 0), 0)
+    if short + shorting_this_round > short_lim:
+        cap_amt = short + shorting_this_round - short_lim
+        for o in sorted(orders, key=lambda x: x.price):
+            if o.quantity <= cap_amt:
+                cap_amt -= o.quantity
+                o.original_quantity = o.quantity
+                o.quantity = 0
+            else:
+                o.original_quantity = o.quantity
+                o.quantity = o.quantity - cap_amt
+                cap_amt = 0
+
+    # "fill" orders
+    sell_fill_amt = 2
+    buy_fill_amt = False
+    for o in filter(lambda x: x.quantity > 0, orders):
+        if o.order_type == OrderType.BID.value and o.price >= g.price:
+            o.quantity_final = min(buy_fill_amt, o.quantity)
+            buy_fill_amt = 0
+        elif o.order_type == OrderType.OFFER.value and o.price <= g.price:
+            o.quantity_final = min(sell_fill_amt, o.quantity)
+            sell_fill_amt = 0
+
+    d4p = DataForPlayer(player)
+    d4p.get_new_player_position(orders, g.dividend, 0.05, g.price)
+    d4p.update_player()
+    for o in orders:
+        o.update_order()
+
+    player.determine_forecast_reward(g.price)
+
+
 # PAGES
 class PracticeMarketPage(Page):
     template_name = 'rounds/Market.html'
@@ -94,53 +140,7 @@ class PracticeForecastPage(Page):
     js_vars = rounds.get_js_vars_forcast_page
     live_method = practice_forecast_page_live_method
     vars_for_template = practice_forecast_variables
-
-    @staticmethod
-    def before_next_page(player: Player, timeout_happened):
-        g = player.group  # price, volume, and dividend are already set on the group
-
-        orders = [DataForOrder(o) for o in Order.filter(player=player)]
-        # cap orders
-        short_lim = C.FLOAT
-        short = C.SHORT
-        supply = sum([o.quantity for o in orders if o.order_type == 1])
-        shorting_this_round = max(supply - max(player.shares, 0), 0)
-        print("supply", supply)
-        print("shorting_this_round:", shorting_this_round)
-        print("player.shares: ", player.shares)
-        if short + shorting_this_round > short_lim:
-            cap_amt = short + shorting_this_round - short_lim
-            print("capp amt", cap_amt)
-            for o in sorted(orders, key=lambda x: x.price):
-                if o.quantity <= cap_amt:
-                    cap_amt -= o.quantity
-                    o.original_quantity = o.quantity
-                    o.quantity = 0
-                    print("c>=q:", o)
-                else:
-                    o.original_quantity = o.quantity
-                    o.quantity = o.quantity - cap_amt
-                    cap_amt = 0
-                    print("c<q:", o)
-
-        # "fill" orders
-        sell_fill_amt = 2
-        buy_fill_amt = False
-        for o in filter(lambda x: x.quantity > 0, orders):
-            if o.order_type == OrderType.BID.value and o.price >= g.price:
-                o.quantity_final = min(buy_fill_amt, o.quantity)
-                buy_fill_amt = 0
-            elif o.order_type == OrderType.OFFER.value and o.price <= g.price:
-                o.quantity_final = min(sell_fill_amt, o.quantity)
-                sell_fill_amt = 0
-
-        d4p = DataForPlayer(player)
-        d4p.get_new_player_position(orders, g.dividend, 0.05, g.price)
-        d4p.update_player()
-        for o in orders:
-            o.update_order()
-
-        player.determine_forecast_reward(g.price)
+    before_next_page = forecast_before_next_page
 
 
 class PracticeRoundResultsPage(Page):
@@ -160,9 +160,7 @@ class PracticeRoundResultsPage(Page):
 
 
 class PracticeEndPage(Page):
-    @staticmethod
-    def is_displayed(player: Player):
-        return player.round_number == C.NUM_ROUNDS
+    is_displayed = is_last_round
 
 
 page_sequence = [PracticeMarketPage, PracticeForecastPage, PracticeRoundResultsPage, PracticeEndPage]
