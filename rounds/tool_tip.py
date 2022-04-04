@@ -118,5 +118,5 @@ def ensure_group(obj):
     elif isinstance(obj, BasePlayer):
         return obj.group
     elif isinstance(obj, BaseSubsession):
-        return obj.get_groups[0]
+        return obj.get_groups()[0]
     return None
