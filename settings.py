@@ -64,8 +64,8 @@ SESSION_CONFIGS = [
         num_demo_participants=2,
     )
     , dict(
-        name='with_practice',
-        app_sequence=['practice', 'rounds', 'survey', 'payment'],
+        name='no_survey',
+        app_sequence=['consent', 'instructions', 'practice', 'rounds', 'survey', 'payment'],
         num_demo_participants=2,
     )
 ]
@@ -89,14 +89,14 @@ SESSION_CONFIG_DEFAULTS = dict(
     auto_trans_delay=0,
     float_ratio_cap=1.0,
 
-    endow_stock='18 -2 10 -6',
-    endow_worth=300.0,
+    endow_stock='6',
+    endow_worth=184.0,
 
     initial_price=14.0,
     bonus_cap=50,
     forecast_thold=2.5,
     forecast_reward=5,
-    market_time=4500,
+    market_time=45,
     forecast_time=15,
     summary_time=15,
 )
