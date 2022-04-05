@@ -31,7 +31,7 @@
                     </div>
                     </div>
                 </li>
-                <li> Period: <span class="pop-up-anchor" id="periods">37</span></li>
+                <li> Period: <span class="pop-up-anchor" id="periods">{{ round_num }}</span></li>
                 <li> Number of Shares: <span class="pop-up-anchor" id="shares">6</span></li>
                 <li> Current Cash: <span class="pop-up-anchor" id="cash">139.96 points</span></li>
             </ul>
@@ -157,11 +157,11 @@
         </div>
 
 </div>
-    <div class="page_width">
-        <div class="right-side">
-            {{ next_button }}
-        </div>
-    </div>
+{#    <div class="page_width">#}
+{#        <div class="right-side">#}
+{#            {{ next_button }}#}
+{#        </div>#}
+{#    </div>#}
 
 {#BEGIN - POP-UP ELEMENTS and TEXT#}
 <span id="01_intro" class="ins-pop-up front-center on" next="02_div">
@@ -177,7 +177,7 @@
     <p> Note that if there is more supply than demand then not every SELL order will be completed.
         Likewise, if there is more demand than supply, some BUY orders will not complete.
         Priority in completing orders will be given to the highest BUY price and the lowest SELL price among all
-        the orders submitted.
+        the orders submitted.</p>
 </span>
 <span id="02_div" class="ins-pop-up tool-tip-text tt-right" rel="stat_div" next="03_int">
     <p>This is your dividend earnings for this market period.  The dividend will be either {{ dividends }} points
