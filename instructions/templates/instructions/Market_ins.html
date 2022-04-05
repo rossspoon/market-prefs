@@ -1,0 +1,288 @@
+{{ block title }}
+{{ endblock }}
+{{ block content }}
+
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>-->
+{#<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>#}
+<script src="{{ static 'js/Chart.js' }}"></script>
+<script src="{{ static 'rounds/js/price_history.js' }}"></script>
+<script src="{{ static 'instructions/js/ins_pop_up.js' }}"></script>
+<script src="{{ static 'rounds/js/move_timer.js' }}"></script>
+{#<script src="{{ static 'rounds/js/set_tool_tip.js' }}"></script>#}
+
+<link rel="stylesheet" href="{{ static 'css/global.css' }}">
+<link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
+<link rel="stylesheet" href="{{ static 'rounds/css/market_page.css' }}">
+<link rel="stylesheet" href="{{ static 'instructions/css/ins_pop_up.css' }}">
+
+<div class="layout-box">
+        <div class="vitals boxed_area">
+            <ul>
+                <li>
+                    <div id="timer_box">
+                    <div class="otree-timer alert alert-warning">
+                        <p>Time Left:
+                            <span style="font-weight: bold">
+                                <span id="the_time" class="pop-up-anchor otree-timer__time-left">
+                                    {{ market_time_fmt }}
+                                </span>
+                            </span>
+                        </p>
+                    </div>
+                    </div>
+                </li>
+                <li> Period: <span class="pop-up-anchor" id="periods">37</span></li>
+                <li> Number of Shares: <span class="pop-up-anchor" id="shares">5</span></li>
+                <li> Current Cash: <span class="pop-up-anchor" id="cash">145.00 points</span></li>
+            </ul>
+        </div>
+
+        <div class="chart-box boxed_area">
+            <p id="history" class="box-header lpad pop-up-anchor">Market History</p>
+            <div class="chart-history-area">
+                <canvas id="gr_price" />
+            </div>
+            <div class="chart-volume-area">
+                <canvas id="gr_volume" />
+            </div>
+        </div>
+
+        <div class="order-form-box boxed_area">
+            <div class="order-form">
+                <div class = "form-cell">
+                    <div class="mb-3 _formfield">
+                        <label class="col-form-label" for="id_type"></label>
+                        <div id="o_type" class="pop-up-anchor controls">
+                            <select class="form-select" id="id_type" name="type">
+                                <option value="">--------</option>
+                                <option value="-1">Buy</option>
+                                <option value="1">Sell</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                    <div class="form-cell">
+                    <div class="mb-3 _formfield">
+
+                    <label class="col-form-label" for="id_quantity"></label>
+                        <div id="o_quant" class="pop-up-anchor controls">
+                            <input type="number" class="form-control" id="id_quantity" name="quantity" value="" placeholder="Quantity">
+                        </div>
+                    </div>
+                    </div>
+                    <div class="form-cell at"> @ </div>
+                    <div class="form-cell">
+                        <div id="o_price" class="pop-up-anchor controls">
+                        <div class="input-group input-group-narrow">
+                            <input type="text" class="form-control" id="id_price" name="price" value="" placeholder="Price">
+                            <span class="input-group-text">points</span></div>
+                        </div>
+                    </div>
+                    <div class="form-cell"><div id="submit-btn" class="pop-up-anchor btn btn-primary no-anim" tabindex="0">Submit</div></div>
+            </div>
+        </div>
+        
+        <div class="orders-box boxed_area">
+            <table id="order-list">
+                <tr>
+                    <th id="button-col">&nbsp;</th>
+                    <th id="details-col" class="box-header details-col">Orders Submitted</th>
+                    <th id="notes-col", class="box-header notes-col hidden">
+                        <div id="tip_notes">Notes</div></th>
+                    <th id="fulfilled-col", class="box-header full-col hidden">
+                        <div id="tip_fill">Filled</div></th>
+                </tr>
+                <tr id="order_7" class="order-list-item off">
+                    <td id="cancel_btn"  class="pop-up-anchor"><span class="close-button" id="cb_7" tabindex="0">X</span></td>
+                    <td id="order_details" class="pop-up-anchor">
+                        <span class="order-details type-col">Buy</span>
+                        <div class="order-details quant-col">&nbsp;<span class="r_just">4</span></div>
+                        <span class="order-details shares-at-col">shares @</span>
+                        <span class="order-details price-col">&nbsp;<span class="r_just">23.45</span></span>
+                    </td>
+                    <td class="notes-col hidden">&nbsp;</td><td class="full-col hidden">&nbsp;</td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="messages" class="message-box pop-up-anchor"></div>
+
+        <div class="stats-box boxed_area">
+            <div>
+                <table class="left-tab">
+                    <tr>
+                         <th colspan="2" class="box-header">Personal Stats</th>
+                     </tr>
+                    <tr>
+                        <td>
+                            <div id="stat_stock_value" class="pop-up-anchor">STOCK Value</div>
+                        </td>
+                        <td class="stat-value"><span class="r_just">74.00</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div id="stat_debt" class="pop-up-anchor">Debt</div></td>
+                        <td class="stat-value"><span class="r_just">0</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                             <div id="stat_limit" class="pop-up-anchor">Limit</div>
+                        </td>
+                        <td class="stat-value">&nbsp;<span class="r_just ">N/A</span></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="right-stat-div">
+                 <table>
+                     <tr>
+                         <th colspan="2" class="box-header">Market Stats</th>
+                     </tr>
+                     <tr>
+                         <td><div id="stat_market_price" class="pop-up-anchor">Market Price</div></td>
+                         <td class="stat-value">&nbsp;<span class="r_just">14.00</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_stock_float" class="pop-up-anchor">Float</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">20 shares</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_total_short" class="pop-up-anchor">Total Shorted</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">5 shares </span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_int_rate" class="pop-up-anchor">Interest Rate</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ interest_pct }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_dividends" class="pop-up-anchor">Dividends</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ dividends }}</span></td>
+                    </tr>
+                   <tr>
+                        <td><div id="stat_buy_back" class="pop-up-anchor">Stock Buy Back</div></td>
+                       <td class="stat-value">&nbsp;<span class="r_just">{{ buy_back }}</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+</div>
+    <div class="page_width">
+        <div class="right-side">
+            {{ next_button }}
+        </div>
+    </div>
+
+{#BEGIN - POP-UP ELEMENTS and TEXT#}
+<span id="01_intro" class="ins-pop-up front-center on" next="02_time">
+    <div class="box-header">Market Page</div>
+    <p>This is the Market page.  Here, you will submit buy and sell orders during the time allowed.
+        After {{ market_time }} seconds the page will automatically advance to the next step.</p>
+    <p>You are not required to submit any orders during a round, so if you wish to hold your
+    current positions, simply wait for the market period to lapse.</p>
+</span>
+<span id="02_time" class="ins-pop-up tool-tip-text tt-bottom-right" rel="the_time" next="03_periods">
+    <div>The market period will last for {{ market_time }} seconds. During that time, you may
+    submit up to 6 BUY or SELL orders.  You have the option to not submit any orders if you wish.</div>
+</span>
+<span id="03_periods" class="ins-pop-up tool-tip-text tt-bottom-right" rel="periods" next="04_shares">
+    <div>The market will last for {{ num_rounds }} periods.</div>
+</span>
+<span id="04_shares" class="ins-pop-up tool-tip-text tt-bottom-right" rel="shares" next="05_cash">
+    <div>This is the number of shares of STOCK that you currently own.  If you short the STOCK, this number
+    will be negative.</div>
+</span>
+<span id="05_cash" class="ins-pop-up tool-tip-text tt-bottom-left" rel="cash" next="06_history">
+    <div>This is the amount of CASH that you hold.  If you borrow CASH, this number
+    will be negative.</div>
+</span>
+<span id="06_history" class="ins-pop-up tool-tip-text tt-bottom-right" rel="history" next="07_o_type">
+    <div>The graphs here will show the market price and the number of shares traded (volume) at each
+        market period.</div>
+</span>
+<span id="07_o_type" class="ins-pop-up tool-tip-text tt-left" rel="o_type" next="08_o_quant">
+    <div>To submit an order, first choose whether the order is a Buy or Sell.</div>
+</span>
+<span id="08_o_quant" class="ins-pop-up tool-tip-text tt-bottom-left" rel="o_quant" next="09_o_price">
+    <div>Then enter the number of shares would like to BUY or SELL.</div>
+    <div>Consider this a maximum number of shares.  Depending on market conditions you may actually trade
+    fewer shares than this amount.</div>
+</span>
+<span id="09_o_price" class="ins-pop-up tool-tip-text tt-bottom-left" rel="o_price" next="10_submit">
+    <div>Next, give the price for the order.</div>
+    <div>This is a limit price.  If you are selling, you will be willing to sell at or above this price.
+    If you are buying are willing to buy at or below this price.</div>
+</span>
+<span id="10_submit" class="ins-pop-up tool-tip-text tt-bottom-left" rel="submit-btn" next="11_order_details">
+    <div>Complete the order by clicking Submit.</div>
+    <div>The order will only count if you click submit.</div>
+</span>
+<span id="11_order_details" class="ins-pop-up tool-tip-text tt-bottom-left" rel="order_details" next="12_cancel">
+    <div>An order will appear here after clicking the Submit button above.</div>
+</span>
+<span id="12_cancel" class="ins-pop-up tool-tip-text tt-left" rel="cancel_btn" next="13_messages">
+    <div>Click here to cancel an order.</div>
+</span>
+<span id="13_messages" class="ins-pop-up front-center" rel="messages" next="14_stock_val">
+    <div>Messages will appear in this area.  Messages can be information that you are about to borrow CASH or
+        short STOCK, or a warning that the system is going to automatically submit a buy or sell order on
+        your behalf.</div>
+</span>
+<span id="14_stock_val" class="ins-pop-up tool-tip-text tt-right" rel="stat_stock_value" next="15_debt">
+    <p>This section contains various personal and market statistics starting with the value of your STOCK.</p>
+    <p>This is the value of your STOCK at the current market price.  If you have shorted the STOCK, this
+    figure will be negative.</p>
+</span>
+<span id="15_debt" class="ins-pop-up tool-tip-text tt-right" rel="stat_debt" next="16_limit">
+    <p>Your debt is either the amount of CASH you borrowed, or the value of shorted STOCK.  This amount
+    is subject to a limit.</p>
+</span>
+<span id="16_limit" class="ins-pop-up tool-tip-text tt-right" rel="stat_limit" next="17_market_price">
+    <p>
+        This is your borrowing limit.  If your debt ever exceeds this amount, the system will submit an automatic
+        transaction on your behalf to lower your debt.   If you are borrowing CASH and your debt exceeds your limit
+        you will face an automatic sell.  If you are shorting STOCK and the value of your STOCK exceeds this amount,
+        the system to buy for you.
+    </p>
+    <p>Note: This amount is based on the value of your STOCK, your CASH holdings, and the current market price.
+    If you do nothing during a market period and the market price changes, this limit will also change.</p>
+</span>
+<span id="17_market_price" class="ins-pop-up tool-tip-text tt-right" rel="stat_market_price" next="18_float">
+    <p>
+        This is the current market price.  At the end of the market period, we will recalculate the market price
+        based on the all the orders submitted and show the updated value here.
+    </p>
+</span>
+<span id="18_float" class="ins-pop-up tool-tip-text tt-right" rel="stat_stock_float" next="19_shorted">
+    <p>This is the total number of shares in the market.</p>
+    {{if short_cap_exist }}
+    <p>During the market play, we will limit short selling to be no more than {{ short_cap }} of this amount.</p>
+    {{ endif }}
+</span>
+<span id="19_shorted" class="ins-pop-up tool-tip-text tt-right" rel="stat_total_short" next="20_interest_rate">
+    <p>This is the total number of shares shorted by all participants in the market.</p>
+    {{if short_cap_exist }}
+        <p>Again this amount will be limited to {{ short_cap }} of the float.  Any sell orders that would cause
+        the market to be shorted above this amount will be canceled.</p>
+    {{ endif }}
+
+</span>
+<span id="20_interest_rate" class="ins-pop-up tool-tip-text tt-right" rel="stat_int_rate" next="21_dividend">
+    <p>This is the interest rate earned on CASH calculated after the shares have been traded.</p>
+    <p>Example:  If you end the market period with 10.00 points in CASH, you will earn 0.50 points in
+    interest.</p>
+    <p>If you borrow CASH, you will pay out interest at this rate.</p>
+</span>
+<span id="21_dividend" class="ins-pop-up tool-tip-text tt-right" rel="stat_dividends" next="22_buy_back">
+    After the market closes and shares have been traded, you will receive either {{ dividends }} for each share ot
+    STOCK that you own.  Either payment amount is equally likely and will apply to the whole market.
+    If you have shorted STOCK, then you will pay out this amount for every share shorted.
+</span>
+<span id="22_buy_back" class="ins-pop-up dont-add-button tool-tip-text tt-right" rel="stat_buy_back">
+    <p>After the last market period we will buy back your STOCK at this price ({{ buy_back | cu }}) and add that
+    amount to your CASH.  If you still have shorted the STOCK at this point, you will effectively buy the STOCK
+        at this price and the total amount will be deducted from your CASH.</p>
+    <div class="bottom-row">&nbsp;<span class="r_just">{{ next_button }}</span></div>
+</span>
+
+{#END - POP-UP ELEMENTS and TEXT#}
+{{ endblock }}

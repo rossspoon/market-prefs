@@ -1,0 +1,178 @@
+{{ block title }}
+{{ endblock }}
+{{ block content }}
+
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>-->
+{#<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>#}
+<script src="{{ static 'js/Chart.js' }}"></script>
+<script src="{{ static 'rounds/js/price_history.js' }}"></script>
+<script src="{{ static 'instructions/js/ins_pop_up.js' }}"></script>
+<script src="{{ static 'rounds/js/move_timer.js' }}"></script>
+{#<script src="{{ static 'rounds/js/set_tool_tip.js' }}"></script>#}
+
+<link rel="stylesheet" href="{{ static 'css/global.css' }}">
+<link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
+<link rel="stylesheet" href="{{ static 'rounds/css/market_page.css' }}">
+<link rel="stylesheet" href="{{ static 'instructions/css/ins_pop_up.css' }}">
+
+<div class="layout-box">
+        <div class="vitals boxed_area">
+            <ul>
+                <li>
+                    <div id="timer_box">
+                    <div class="otree-timer alert alert-warning">
+                        <p>Time Left:
+                            <span style="font-weight: bold">
+                                <span id="the_time" class="pop-up-anchor otree-timer__time-left">
+                                    {{ forecast_time_fmt }}
+                                </span>
+                            </span>
+                        </p>
+                    </div>
+                    </div>
+                </li>
+                <li> Period: <span class="pop-up-anchor" id="periods">37</span></li>
+                <li> Number of Shares: <span class="pop-up-anchor" id="shares">5</span></li>
+                <li> Current Cash: <span class="pop-up-anchor" id="cash">145.00 points</span></li>
+            </ul>
+        </div>
+
+        <div class="chart-box boxed_area">
+            <p id="history" class="box-header lpad pop-up-anchor">Market History</p>
+            <div class="chart-history-area">
+                <canvas id="gr_price" />
+            </div>
+            <div class="chart-volume-area">
+                <canvas id="gr_volume" />
+            </div>
+        </div>
+
+        <div class="order-form-box boxed_area">
+            <div id="forcast-form">
+                    What do you think the market price will be this period?
+                    <div class="ilb lpad">
+                <div class="mb-3 _formfield">
+                    <label class="col-form-label" for="id_f0"></label>
+                <div id="forecast_input" class="pop-up-anchor controls">
+                <div class="input-group input-group-narrow"><input type="text" class="form-control" id="id_f0" name="f0" value="" placeholder="14.00"><span class="input-group-text">points</span></div>
+                </div>
+                </div></div>
+                <div class="ilb">
+                <p>
+                <button class="otree-btn-next btn btn-primary no-anim">Next</button>
+                </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="orders-box boxed_area">
+            <table id="order-list">
+                <tr>
+                    <th id="button-col">&nbsp;</th>
+                    <th id="details-col" class="box-header details-col">Orders Submitted</th>
+                    <th id="notes-col", class="box-header notes-col hidden">
+                        <div id="tip_notes">Notes</div></th>
+                    <th id="fulfilled-col", class="box-header full-col hidden">
+                        <div id="tip_fill">Filled</div></th>
+                </tr>
+                <tr id="order_7" class="order-list-item">
+                    <td id="cancel_btn"  class="pop-up-anchor">&nbsp;</td>
+                    <td id="order_details" class="pop-up-anchor">
+                        <span class="order-details type-col">Buy</span>
+                        <div class="order-details quant-col">&nbsp;<span class="r_just">4</span></div>
+                        <span class="order-details shares-at-col">shares @</span>
+                        <span class="order-details price-col">&nbsp;<span class="r_just">23.45</span></span>
+                    </td>
+                    <td class="notes-col hidden">&nbsp;</td><td class="full-col hidden">&nbsp;</td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="messages" class="message-box pop-up-anchor"></div>
+
+        <div class="stats-box boxed_area">
+            <div>
+                <table class="left-tab">
+                    <tr>
+                         <th colspan="2" class="box-header">Personal Stats</th>
+                     </tr>
+                    <tr>
+                        <td>
+                            <div id="stat_stock_value" class="pop-up-anchor">STOCK Value</div>
+                        </td>
+                        <td class="stat-value"><span class="r_just">74.00</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div id="stat_debt" class="pop-up-anchor">Debt</div></td>
+                        <td class="stat-value"><span class="r_just">0</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                             <div id="stat_limit" class="pop-up-anchor">Limit</div>
+                        </td>
+                        <td class="stat-value">&nbsp;<span class="r_just ">N/A</span></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="right-stat-div">
+                 <table>
+                     <tr>
+                         <th colspan="2" class="box-header">Market Stats</th>
+                     </tr>
+                     <tr>
+                         <td><div id="stat_market_price" class="pop-up-anchor">Market Price</div></td>
+                         <td class="stat-value">&nbsp;<span class="r_just">14.00</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_stock_float" class="pop-up-anchor">Float</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">20 shares</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_total_short" class="pop-up-anchor">Total Shorted</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">5 shares </span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_int_rate" class="pop-up-anchor">Interest Rate</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ interest_pct }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_dividends" class="pop-up-anchor">Dividends</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ dividends }}</span></td>
+                    </tr>
+                   <tr>
+                        <td><div id="stat_buy_back" class="pop-up-anchor">Stock Buy Back</div></td>
+                       <td class="stat-value">&nbsp;<span class="r_just">{{ buy_back }}</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+</div>
+    <div class="page_width">
+        <div class="right-side">
+            {{ next_button }}
+        </div>
+    </div>
+
+{#BEGIN - POP-UP ELEMENTS and TEXT#}
+<span id="01_intro" class="ins-pop-up front-center on" next="02_forecast">
+    <div class="box-header">Forecast Page</div>
+    <p>The next step is the is to make a prediction about the market price.  When the market period ends,
+    the screen will change to the forecast page.  You will be asked to enter your belief about what the market
+    price will be this period.  If you guess the market price with in {{ forecast_thold | cu }} of the true price,
+        you will be awarded {{ forecast_reward | cu}} of CASH.</p>
+</span>
+<span id="02_forecast" class="ins-pop-up tool-tip-text tt-bottom-left" rel="forecast_input" next="03_time">
+    <p>Enter you prediction for the market price here.   By default, the form will the current market price.
+        If you do not make enter anything, that will be considered your prediction.
+        Click the Next button when you are ready or...
+    </p>
+</span>
+<span id="03_time" class="ins-pop-up tool-tip-text tt-bottom-right dont-add-button" rel="the_time">
+    <p>... the page will automatically advance after {{ forecast_time }} seconds.</p>
+    <div class="bottom-row">&nbsp;<span class="r_just">{{ next_button }}</span></div>
+</span>
+
+{#END - POP-UP ELEMENTS and TEXT#}
+{{ endblock }}

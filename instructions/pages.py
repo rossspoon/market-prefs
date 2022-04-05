@@ -1,3 +1,8 @@
+import datetime
+import random
+
+from otree.api import cu
+
 import common.SessionConfigFunctions as scf
 import practice
 import rounds
@@ -33,6 +38,44 @@ def vars_for_temp_common(player: Player):
     ret['forecast_reward'] = forecast_reward
 
     return ret
+
+
+def vars_for_market_ins_template(player):
+    ret = scf.ensure_config(player)
+    ret['interest_pct'] = f"{scf.get_interest_rate(player):.0%}"
+    ret['dividends'] = " or ".join(str(d) for d in scf.get_dividend_amounts(player))
+    ret['buy_back'] = scf.get_fundamental_value(player)
+
+    m_time = datetime.timedelta(seconds=scf.get_market_time(player))
+    ret['market_time_fmt'] = f"{m_time}"
+    ret['market_time'] = scf.get_market_time(player)
+
+    f_time = datetime.timedelta(seconds=scf.get_forecast_time(player))
+    ret['forecast_time_fmt'] = f"{f_time}"
+    ret['forecast_time'] = scf.get_forecast_time(player)
+
+    r_time = datetime.timedelta(seconds=scf.get_summary_time(player))
+    ret['results_time_fmt'] = f"{r_time}"
+    ret['results_time'] = scf.get_summary_time(player)
+
+    ret['num_rounds'] = rounds.Constants.num_rounds
+    short_cap_exist = scf.get_float_ratio_cap(player) is not None
+    ret['short_cap_exist'] = short_cap_exist
+    ret['short_cap'] = f"{scf.get_float_ratio_cap(player):.0%}" if short_cap_exist else ''
+
+    return ret
+
+
+def js_vars_for_market_ins(player):
+    show_rounds = 2 * 50 // 3
+    prices = [14] + random.choices(range(15, 20), k=show_rounds)
+    volumes = [0] + random.choices(range(0, 11), k=show_rounds)
+
+    return dict(labels=list(range(0, 50 + 1)),
+                price_data=prices,
+                volume_data=volumes,
+                num_periods=50,
+                )
 
 
 def vars_for_08_template(player: Player):
@@ -126,12 +169,30 @@ class _12_MarketPage(Page):
     vars_for_template = vars_for_temp_common
 
 
+class _12_MarketPage2(Page):
+    template_name = "instructions/Market_ins.html"
+    vars_for_template = vars_for_market_ins_template
+    js_vars = js_vars_for_market_ins
+
+
 class _13_ForecastingPage(Page):
     vars_for_template = vars_for_temp_common
 
 
+class _13_ForecastPage2(Page):
+    template_name = "instructions/Forecast_ins.html"
+    vars_for_template = vars_for_market_ins_template
+    js_vars = js_vars_for_market_ins
+
+
 class _14_PeriodSummary(Page):
     pass
+
+
+class _14_PeriodSummary2(Page):
+    template_name = "instructions/Summary_ins.html"
+    vars_for_template = vars_for_market_ins_template
+    js_vars = js_vars_for_market_ins
 
 
 class _15_EndOfMarket(Page):
@@ -193,7 +254,7 @@ class Quiz01(QuizPage):
             ret['qz1q1'] = "You are allowed up to 6 orders per market period."
 
         if values['qz1q2'] is None or values['qz1q2']:
-            ret['qz1q2'] = "Your BUY prices must all be less than you SELL prices."
+            ret['qz1q2'] = "All BUY prices must all be less than your SELL prices."
 
         if not values['qz1q3']:
             ret['qz1q3'] = "When you short the STOCK, dividends  will be deducted from your CASH holdings."
@@ -206,25 +267,27 @@ class Quiz01(QuizPage):
 
 
 class Quiz02(QuizPage):
-    form_fields = ['qz2q1', 'qz2q2', 'qz2q3']
-    attempted_field = 'qz2_attempted'
+    form_fields = ['quiz_1', 'quiz_2', 'quiz_3', 'quiz_4']
+    attempted_field = 'qz_attempted'
 
     def grade_quiz(self, values):
         player = self.player
         ret = {}
 
-        fundamental = scf.get_fundamental_value(player)
-        if values['qz2q1'] != fundamental:
-            ret['qz2q1'] = f'The system will buy back shares of STOCK at a price of {fundamental} points'
+        if values['quiz_1'] is None or values['quiz_1']:
+            ret['quiz_1'] = "All BUY prices must all be less than your SELL prices."
 
-        mr = scf.get_margin_ratio(player, wnp=True)
-        if values['qz2q2'] != 1:
-            ret['qz2q2'] = f'The system will attempt an automatic buy-in when you are currently shorting the STOCK ' \
-                           f'and your margin ratio drops below {mr} '
+        fundamental = cu(scf.get_fundamental_value(player))
+        if values['quiz_2'] != fundamental:
+            ret['quiz_2'] = f'The system will buy back shares of STOCK at a price of {fundamental}.'
 
-        num = rounds.Constants.num_rounds
-        if values['qz2q3'] != num:
-            ret['qz2q3'] = f'The market will last for {num} periods'
+        if values['quiz_3'] != 56:
+            ret['quiz_3'] = f'At the end of the experiment, all STOCK is bought back at a price of {fundamental}.' \
+                           f'You will receive 4 + {fundamental} = {cu(4 * fundamental)}.'
+
+        if values['quiz_4'] != 110:
+            ret['quiz_4'] = f'You will receive 5% on you CASH or 5.00 points, and 1.00 point for each of your' \
+                           f'shares.  Your final CASH position will be: 100.00 + 5.00 + (1.00 x 5) = 110.00 points.'
 
         return ret
 
@@ -234,22 +297,14 @@ class OutroPage(Page):
 
 
 page_sequence = [IntroPage,
-                 _01_Assets,
                  _02_Trading,
-                 _03_BorrowingCash,
-                 _04_ShortingStock,
-                 _05_MarketRestrictions_1,
                  _06_MarketRestrictions_2,
                  _06_MarketRestrictions_3,
-                 _07_MarketPeriod,
-                 Quiz01,
-                 _08_Equity,
                  _09_AutoTransactions,
                  _10_Bankruptcy,
-                 _11_MarketPeriod_2,
-                 _12_MarketPage,
-                 _13_ForecastingPage,
-                 _14_PeriodSummary,
+                 _12_MarketPage2,
+                 _13_ForecastPage2,
+                 _14_PeriodSummary2,
                  _15_EndOfMarket,
                  Quiz02,
                  OutroPage]

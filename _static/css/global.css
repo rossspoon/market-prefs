@@ -102,6 +102,12 @@
     }
 }
 
+.r_just {
+    position: absolute;
+    right: 5px;
+    bottom: 0px;
+}
+
 /*BEGIN Tooltip Stuff */
 .tool-tip {
   position: relative;
@@ -128,20 +134,30 @@
     width: 500px;
     background-color: lightyellow;
     color: #559;
-    padding: 10px;
+    padding: 15px;
     border-radius: 10px;
     border: 2px dashed #555599;
     position: absolute;
     z-index: 1;
 }
-.tool-tip .tt-left {
+.tt-left {
     top: -60px;
     left: -515px;
 }
 
-.tool-tip .tt-right {
+.tt-right {
     bottom: -20px;
     right: -515px;
+}
+
+.tt-bottom-right {
+    top: 160%;
+    left: -10px;
+}
+
+.tt-bottom-left {
+    top: 160%;
+    right: -10px;
 }
 
 /* Show the tooltip text when you mouse over the tooltip container */
@@ -166,23 +182,39 @@
 }
 
 /*Base class for Tool-tip arrow*/
-.tool-tip .tool-tip-text::after {
+.tool-tip-text::after {
   content: " ";
   position: absolute;
-  margin-top: -5px;
-  border-width: 10px;
+
   border-style: solid;
 }
 /*Position of the arrows*/
 .tt-left::after{
     top: 70px;
     left: 100%;
+    margin-top: -5px;
+    border-width: 10px;
     border-color: transparent transparent transparent #555599;
 }
-/*Position of the arrows*/
 .tt-right::after{
-  bottom: 20px;
-  right: 100%;
-  border-color: transparent #555599 transparent transparent;
+    bottom: 20px;
+    right: 100%;
+    margin-top: -5px;
+    border-width: 10px;
+    border-color: transparent #555599 transparent transparent;
+}
+.tt-bottom-right::after{
+    left: 20px;
+    bottom: 100%;
+    margin-top: -5px;
+    border-width: 10px;
+    border-color: transparent transparent #555599  transparent;
+}
+.tt-bottom-left::after{
+    right: 20px;
+    bottom: 100%;
+    margin-top: -5px;
+    border-width: 10px;
+    border-color: transparent transparent #555599  transparent;
 }
 /*END Tooltip Stuff */

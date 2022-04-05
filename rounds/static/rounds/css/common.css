@@ -55,11 +55,6 @@
     position: relative;
     font-weight: 500;
 }
-.r_just {
-    position: absolute;
-    right: 5px;
-    bottom: 0px;
-}
 
 /* Order List Styles*/
 #order-list{

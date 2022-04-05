@@ -92,7 +92,7 @@
     margin: auto;
     width: 50%;
 }
-.results-form div{
+.results-form .large-font{
     font-size: 1.6em;
 }
 .results-form{
