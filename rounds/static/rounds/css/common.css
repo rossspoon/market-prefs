@@ -70,7 +70,7 @@
     width: 50px;
 }
 .details-col {
-    width: 40%;
+    width: 45%;
     text-align: center;
 }
 .notes-col {
@@ -96,7 +96,7 @@
 }
 
 .order-list-item{
-    font-size: 1.4em;
+    font-size: 1.2em;
 }
 .order-list-item:not(:last-child) td:not(:first-child){
     border-bottom: 2px dotted lightgray;
