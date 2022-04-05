@@ -313,7 +313,6 @@ def standard_vars_for_template(player: Player):
     ret['short'] = player.group.short
 
     ret['messages'] = []  # The market page will populate this
-    ret['show_next'] = False
     ret['attn_cls'] = ''
 
     return ret
@@ -422,7 +421,6 @@ def vars_for_market_template(player: Player):
     ret = standard_vars_for_template(player)
     ret['messages'] = get_messages(player, ret)
     ret['show_form'] = 'order'
-    ret['show_next'] = True
     return ret
 
 

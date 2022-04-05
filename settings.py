@@ -99,6 +99,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     market_time=45,
     forecast_time=15,
     summary_time=15,
+    show_next=False,
 )
 
 PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT', 'CONSENT_BUTTON_CLICKED']

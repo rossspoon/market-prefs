@@ -21,6 +21,7 @@ SK_FORECAST_TIME = 'forecast_time'
 SK_SUMMARY_TIME = 'summary_time'
 SK_ENDOW_STOCK = 'endow_stock'
 SK_ENDOW_WORTH = 'endow_worth'
+SK_SHOW_NEXT = 'show_next'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -207,3 +208,8 @@ def get_endow_stocks(obj):
 def get_endow_worth(obj):
     config = ensure_config(obj)
     return get_item_as_int(config, SK_ENDOW_WORTH)
+
+
+def show_next_button(obj):
+    config = ensure_config(obj)
+    return get_item_as_bool(config, SK_SHOW_NEXT)
