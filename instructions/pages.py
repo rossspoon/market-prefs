@@ -239,7 +239,8 @@ class QuizPage(Page):
             self.form.non_field_error = f"You missed {num_wrong} question{s}. &nbsp;&nbsp Please take note of the " \
                                         f"correct answers and click ""Next"" to continue."
         else:
-            self.form.non_field_error = "Well Done! &nbsp;&nbsp Please click Next to continue."
+            self.form.non_field_error = "You answered all questions correctly. &nbsp;&nbsp Please click Next to " \
+                                        "continue. "
         return ret
 
 
