@@ -45,6 +45,7 @@ def vars_for_market_ins_template(player):
     ret['interest_pct'] = f"{scf.get_interest_rate(player):.0%}"
     ret['dividends'] = " or ".join(str(d) for d in scf.get_dividend_amounts(player))
     ret['buy_back'] = scf.get_fundamental_value(player)
+    ret['round_num'] = 2 * rounds.Constants.num_rounds // 3
 
     m_time = datetime.timedelta(seconds=scf.get_market_time(player))
     ret['market_time_fmt'] = f"{m_time}"
@@ -67,14 +68,14 @@ def vars_for_market_ins_template(player):
 
 
 def js_vars_for_market_ins(player):
-    show_rounds = 2 * 50 // 3
+    show_rounds = 2 * rounds.Constants.num_rounds // 3
     prices = [14] + random.choices(range(15, 20), k=show_rounds)
     volumes = [0] + random.choices(range(0, 11), k=show_rounds)
 
-    return dict(labels=list(range(0, 50 + 1)),
+    return dict(labels=list(range(0, rounds.Constants.num_rounds + 1)),
                 price_data=prices,
                 volume_data=volumes,
-                num_periods=50,
+                num_periods=rounds.Constants.num_rounds,
                 )
 
 
