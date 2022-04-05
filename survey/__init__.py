@@ -58,7 +58,7 @@ class Player(BasePlayer):
                                    [1, 'Asian'],
                                    [2, 'Black or African American'],
                                    [3, 'Native Hawaiian or Other Pacific Islander'],
-                                   [4, 'Caucasian'],
+                                   [4, 'White'],
                                    [5, 'More than one race'],
                                    [6, 'Other']
                                ])
@@ -234,28 +234,28 @@ class IntroPage(SurveyBasePage):
 
 
 class SurveyPage_01(SurveyBasePage):
-    form_fields = ['gender', 'age', 'hisp', 'race', 'college', 'income', 'employment']
+    form_fields = ['gender', 'age', 'hisp', 'race', 'major', 'econ_class']
     template_name = 'survey/survey_page_side_by_side.html'
 
 
-class SurveyPage_02(SurveyBasePage):
-    form_fields = ['major', 'econ_class', 'religious_service', 'vote_reg', 'vote_freq']
-    template_name = 'survey/survey_page_side_by_side.html'
+# class SurveyPage_02(SurveyBasePage):
+#     form_fields = ['religious_service', 'vote_reg', 'vote_freq']
+#     template_name = 'survey/survey_page_side_by_side.html'
 
 
 class SurveyPage_03(SurveyBasePage):
-    form_fields = ['politics', 'risk', 'time', 'procrast']
+    form_fields = ['risk', 'time', 'good_cause', 'math']
     template_name = 'survey/survey_page_likert.html'
 
 
-class SurveyPage_04(SurveyBasePage):
-    form_fields = ['pos_reciprocity', 'neg_reciprocity', 'good_cause', 'good_intent']
-    template_name = 'survey/survey_page_likert.html'
-
-
-class SurveyPage_05(SurveyBasePage):
-    form_fields = ['punish_self', 'punish_others', 'math']
-    template_name = 'survey/survey_page_likert.html'
+# class SurveyPage_04(SurveyBasePage):
+#     form_fields = ['pos_reciprocity', 'neg_reciprocity', 'good_cause', 'good_intent']
+#     template_name = 'survey/survey_page_likert.html'
+#
+#
+# class SurveyPage_05(SurveyBasePage):
+#     form_fields = ['punish_self', 'punish_others', 'math']
+#     template_name = 'survey/survey_page_likert.html'
 
 
 class SurveyPage_06(SurveyBasePage):
