@@ -13,7 +13,7 @@ from otree import database
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
-    num_rounds = 35
+    num_rounds = 1
 
 
 # assign treatments
@@ -537,8 +537,8 @@ def not_displayed_for_simulation_except_last_round(player: Player):
 
 
 def custom_export(players):
-    yield['session', 'participant', 'part_label', 'round_number', 'type', 'quantity', 'price',
-          'quantity_final', 'original_quantity', 'automatic', 'market_price', 'volume']
+    yield ['session', 'participant', 'part_label', 'round_number', 'type', 'quantity', 'price',
+           'quantity_final', 'original_quantity', 'automatic', 'market_price', 'volume']
 
     for p in players:
         session = p.session
@@ -551,10 +551,10 @@ def custom_export(players):
             yield [session.code, part.code, part.label, p.round_number, o_type, o.quantity, o.price,
                    o.quantity_final, o.original_quantity, o.is_buy_in, group.price, group.volume]
 
+
 ############
 # PAGES
 ##########
-
 class PreMarketWait(WaitPage):
     body_text = "Waiting for the experiment to begin"
     pass
@@ -624,7 +624,9 @@ class RoundResultsPage(Page):
         participant = player.participant
         stock_value = player.shares_result * scf.get_fundamental_value(player)
         total_equity = stock_value + player.cash_result
-        participant.payoff = max(total_equity, 0)
+        bonus_cap = scf.get_bonus_cap(player)
+        bonus = min(total_equity, bonus_cap)
+        participant.payoff = max(bonus, 0)
 
 
 class FinalResultsPage(Page):

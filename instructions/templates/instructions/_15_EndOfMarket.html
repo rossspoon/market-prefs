@@ -15,7 +15,10 @@
         </p>
         <p>Your final amount of CASH will be converted to actual payment.&nbsp;&nbsp;
             You will be paid 1 US dollar for each {{ conversion }} points of CASH
-            that you hold.</p>
+            that you hold
+            {{ if has_bonus_cap }}
+                (up to ${{ bonus_cap_whole_num }})
+            {{ endif }}.</p>
         <p>Following the final summary page will be a short survey.</p>
 
     </div>

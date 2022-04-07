@@ -93,7 +93,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     endow_worth=184.0,
 
     initial_price=14.0,
-    bonus_cap=50,
+    bonus_cap=5000,
     forecast_thold=2.5,
     forecast_reward=5,
     market_time=45,
