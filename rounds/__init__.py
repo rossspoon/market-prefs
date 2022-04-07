@@ -13,7 +13,7 @@ from otree import database
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
-    num_rounds = 1
+    num_rounds = 25
 
 
 # assign treatments
