@@ -52,6 +52,10 @@
     top: 0;
 }
 
+.shift-up-a-bit{
+    margin-top: 40px;
+}
+
 .on {
     visibility: visible;
 
