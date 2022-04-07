@@ -606,13 +606,13 @@ class RoundResultsPage(Page):
     is_displayed = not_displayed_for_simulation_except_last_round
     live_method = result_page_live_method
 
-    @staticmethod
-    def app_after_this_page(player: Player, upcoming_apps):
-        if not upcoming_apps or len(upcoming_apps) == 0:
-            return None
-
-        if player.is_bankrupt():
-            return upcoming_apps[0]
+    # @staticmethod
+    # def app_after_this_page(player: Player, upcoming_apps):
+    #     if not upcoming_apps or len(upcoming_apps) == 0:
+    #         return None
+    #
+    #     if player.is_bankrupt():
+    #         return upcoming_apps[0]
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
