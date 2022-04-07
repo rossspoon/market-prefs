@@ -23,6 +23,12 @@ def vars_for_temp_common(player: Player):
     forecast_thold = scf.get_forecast_thold(player)
     forecast_reward = scf.get_forecast_reward(player)
 
+    bonus_cap = ret['bonus_cap']
+    ret['has_bonus_cap'] = False
+    if bonus_cap:
+        ret['has_bonus_cap'] = True
+        ret['bonus_cap_whole_num'] = int(bonus_cap * ret['real_world_currency_per_point'])
+
     ret['interest_rate_pct'] = scf.as_wnp(scf.get_interest_rate(player))
     ret['marg_ratio'] = margin_ratio
     ret['marg_ratio_pct'] = marg_ratio_pct
@@ -31,7 +37,6 @@ def vars_for_temp_common(player: Player):
     ret['num_rounds'] = rounds.Constants.num_rounds
     ret['num_practice_rounds'] = practice.C.NUM_ROUNDS
     ret['part_fee_whole_num'] = int(ret['participation_fee'])
-    ret['bonus_cap_whole_num'] = int(ret['bonus_cap'] / 10000)
     ret['float_ratio_cap'] = scf.as_wnp(scf.get_float_ratio_cap(player))
     ret['market_time'] = scf.get_market_time(player)
     ret['forecast_thold'] = forecast_thold
