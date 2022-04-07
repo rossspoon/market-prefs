@@ -9,7 +9,7 @@ from rounds import Constants, ForecastPage, RoundResultsPage, Market, FinalResul
 
 class PlayerBot(Bot):
     def __init__(self, **kwargs):
-        self.f0s = [2800] * (Constants.num_rounds + 1)
+        self.f0s = [14.00] * (Constants.num_rounds + 1)
         super().__init__(**kwargs)
 
     def __new__(cls, *args, **kwargs):
@@ -36,19 +36,14 @@ class PlayerBot(Bot):
         # Forcast Page
         f0 = self.f0s[round_number]
         form_data = {'f0': f0}
-        if round_number < Constants.num_rounds:
-            form_data['f1'] = 0
-        if round_number < Constants.num_rounds - 1:
-            form_data['f2'] = 0
-
         yield Submission(ForecastPage, form_data)
 
         player = self.player
-        expect(player.forecast_reward, 500)
+        expect(player.forecast_reward, 5.00)
         expect(player.forecast_error, 0)
 
         # Round Result Page
-        yield RoundResultsPage
+        yield Submission(RoundResultsPage)
 
         if round_number == Constants.num_rounds:
             yield FinalResultsPage
