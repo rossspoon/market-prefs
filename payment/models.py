@@ -2,9 +2,10 @@ from otree.api import (
     BaseConstants,
     BaseSubsession,
     BaseGroup,
-    BasePlayer,
+    BasePlayer, cu,
 )
 import common.SessionConfigFunctions as scf
+import rounds
 
 from common.ParticipantFuctions import generate_participant_ids, is_button_click
 
@@ -37,7 +38,7 @@ class Subsession(BaseSubsession):
         player_data = [to_variable_dict(p) for p in clickers]
         total = sum(d['total'] for d in player_data)
         if len(clickers) > 0:
-            average = total/ len(clickers)
+            average = total / len(clickers)
         else:
             average = 'N/A'
         return {'players': player_data, 'total': total, 'average': average}
@@ -58,3 +59,23 @@ class Group(BaseGroup):
 
 class Player(BasePlayer):
     pass
+
+
+def custom_export(players):
+    yield (['session', 'participant', 'part_label', 'clicked_button', 'round_number', 'final_cash', 'bonus',
+            'show-up', 'cash_plus_show', 'bonus_plus_show'])
+
+    for p in players:
+        participant = p.participant
+        session = p.session
+        round_players = list(rounds.Player.objects_filter(participant=participant).order_by('round_number'))
+        last_player: rounds.Player = round_players[-1]
+        cash_result = last_player.field_maybe_none('cash_result')
+        cash_result = cash_result if cash_result is not None else 0
+        cash_result = cu(max(0, cash_result))
+        cash = cu(cash_result).to_real_world_currency(session)
+        bonus = participant.payoff.to_real_world_currency(session)
+        show_up = cu(session.config['participation_fee'])
+        clicked = is_button_click(p)
+        yield(session.code, participant.code, participant.label, clicked, last_player.round_number,
+              cash, bonus, show_up, cash + show_up, bonus + show_up)
