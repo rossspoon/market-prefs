@@ -1,6 +1,7 @@
 import decimal
 import random
 from collections import defaultdict
+from math import ceil
 
 from rounds.call_market import CallMarket
 from . import tool_tip
@@ -625,7 +626,7 @@ class RoundResultsPage(Page):
         stock_value = player.shares_result * scf.get_fundamental_value(player)
         total_equity = stock_value + player.cash_result
         bonus_cap = scf.get_bonus_cap(player)
-        bonus = min(total_equity, bonus_cap)
+        bonus = ceil(min(total_equity, bonus_cap))
         participant.payoff = max(bonus, 0)
 
 

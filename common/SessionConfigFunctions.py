@@ -153,7 +153,7 @@ def is_random_hist(obj):
 
 def get_bonus_cap(obj):
     config = ensure_config(obj)
-    return get_item_as_currency(config, SK_BONUS_CAP)
+    return get_item_as_currency(config, SK_BONUS_CAP, default=9999999999)
 
 
 def get_auto_trans_delay(obj):
