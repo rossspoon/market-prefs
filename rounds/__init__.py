@@ -536,6 +536,21 @@ def not_displayed_for_simulation_except_last_round(player: Player):
     return not scf.get_session_name(player) == 'sim_1' or player.round_number == Constants.num_rounds
 
 
+def custom_export(players):
+    yield['session', 'participant', 'part_label', 'round_number', 'type', 'quantity', 'price',
+          'quantity_final', 'original_quantity', 'automatic', 'market_price', 'volume']
+
+    for p in players:
+        session = p.session
+        part = p.participant
+        group = p.group
+        orders = Order.filter(player=p)
+
+        for o in orders:
+            o_type = 'SELL' if o.order_type == 1 else 'BUY'
+            yield [session.code, part.code, part.label, p.round_number, o_type, o.quantity, o.price,
+                   o.quantity_final, o.original_quantity, o.is_buy_in, group.price, group.volume]
+
 ############
 # PAGES
 ##########
