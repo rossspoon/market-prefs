@@ -149,7 +149,7 @@ function add_order_to_list(oid, o_info){
     // Type Span
     const type_span = document.createElement("span");
     type_span.classList.add('order-details', 'type-col')
-    type_span.innerHTML = (o_info.type === "-1") ? 'Buy' : 'Sell';
+    type_span.innerHTML = (parseInt(o_info.type) === -1) ? 'Buy' : 'Sell';
 
     // Quant Span
     const quant_span = document.createElement("div");
@@ -207,7 +207,7 @@ function add_order_to_list(oid, o_info){
 
     // Disable the form is this is the sixth order
     num_orders += 1;
-    if (num_orders >= 6){
+    if (num_orders >= 6 && js_vars.show_cancel){  //show_cancel is true only on the market page.
         $("#submit-btn").addClass("disabled");
         $("input").prop( "disabled", true );
         $("select").prop("disabled", true);
