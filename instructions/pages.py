@@ -290,7 +290,7 @@ class Quiz02(QuizPage):
 
         if values['quiz_3'] != 56:
             ret['quiz_3'] = f'At the end of the experiment, all STOCK is bought back at a price of {fundamental}.' \
-                           f'You will receive 4 + {fundamental} = {cu(4 * fundamental)}.'
+                           f'You will receive 4 x {fundamental} = {cu(4 * fundamental)}.'
 
         if values['quiz_4'] != 110:
             ret['quiz_4'] = f'You will receive 5% on you CASH or 5.00 points, and 1.00 point for each of your' \
