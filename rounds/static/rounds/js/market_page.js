@@ -2,6 +2,7 @@ $(window).on('load', function () {
     ///////////////////////////
     // These are tasks to do when the page loads
     $('.debug-info').detach();
+    $('#_otree-title').detach();
 
     if (js_vars.show_notes){
         $('#notes-col').removeClass('hidden')
