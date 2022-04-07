@@ -64,8 +64,8 @@ SESSION_CONFIGS = [
         num_demo_participants=2,
     )
     , dict(
-        name='no_survey',
-        app_sequence=['consent', 'instructions', 'practice', 'rounds', 'survey', 'payment'],
+        name='consent_then_rounds',
+        app_sequence=['consent',  'rounds', 'payment'],
         num_demo_participants=2,
     )
 ]
@@ -89,8 +89,8 @@ SESSION_CONFIG_DEFAULTS = dict(
     auto_trans_delay=0,
     float_ratio_cap=1.0,
 
-    endow_stock='6',
-    endow_worth=184.0,
+    endow_stock='3',
+    endow_worth=142.0,
 
     initial_price=14.0,
     bonus_cap=5000,
