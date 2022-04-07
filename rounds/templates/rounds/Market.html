@@ -52,7 +52,8 @@
             {{ elif show_form == 'results' }}
                 <div class="results-form">
                     <div class="large-font center">
-                        Market Period Results
+                        Market Period Results: <span class="bold-text">{{ group.volume }}</span> shares traded
+                        @ <span class="bold-text">{{ market_price }}</span>
                         <div class="ilb lpad">{{ next_button }}</div>
                     </div>
                 </div>
