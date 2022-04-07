@@ -10,7 +10,11 @@
     <p>
         This experiment is about economic decision-making in an experimental market.
         In addition to your ${{ part_fee_whole_num }} show-up fee, you can earn a bonus
-        depending on your performance in the market. &nbsp;&nbsp; Payments will be made to you at the
+        depending on your performance in the market
+        {{ if has_bonus_cap }}
+            (up to ${{ bonus_cap_whole_num }})
+        {{ endif }}
+        . &nbsp;&nbsp; Payments will be made to you at the
         end of the experiment. The experiment will consist of a series of {{ num_rounds }} trading periods in
         which you will have the opportunity to buy or sell shares a risky asset that we will refer to as STOCK.
     </p>
