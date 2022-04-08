@@ -22,6 +22,7 @@ SK_SUMMARY_TIME = 'summary_time'
 SK_ENDOW_STOCK = 'endow_stock'
 SK_ENDOW_WORTH = 'endow_worth'
 SK_SHOW_NEXT = 'show_next'
+SK_CONVERSION_RATE = 'real_world_currency_per_point'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -213,3 +214,8 @@ def get_endow_worth(obj):
 def show_next_button(obj):
     config = ensure_config(obj)
     return get_item_as_bool(config, SK_SHOW_NEXT)
+
+
+def get_conversion_rate(obj):
+    config = ensure_config(obj)
+    return get_item_as_float(config, SK_CONVERSION_RATE)

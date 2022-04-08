@@ -14,7 +14,7 @@ from otree import database
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
-    num_rounds = 25
+    num_rounds = 2
 
 
 # assign treatments
@@ -624,8 +624,10 @@ class RoundResultsPage(Page):
         stock_value = player.shares_result * scf.get_fundamental_value(player)
         total_equity = stock_value + player.cash_result
         bonus_cap = scf.get_bonus_cap(player)
-        bonus = ceil(min(total_equity, bonus_cap))
-        participant.payoff = max(bonus, 0)
+        bonus = min(total_equity, bonus_cap)
+        conversion = 1 / scf.get_conversion_rate(player)
+        bonus_rounded_up = ceil(bonus/conversion)*conversion
+        participant.payoff = max(bonus_rounded_up, 0)
 
 
 class FinalResultsPage(Page):

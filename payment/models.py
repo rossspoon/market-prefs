@@ -69,6 +69,9 @@ def custom_export(players):
         participant = p.participant
         session = p.session
         round_players = list(rounds.Player.objects_filter(participant=participant).order_by('round_number'))
+        if not round_players or len(round_players) == 0:
+            continue
+
         last_player: rounds.Player = round_players[-1]
         cash_result = last_player.field_maybe_none('cash_result')
         cash_result = cash_result if cash_result is not None else 0
