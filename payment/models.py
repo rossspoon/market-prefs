@@ -1,6 +1,5 @@
 from base64 import b64encode
 from datetime import datetime
-from random import randint
 
 from jinja2 import Template
 from otree.api import (
@@ -13,7 +12,6 @@ from pdflatex import pdflatex
 
 import common.SessionConfigFunctions as scf
 import rounds
-
 from common.ParticipantFuctions import generate_participant_ids, is_button_click
 
 doc = """
