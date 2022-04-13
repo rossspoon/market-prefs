@@ -1,0 +1,76 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage[margin=1.0in]{geometry}
+\usepackage{pifont}
+\usepackage{tabularx}
+
+\graphicspath{ {./_static/img/} }
+
+\renewcommand{\familydefault}{\sfdefault}
+\pagenumbering{gobble}
+
+\newcommand{\cuthere}{ %
+\noindent
+\unskip{\tiny\dotfill}
+\raisebox{-2.8pt}[0pt][0.75\baselineskip]{\small\ding{36}}
+\unskip{\tiny\dotfill}
+}
+
+\begin{document}
+
+
+\large
+
+{% for d in data %}
+
+Participant ID: \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {{ d.label }}
+
+\vspace{1cm}
+\cuthere
+
+\vspace{1cm}
+\begin{center}
+    \huge{Experiment Receipt}
+\end{center}
+
+
+
+\vspace{1cm}
+I \underline{\hspace{6cm}}
+(print name) participated in the "Market Experiment"
+conducted by Ross Spoon at the Virginia Tech Economics Lab.
+For my participation, I have received the following payment.
+
+
+\vspace{1cm}
+\begin{table}[ht!]
+    \large
+    \centering
+    \begin{tabularx}{.7\linewidth}{lXr}
+        Participation Fee & \tiny\dotfill  & \{{ d.show_up }} \\
+        Market Results & \tiny\dotfill & \{{ d.bonus }}  \\
+        \\
+        Total Payment & \tiny\dotfill  & \{{ d.total }}
+    \end{tabularx}
+\end{table}
+
+\vspace{2cm}
+Signature: \underline{\hspace{10cm}}
+
+\vspace{2cm}
+VT PID (9-digit number): \underline{\hspace{7cm}}
+
+\vspace{2cm}
+Date: \ \ \ \ \ \ \ \ \ {{ date }}
+
+\vspace{1cm}
+\begin{center}
+    \includegraphics[scale=.75]{vtel}
+\end{center}
+
+\pagebreak
+{% endfor %}
+
+\end{document}
+

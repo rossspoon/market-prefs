@@ -1,6 +1,55 @@
-<style>
+<script>
+    //from https://blog.logrocket.com/programmatic-file-downloads-in-the-browser-9a5186298d5c/
+    function downloadBlob(blob, filename) {
+      // Create an object URL for the blob object
+      const url = URL.createObjectURL(blob);
 
-</style>
+      // Create a new anchor element
+      const a = document.createElement('a');
+      // Set the href and download attributes for the anchor element
+      // You can optionally set other attributes like `title`, etc
+      // Especially, if the anchor element will be attached to the DOM
+      a.href = url;
+      a.download = filename || 'download';
+
+      a.click();
+      return a;
+    }
+
+    // from https://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
+    const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
+      const byteCharacters = atob(b64Data);
+      const byteArrays = [];
+
+      for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+        const slice = byteCharacters.slice(offset, offset + sliceSize);
+
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+      }
+
+      const blob = new Blob(byteArrays, {type: contentType});
+      return blob;
+    }
+
+    $(window).on('load', function () {
+
+        $('#receipt_dl').on('click', function () {
+            pdf_elem = document.getElementById('pdf')
+            const blob = b64toBlob(pdf_elem.innerText, 'application/pdf');
+
+            // Create a download link for the blob content
+            downloadBlob(blob, 'receipts.pdf');
+        });
+    });
+</script>
+
+<link rel="stylesheet" href="{{ static 'css/global.css' }}">
 
 <table class="table table-striped">
     <tr><th>Label</th><th>Participation</th><th>Market</th><th>Total</th></tr>
@@ -14,6 +63,12 @@
     {{ endfor }}
 </table>
 
+{{ if show_pdf }}
+<span id="pdf" style="display: none;">{{ pdf }}</span>
+<div id="receipt_dl" class="btn btn-look-alike">Get Receipts</div>
+{{ endif }}
+
+<div>&nbsp;</div>
 <h3>Summary</h3>
 <table class="table">
     <tr>
@@ -24,5 +79,5 @@
         <td>Average Payout:</td>
         <td>{{ average }}</td>
     </tr>
-
 </table>
+

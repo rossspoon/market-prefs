@@ -1,9 +1,16 @@
+from base64 import b64encode
+from datetime import datetime
+from random import randint
+
+from jinja2 import Template
 from otree.api import (
     BaseConstants,
     BaseSubsession,
     BaseGroup,
     BasePlayer, cu,
 )
+from pdflatex import pdflatex
+
 import common.SessionConfigFunctions as scf
 import rounds
 
@@ -12,6 +19,8 @@ from common.ParticipantFuctions import generate_participant_ids, is_button_click
 doc = """
 This application handles the final pay off
 """
+
+KEEP = False
 
 
 def set_payoffs(subsession):
@@ -41,13 +50,38 @@ class Subsession(BaseSubsession):
             average = total / len(clickers)
         else:
             average = 'N/A'
-        return {'players': player_data, 'total': total, 'average': average}
+
+        ## Generate PDF data
+        now = datetime.now()
+        date_str = now.strftime('%A  %m/%d/%Y')
+
+        # Read in the receipt template
+        with open('payment/receipt_temp.tex', 'r') as f:
+            template_str = f.read()
+
+        # Render the latex with the player data
+        t = Template(template_str)
+        tex = t.render(data=player_data, date=date_str)
+
+        # Compile the latex into a PDF
+        try:
+            pdfl = pdflatex.PDFLaTeX.from_binarystring(tex.encode(), 'pdfs')
+            pdf, log, cp = pdfl.create_pdf(keep_pdf_file=KEEP, keep_log_file=False)
+            show_pdf = cp.returncode == 0
+            pdf = b64encode(pdf).decode('UTF-8')
+        except FileNotFoundError:
+            show_pdf = False
+            pdf = ""
+
+        return {'players': player_data, 'total': total, 'average': average, 'show_pdf': show_pdf, 'pdf': pdf}
 
 
 def to_variable_dict(player: BasePlayer):
     part = player.participant
     session = player.session
+
     return dict(label=part.label,
+                show_up=session.participation_fee,
                 bonus=part.payoff.to_real_world_currency(session),
                 total=part.payoff_plus_participation_fee()
                 )
