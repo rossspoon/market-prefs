@@ -128,9 +128,9 @@
     font-size: 14px;
     color: white;
     border: 2px solid #ccc;
-    border-radius: 40px;
+    border-radius: 50%;
     background-color: #ddd;
-    padding: 2px 8px;
+    padding: 2px 5px;
 }
 
 .close-button:focus,
