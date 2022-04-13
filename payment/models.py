@@ -67,7 +67,8 @@ class Subsession(BaseSubsession):
             pdf, log, cp = pdfl.create_pdf(keep_pdf_file=KEEP, keep_log_file=False)
             show_pdf = cp.returncode == 0
             pdf = b64encode(pdf).decode('UTF-8')
-        except FileNotFoundError:
+        except FileNotFoundError as e:
+            print(e)
             show_pdf = False
             pdf = ""
 
