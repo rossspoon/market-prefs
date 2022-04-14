@@ -23,10 +23,13 @@
 \large
 
 {% for d in data %}
+\begin{table}[ht!]
+    \centering
+    \begin{tabularx}{\linewidth}{Xr}
+        Participant ID: {{ d.label }} & Consent: {% if d.consent %} Y {% else %} N {% endif %}\\
+    \end{tabularx}
+\end{table}
 
-Participant ID: \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ {{ d.label }}
-
-\vspace{1cm}
 \cuthere
 
 \vspace{1cm}

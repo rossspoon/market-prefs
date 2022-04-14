@@ -80,6 +80,7 @@ def to_variable_dict(player: BasePlayer):
     session = player.session
 
     return dict(label=part.label,
+                consent=part.vars.get('CONSENT'),
                 show_up=session.participation_fee,
                 bonus=part.payoff.to_real_world_currency(session),
                 total=part.payoff_plus_participation_fee()
