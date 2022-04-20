@@ -192,7 +192,9 @@ class Player(BasePlayer):
         return self.cash < 0
 
     def is_bankrupt(self):
-        return self.shares < 0 and self.cash < 0
+        price = self.group.get_last_period_price()
+        _, equity, _, _, _ = self.get_holding_details(price)
+        return equity <= 0
 
     def in_round_or_null(self, round_number):
         try:

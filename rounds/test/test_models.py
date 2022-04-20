@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 from otree.models import Session
 
 from rounds.models import *
+from rounds.test.test_call_market import basic_group
 
 
 class TestOrderErrorCodeMethods(unittest.TestCase):
@@ -90,6 +91,7 @@ def set_up_trans_status_tests(ratio=.4, delay=2, price=None, shares=None, cash=N
     p.round_number = 7
 
     p.in_round_or_null = MagicMock(return_value=last_p)
+    p.group.get_last_period_price = MagicMock(return_value=price)
     return p
 
 
@@ -137,7 +139,12 @@ class TestPlayerMethods(unittest.TestCase):
 
     def test_is_bankrupt(self):
         # Setup  ------------  TEST 1
+        group = basic_group()
+        group.get_last_period_price = MagicMock(return_value=1)
         p = Player()
+        p.group = group
+        p.session = group.session
+
         p.cash = -1
         p.shares = -1
 
@@ -149,14 +156,14 @@ class TestPlayerMethods(unittest.TestCase):
         p.shares = -1
 
         # Run / Assert
-        self.assertFalse(p.is_bankrupt())
+        self.assertTrue(p.is_bankrupt())
 
         # Setup  ------------  TEST 3
         p.cash = -1
         p.shares = 1
 
         # Run / Assert
-        self.assertFalse(p.is_bankrupt())
+        self.assertTrue(p.is_bankrupt())
 
         # Setup  ------------  TEST 4
         p.cash = 1
@@ -164,6 +171,27 @@ class TestPlayerMethods(unittest.TestCase):
 
         # Run / Assert
         self.assertFalse(p.is_bankrupt())
+
+        # Setup  ------------  TEST 5
+        p.cash = 2
+        p.shares = -1
+
+        # Run / Assert
+        self.assertFalse(p.is_bankrupt())
+
+        # Setup  ------------  TEST 6
+        p.cash = 1
+        p.shares = -2
+
+        # Run / Assert
+        self.assertTrue(p.is_bankrupt())
+
+        # Setup  ------------  TEST 7
+        p.cash = -2
+        p.shares = 1
+
+        # Run / Assert
+        self.assertTrue(p.is_bankrupt())
 
     def test_in_round_or_null_except(self):
         # Setup
@@ -252,7 +280,7 @@ class TestPlayerMethods(unittest.TestCase):
     # BEGIN determine_auto_trans_status TESTS
     def test_determine_auto_trans_status_bankrupt(self):
         # Setup
-        p = set_up_trans_status_tests(shares=-1, cash=-1)
+        p = set_up_trans_status_tests(shares=-1, cash=-1, price=1)
 
         # Test
         p.determine_auto_trans_status()
