@@ -7,15 +7,15 @@
 
     <div class="layout-box">
     <div class="main-block">
-        In this experiment, the system will limit short sales to {{ float_ratio_cap }} of the STOCK that is available
-        to trade (this is called the "float"). &nbsp;&nbsp; This limit applies to the whole market, so if you attempt to
+        In this experiment, the system will limit short sales to {{ float_ratio_cap }} of STOCK that is available
+        to trade (this is called the "float").  This limit applies to the whole market, so if you attempt to
         short the STOCK and others have already shorted {{ float_ratio_cap }} of the float, your order
-        will be canceled. &nbsp;&nbsp; The Market Page will inform you of the proportion of shorted STOCK.
+        will be canceled.  The Market Page will inform you of the proportion of shorted STOCK.
 
         <div class="example">
-            <p>Suppose there are 10 shares of STOCK available to trade, and two other traders have already
-            shorted the STOCK by 5 shares each. &nbsp;&nbsp; This means that 100% of the STOCK float has been shorted.
-            If you attempt to sell one share short, that order will be canceled.</p>
+            <p>Suppose there are 10 shares of STOCK available to trade, and two other have each shorted 5 shares.
+                This means that 100% of the float has been shorted.
+            In this situation, all SELL orders that short STOCK will be canceled.</p>
         </div>
 
 

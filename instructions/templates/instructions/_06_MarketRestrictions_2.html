@@ -1,5 +1,5 @@
 {{ block title }}
-    MARKET RESTRICTIONS
+    VALID ORDERS
 {{ endblock }}
 {{ block content }}
     <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
@@ -7,8 +7,8 @@
 
     <div class="layout-box">
     <div class="main-block">
-    <p>As you create orders, your lowest SELL price must be greater than your highest BUY price. &nbsp;&nbsp;
-        When the market closes you will be either a buyer or a seller (nor neither) depending on the resulting
+    <p>As you create orders, your lowest SELL price must be greater than your highest BUY price. 
+        When the market closes you will be either a buyer or a seller (or neither) depending on the resulting
         market price.</p>
 
     <div class="example">
@@ -18,7 +18,7 @@
             <li>BUY 1 shares @ 25.00</li>
         </ul>
         <p>This will result in an error when you attempt to submit the second order because the BUY price is
-            equal to the outstanding SELL price.   The second order will not be accepted. &nbsp;&nbsp; Either lower the BUY
+            equal to the outstanding SELL price.   The second order will not be accepted.  Either lower the BUY
             price or cancel the SELL order.</p>
     </div>
 
@@ -28,9 +28,9 @@
             <li>SELL 4 @ 30.00</li>
             <li>BUY 2 @ 20.00</li>
         </ul>
-    <p>If the market price is 3000 or greater, you will be a seller this period.
-        If the market price is 2000 or lower you will be a buyer. &nbsp;&nbsp; If the market price is
-        between 20.01 and 29.99 points, you will not make any trades this period.</p>
+    <p>If the market price is 30.00 or greater, you will be a seller this period.
+        If the market price is 20.00 or lower you will be a buyer.  If the market price is
+        between 20.01 and 29.99, you will not make any trades this period.</p>
     </div>
 
     </div>

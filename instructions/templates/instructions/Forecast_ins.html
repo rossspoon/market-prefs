@@ -33,7 +33,7 @@
                 </li>
                 <li> Period: <span class="pop-up-anchor" id="periods">{{ round_num }}</span></li>
                 <li> Number of Shares: <span class="pop-up-anchor" id="shares">5</span></li>
-                <li> Current Cash: <span class="pop-up-anchor" id="cash">145.00 points</span></li>
+                <li> Current Cash: <span class="pop-up-anchor" id="cash">{{ 145.00 | cu }}</span></li>
             </ul>
         </div>
 
@@ -54,7 +54,7 @@
                 <div class="mb-3 _formfield">
                     <label class="col-form-label" for="id_f0"></label>
                 <div id="forecast_input" class="pop-up-anchor controls">
-                <div class="input-group input-group-narrow"><input type="text" class="form-control" id="id_f0" name="f0" value="" placeholder="14.00"><span class="input-group-text">points</span></div>
+                <div class="input-group input-group-narrow"><input type="text" class="form-control" id="id_f0" name="f0" value="" placeholder="14.00"></div>
                 </div>
                 </div></div>
                 <div class="ilb">
@@ -160,7 +160,7 @@
     <div class="box-header">Forecast Page</div>
     <p>The next step is the is to make a prediction about the market price.  When the market period ends,
     the screen will change to the forecast page.  You will be asked to enter your belief about what the market
-    price will be this period.  If you guess the market price with in {{ forecast_thold | cu }} of the true price,
+    price will be this period.  If you guess the market price within {{ forecast_thold | cu }} of the true price,
         you will be awarded {{ forecast_reward | cu}} of CASH.</p>
 </span>
 <span id="02_forecast" class="ins-pop-up tool-tip-text tt-bottom-left" rel="forecast_input" next="03_time">

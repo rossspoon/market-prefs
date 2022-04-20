@@ -33,7 +33,7 @@
                 </li>
                 <li> Period: <span class="pop-up-anchor" id="periods">{{ round_num }}</span></li>
                 <li> Number of Shares: <span class="pop-up-anchor" id="shares">5</span></li>
-                <li> Current Cash: <span class="pop-up-anchor" id="cash">145.00 points</span></li>
+                <li> Current Cash: <span class="pop-up-anchor" id="cash">{{ 145.00 | cu }}</span></li>
             </ul>
         </div>
 
@@ -75,7 +75,7 @@
                         <div id="o_price" class="pop-up-anchor controls">
                         <div class="input-group input-group-narrow">
                             <input type="text" class="form-control" id="id_price" name="price" value="" placeholder="Price">
-                            <span class="input-group-text">points</span></div>
+                        </div>
                         </div>
                     </div>
                     <div class="form-cell"><div id="submit-btn" class="pop-up-anchor btn btn-primary no-anim" tabindex="0">Submit</div></div>
@@ -175,7 +175,7 @@
 {#BEGIN - POP-UP ELEMENTS and TEXT#}
 <span id="01_intro" class="ins-pop-up front-center on" next="02_time">
     <div class="box-header">Market Page</div>
-    <p>This is the Market page.  Here, you will submit buy and sell orders during the time allowed.
+    <p>This is the Market page.  Here, you will submit buy and sell orders.
         After {{ market_time }} seconds the page will automatically advance to the next step.</p>
     <p>You are not required to submit any orders during a round, so if you wish to hold your
     current positions, simply wait for the market period to lapse.</p>
@@ -185,7 +185,7 @@
     submit up to 6 BUY or SELL orders.  You have the option to not submit any orders if you wish.</div>
 </span>
 <span id="03_periods" class="ins-pop-up tool-tip-text tt-bottom-right" rel="periods" next="04_shares">
-    <div>The market will last for {{ num_rounds }} periods.</div>
+    <div>The experiment will last for {{ num_rounds }} periods.</div>
 </span>
 <span id="04_shares" class="ins-pop-up tool-tip-text tt-bottom-right" rel="shares" next="05_cash">
     <div>This is the number of shares of STOCK that you currently own.  If you short the STOCK, this number
@@ -230,7 +230,7 @@
 <span id="14_stock_val" class="ins-pop-up tool-tip-text tt-right" rel="stat_stock_value" next="15_debt">
     <p>This section contains various personal and market statistics starting with the value of your STOCK.</p>
     <p>This is the value of your STOCK at the current market price.  If you have shorted the STOCK, this
-    figure will be negative.</p>
+    value will be negative.</p>
 </span>
 <span id="15_debt" class="ins-pop-up tool-tip-text tt-right" rel="stat_debt" next="16_limit">
     <p>Your debt is either the amount of CASH you borrowed, or the value of shorted STOCK.  This amount
@@ -239,9 +239,10 @@
 <span id="16_limit" class="ins-pop-up tool-tip-text tt-right" rel="stat_limit" next="17_market_price">
     <p>
         This is your borrowing limit.  If your debt ever exceeds this amount, the system will submit an automatic
-        transaction on your behalf to lower your debt.   If you are borrowing CASH and your debt exceeds your limit
-        you will face an automatic sell.  If you are shorting STOCK and the value of your STOCK exceeds this amount,
-        the system to buy for you.
+        transaction on your behalf to lower your debt.   If you are borrowing CASH and your debt exceeds your limit,
+        The system will sell some of your STOCK.  If you are shorting STOCK and the value of your STOCK exceeds this
+        amount,
+        the system will buy STOCK on you behalf.
     </p>
     <p>Note: This amount is based on the value of your STOCK, your CASH holdings, and the current market price.
     If you do nothing during a market period and the market price changes, this limit will also change.</p>
@@ -255,7 +256,8 @@
 <span id="18_float" class="ins-pop-up tool-tip-text tt-right" rel="stat_stock_float" next="19_shorted">
     <p>This is the total number of shares in the market.</p>
     {{if short_cap_exist }}
-    <p>During the market play, we will limit short selling to be no more than {{ short_cap }} of this amount.</p>
+    <p>During the experiment, the system will limit the total amount of shares shorted to {{ short_cap }} of
+        the float.</p>
     {{ endif }}
 </span>
 <span id="19_shorted" class="ins-pop-up tool-tip-text tt-right" rel="stat_total_short" next="20_interest_rate">
@@ -268,7 +270,7 @@
 </span>
 <span id="20_interest_rate" class="ins-pop-up tool-tip-text tt-right" rel="stat_int_rate" next="21_dividend">
     <p>This is the interest rate earned on CASH calculated after the shares have been traded.</p>
-    <p>Example:  If you end the market period with 10.00 points in CASH, you will earn 0.50 points in
+    <p>Example:  If you end the market period with 10.00 units CASH, you will earn 0.50 units in
     interest.</p>
     <p>If you borrow CASH, you will pay out interest at this rate.</p>
 </span>

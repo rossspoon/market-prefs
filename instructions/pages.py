@@ -129,11 +129,11 @@ class _02_Trading(Page):
 
 
 class _03_BorrowingCash(Page):
-    pass
+    vars_for_template = vars_for_temp_common
 
 
 class _04_ShortingStock(Page):
-    pass
+    vars_for_template = vars_for_temp_common
 
 
 class _05_MarketRestrictions_1(Page):
@@ -305,13 +305,15 @@ class OutroPage(Page):
 
 page_sequence = [IntroPage,
                  _02_Trading,
+                 _03_BorrowingCash,
+                 _04_ShortingStock,
+                 _15_EndOfMarket,
+                 _12_MarketPage2,
+                 _13_ForecastPage2,
+                 _14_PeriodSummary2,
                  _06_MarketRestrictions_2,
                  _06_MarketRestrictions_3,
                  _09_AutoTransactions,
                  _10_Bankruptcy,
-                 _12_MarketPage2,
-                 _13_ForecastPage2,
-                 _14_PeriodSummary2,
-                 _15_EndOfMarket,
                  Quiz02,
                  OutroPage]

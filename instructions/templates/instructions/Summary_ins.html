@@ -33,7 +33,7 @@
                 </li>
                 <li> Period: <span class="pop-up-anchor" id="periods">{{ round_num }}</span></li>
                 <li> Number of Shares: <span class="pop-up-anchor" id="shares">6</span></li>
-                <li> Current Cash: <span class="pop-up-anchor" id="cash">139.96 points</span></li>
+                <li> Current Cash: <span class="pop-up-anchor" id="cash">139.96</span></li>
             </ul>
         </div>
 
@@ -79,7 +79,7 @@
                         <span class="order-details price-col">&nbsp;<span class="r_just">23.45</span></span>
                     </td>
                     <td class="notes-col">&nbsp;</td>
-                    <td class="full-col">&nbsp;1 @ {{ 18.75|cu }}</td>
+                    <td class="full-col">&nbsp;1 @ 18.75</td>
                 </tr>
             </table>
         </div>
@@ -111,15 +111,15 @@
                     </tr>
                     <tr>
                         <td><div id="stat_div" class="pop-up-anchor">Dividend Earned</div></td>
-                        <td class="stat-value">&nbsp;<span class="r_just">2.40 points</span></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ 2.40 | cu }}</span></td>
                     </tr>
                     <tr>
                         <td><div id="stat_int" class="pop-up-anchor">Interest Earned</div></td>
-                        <td class="stat-value">&nbsp;<span class="r_just">6.31 points</span></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ 6.31 | cu }}</span></td>
                     </tr>
                     <tr>
                         <td><div id="stat_reward" class="pop-up-anchor">Forecast Payment</div></td>
-                        <td class="stat-value">&nbsp;<span class="r_just">5.00 points</span></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ 5.00 | cu }}</span></td>
                     </tr>
                 </table>
             </div>
@@ -166,11 +166,12 @@
 {#BEGIN - POP-UP ELEMENTS and TEXT#}
 <span id="01_intro" class="ins-pop-up front-center on" next="02_div">
     <div class="box-header">Market Period Results</div>
-    <p>This is the Market Period Results page.  Here you will learn how the market changed in the
-    last trading period and how you performed.</p>
+    <p>This is the Market Period Results page.  Here you will learn how the updated market price and trading
+        volume in the last period.  You will also be informed about how many shares you traded, how much
+    dividend and interest you earned, and what your new CASH and STOCK holdings are.</p>
     <p>
     At the end of the market period, all outstanding orders will be used to
-        determine the market clearing price. &nbsp;&nbsp; This price will be chosen to maximize the number of shares traded.&nbsp;&nbsp;
+        determine the market clearing price.  This price will be chosen to maximize the number of shares traded.
         Once the market price is determined, the system will execute as many trades as possible at that price.
     </p>
 
@@ -180,7 +181,7 @@
         the orders submitted.</p>
 </span>
 <span id="02_div" class="ins-pop-up tool-tip-text tt-right" rel="stat_div" next="03_int">
-    <p>This is your dividend earnings for this market period.  The dividend will be either {{ dividends }} points
+    <p>This is your dividend earnings for this market period.  The dividend will be either {{ dividends }}
         per share that you own.  If you have shorted STOCK then this amount will be negative indicating that you
         are paying out the dividend.
     </p>

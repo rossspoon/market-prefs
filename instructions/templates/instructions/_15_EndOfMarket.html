@@ -1,5 +1,5 @@
 {{ block title }}
-    END OF MARKET
+    END OF EXPERIMENT
 {{ endblock }}
 {{ block content }}
     <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
@@ -7,19 +7,26 @@
 
     <div class="layout-box">
     <div class="main-block">
-        <p>The market will run for {{ num_rounds }} periods. &nbsp;&nbsp; Afterward you will be presented with a final
-            summary page that will show your final holdings of CASH and STOCK and your final payment.</p>
-        <p>In addition to you final amount of CASH, the experiment will pay out {{ fund_value }} points for each
-            share of STOCK that you own. &nbsp;&nbsp; If you finish the market with a short position (negative shares),
-            you will be charged {{ fund_value }} points per share.
+        <p>At the end of {{ num_rounds }} periods of trading, each unit of STOCK is automatically traded in
+            for 14.00 CASH.  If you end the experiment with negative shares (a short position) 14.00
+            CASH will be deducted from your CASH for every share short.
         </p>
-        <p>Your final amount of CASH will be converted to actual payment.&nbsp;&nbsp;
-            You will be paid 1 US dollar for each {{ conversion }} points of CASH
-            that you hold
-            {{ if has_bonus_cap }}
-                (up to ${{ bonus_cap_whole_num }})
-            {{ endif }}.</p>
-        <p>Following the final summary page will be a short survey.</p>
+        <p>After that your experiment CASH units are converted to US dollars at a rate of 100 CASH = $1 US,
+            to determine
+            how much you will be paid at the end of the experiment.</p>
+
+        <div class="example">
+        <p>Suppose in a period you have 120 units of CASH and 5 units of STOCK, and the dividend
+        is 0.40 per unit of stock. Then your new CASH amount would be a 5% increase times 120 (a gain of 6) and
+        total dividends of 0.40 x 5 = 2. Your total CASH would therefore increase by 6 + 2 = 8 units.  Then your
+        STOCK will be traded in for 14.00 CASH or 5 x 14.00 = 70.00.  Your resulting CASH will then be
+            120 + 8 + 70 = 198.  That will get converted to $1.98 which will be rounded up to $2.00.</p>
+        </div>
+
+        <p>Notice:
+        that keeping CASH will earn a return (5% per period) and using CASH to buy units of STOCK will also
+        yield dividend earnings. If you are trying to earn the most money you might think about whether
+            keeping CASH or buying STOCK creates more earnings.</p>
 
     </div>
     <div class="bottom-row">
