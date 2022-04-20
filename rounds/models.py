@@ -42,6 +42,9 @@ class OrderErrorCode(Enum):
     BAD_TYPE = (16, OrderField.TYPE, 'Select a type')
     BID_GREATER_THAN_ASK = (32, OrderField.PRICE, 'Buy price must be less than all sell orders')
     ASK_LESS_THAN_BID = (64, OrderField.PRICE, 'Sell price must be greater than all buy orders')
+    BORROWING_TOO_MUCH = (128, OrderField.QUANTITY, 'The cost of this order will increase your debt beyond your'
+                                                    ' limit. \u000D\u000A '
+                                                    'Either lower the price or reduce the number of shares.')
 
     def combine(self, code):
         if type(code) is OrderErrorCode:

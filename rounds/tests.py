@@ -54,7 +54,11 @@ def call_live_method(method, **kwargs):
     if round_number != 1:
         return
 
+    page_class = kwargs.get('page_class')
+    if not (page_class is Market):
+        return
+
     group: Group = kwargs.get('group')
 
     for player in group.get_players():
-        test_place_order(method, player.id_in_group, -1, 4000, 2)
+        test_place_order(method, player.id_in_group, -1, 40.00, 2)

@@ -88,7 +88,7 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
 #########################
 # LIVE PAGES FUNCTIONS
 # noinspection DuplicatedCode
-def is_order_valid(data, orders_by_type):
+def is_order_valid(player, data, orders_by_type):
     error_code, o_type, price, quant = is_order_form_valid(data)
 
     # All remaining tests depend on the numeric form data
@@ -112,12 +112,41 @@ def is_order_valid(data, orders_by_type):
     max_bid = max([o.price for o in orders_by_type[OrderType.BID]], default=-999)
 
     if o_type == OrderType.BID and price >= min_ask:
-        error_code = OrderErrorCode.BID_GREATER_THAN_ASK.combine(error_code)
+        return OrderErrorCode.BID_GREATER_THAN_ASK.combine(error_code)
 
     if o_type == OrderType.OFFER and price <= max_bid:
-        error_code = OrderErrorCode.ASK_LESS_THAN_BID.combine(error_code)
+        return OrderErrorCode.ASK_LESS_THAN_BID.combine(error_code)
+
+    # Check that buy orders don't violate margin requirements
+    if is_borrowing_too_much(player, orders_by_type, o_type, price, quant):
+        return OrderErrorCode.BORROWING_TOO_MUCH.value
 
     return error_code
+
+
+def is_borrowing_too_much(player, orders_by_type, o_type, price, quant):
+    if o_type == OrderType.OFFER:
+        return False
+
+    # Get total cost
+    buy_orders = orders_by_type[OrderType.BID]
+    total_cost = sum(o.price * o.quantity for o in buy_orders) + price * quant
+
+    # player position information
+    cash = player.cash
+    value_of_stock = abs(player.shares * player.group.get_last_period_price())
+    margin_ratio = scf.get_margin_ratio(player)
+    lowest_possible_cash = cash - total_cost
+
+    if player.is_short() and lowest_possible_cash < (1 + margin_ratio) * value_of_stock:
+        return True
+
+    elif not player.is_short() \
+            and lowest_possible_cash < 0 \
+            and abs(lowest_possible_cash) >= value_of_stock / (1 + margin_ratio):
+        return True
+
+    return False
 
 
 def is_order_form_valid(data):
@@ -251,7 +280,7 @@ def market_page_live_method(player, d, o_cls=Order, show_warnings=True, show_not
     if func == 'submit-order':
         data = d['data']
         form_code, t, p, q = is_order_form_valid(data)
-        error_code = is_order_valid(data, orders_by_type)
+        error_code = is_order_valid(player, data, orders_by_type)
 
         if form_code == 0 and error_code == 0:
             ret.update(create_order_from_live_submit(player, t, p, q, o_cls=o_cls))
