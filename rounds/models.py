@@ -257,7 +257,6 @@ class Player(BasePlayer):
             forecast_reward = reward if forecast_error <= threshold else 0
             self.forecast_error = forecast_error
             self.forecast_reward = forecast_reward
-            self.cash_result += forecast_reward
 
     @staticmethod
     def calculate_delay(current_delay, base):

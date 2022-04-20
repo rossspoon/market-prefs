@@ -11,9 +11,11 @@ class FinalResultsPage(Page):
     def vars_for_template(self):
         participant = self.player.participant
         session = self.player.session
-        return {'bonus_rwc': participant.payoff.to_real_world_currency(session),
-                'total_pay': participant.payoff_plus_participation_fee()
-                }
+        market_bonus = participant.vars.get('MARKET_PAYMENT').to_real_world_currency(session)
+        forecast_bonus = participant.vars.get('FORECAST_PAYMENT').to_real_world_currency(session)
+        return {'market_bonus': market_bonus,
+                'forecast_bonus': forecast_bonus,
+                'total_pay': participant.payoff_plus_participation_fee()}
 
     def is_displayed(self):
         participant = self.player.participant

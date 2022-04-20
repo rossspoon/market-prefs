@@ -614,19 +614,32 @@ class RoundResultsPage(Page):
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
-        if player.is_bankrupt():
-            return
-
         if player.round_number != Constants.num_rounds:
             return
 
+        bankrupt = player.is_bankrupt()
         participant = player.participant
-        stock_value = player.shares_result * scf.get_fundamental_value(player)
-        total_equity = stock_value + player.cash_result
-        bonus_cap = scf.get_bonus_cap(player)
-        bonus = min(total_equity, bonus_cap)
+
+        # Market Bonus - Final equity with STOCK at Fundamental Value
+        market_bonus = 0
+        if not bankrupt:
+            stock_value = player.shares_result * scf.get_fundamental_value(player)
+            total_equity = stock_value + player.cash_result
+            bonus_cap = scf.get_bonus_cap(player)
+            market_bonus = min(total_equity, bonus_cap)
+
+        participant.MARKET_PAYMENT = cu(market_bonus)
+
+        # Forecast Bonus
+        forecast_bonus = 0
+        for p in player.in_all_rounds():
+            forecast_bonus += p.forecast_reward
+        participant.FORECAST_PAYMENT = cu(forecast_bonus)
+
+        # Determine total bonus and round up to whole dollar amount.
+        bonus = market_bonus + forecast_bonus
         conversion = 1 / scf.get_conversion_rate(player)
-        bonus_rounded_up = ceil(bonus/conversion)*conversion
+        bonus_rounded_up = ceil(bonus / conversion) * conversion
         participant.payoff = max(bonus_rounded_up, 0)
 
 
@@ -642,7 +655,10 @@ class FinalResultsPage(Page):
     def vars_for_template(player: Player):
         participant = player.participant
         session = player.session
-        return {'bonus_rwc': participant.payoff.to_real_world_currency(session),
+        market_bonus = participant.vars.get('MARKET_PAYMENT').to_real_world_currency(session)
+        forecast_bonus = participant.vars.get('FORECAST_PAYMENT').to_real_world_currency(session)
+        return {'market_bonus': market_bonus,
+                'forecast_bonus': forecast_bonus,
                 'total_pay': participant.payoff_plus_participation_fee()}
 
 
