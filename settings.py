@@ -3,7 +3,7 @@ from os import environ
 SESSION_CONFIGS = [
     dict(
         name='rounds',
-        app_sequence=['rounds'],
+        app_sequence=['consent', 'rounds', 'payment'],
         num_demo_participants=2,
         random_hist=False
     )
@@ -89,11 +89,11 @@ SESSION_CONFIG_DEFAULTS = dict(
     auto_trans_delay=0,
     float_ratio_cap=1.0,
 
-    endow_stock='3',
-    endow_worth=142.0,
+    endow_stock='0 2 4',
+    endow_worth=184.0,
 
     initial_price=14.0,
-    bonus_cap=5000,
+    bonus_cap=None,
     forecast_thold=2.5,
     forecast_reward=5,
     market_time=45,
@@ -112,6 +112,7 @@ LANGUAGE_CODE = 'en'
 # e.g. EUR, GBP, CNY, JPY
 REAL_WORLD_CURRENCY_CODE = 'USD'
 USE_POINTS = True
+POINTS_CUSTOM_NAME = ""
 POINTS_DECIMAL_PLACES = 2
 
 ADMIN_USERNAME = 'admin'
