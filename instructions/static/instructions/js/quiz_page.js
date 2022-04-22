@@ -4,6 +4,12 @@ $(window).on('load', function () {
         $('#'+n).addClass(cls)
     }
 
+    //disable the form items if the quiz was already attempted
+    if (js_vars.attempted) {
+        $("select").prop("disabled", true)
+        $("input").prop("disabled", true)
+    }
+
     $('.debug-info').detach();
 
     if (js_vars.success){

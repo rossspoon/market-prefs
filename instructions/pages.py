@@ -216,6 +216,7 @@ class QuizPage(Page):
     def js_vars(self):
         question_class = {name: 'normal' for name in self.form_fields}
         success = False
+        attempted = False
 
         # if the page has already been submitted, we now have a form object,
         # and it has been 'graded'.  determine the check/ex class of each question.
@@ -226,8 +227,11 @@ class QuizPage(Page):
             # This variable will signal the js to turn the error message green.
             success = all(correct.values())
 
+            attempted = True
+
         return {'q_class': question_class,
-                'success': success}
+                'success': success,
+                'attempted': attempted}
 
     def error_message(self, values):
         player = self.player
@@ -303,17 +307,20 @@ class OutroPage(Page):
     vars_for_template = vars_for_temp_common
 
 
-page_sequence = [IntroPage,
-                 _02_Trading,
-                 _03_BorrowingCash,
-                 _04_ShortingStock,
-                 _15_EndOfMarket,
-                 _12_MarketPage2,
-                 _13_ForecastPage2,
-                 _14_PeriodSummary2,
-                 _06_MarketRestrictions_2,
-                 _06_MarketRestrictions_3,
-                 _09_AutoTransactions,
-                 _10_Bankruptcy,
+# page_sequence = [IntroPage,
+#                  _02_Trading,
+#                  _03_BorrowingCash,
+#                  _04_ShortingStock,
+#                  _15_EndOfMarket,
+#                  _12_MarketPage2,
+#                  _13_ForecastPage2,
+#                  _14_PeriodSummary2,
+#                  _06_MarketRestrictions_2,
+#                  _06_MarketRestrictions_3,
+#                  _09_AutoTransactions,
+#                  _10_Bankruptcy,
+#                  Quiz02,
+#                  OutroPage]
+page_sequence = [
                  Quiz02,
                  OutroPage]
