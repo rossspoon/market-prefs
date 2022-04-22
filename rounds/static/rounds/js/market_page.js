@@ -21,7 +21,6 @@ $(window).on('load', function () {
     //Add placeholder on the order form
     $('#id_quantity').attr('placeholder', 'Quantity')
     $('#id_price').attr('placeholder', 'Price')
-    $('#id_f0').attr('placeholder', js_vars.market_price)
 
     set_tool_tips();
 

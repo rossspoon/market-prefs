@@ -613,11 +613,6 @@ class ForecastPage(Page):
     is_displayed = not_displayed_for_simulation
     live_method = forecast_page_live_method
 
-    @staticmethod
-    def before_next_page(player: Player, timeout_happened):
-        if player.field_maybe_none('f0') is None:
-            player.f0 = player.group.get_last_period_price()
-
 
 class MarketWaitPage(WaitPage):
     after_all_players_arrive = calculate_market
