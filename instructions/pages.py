@@ -307,20 +307,17 @@ class OutroPage(Page):
     vars_for_template = vars_for_temp_common
 
 
-# page_sequence = [IntroPage,
-#                  _02_Trading,
-#                  _03_BorrowingCash,
-#                  _04_ShortingStock,
-#                  _15_EndOfMarket,
-#                  _12_MarketPage2,
-#                  _13_ForecastPage2,
-#                  _14_PeriodSummary2,
-#                  _06_MarketRestrictions_2,
-#                  _06_MarketRestrictions_3,
-#                  _09_AutoTransactions,
-#                  _10_Bankruptcy,
-#                  Quiz02,
-#                  OutroPage]
-page_sequence = [
+page_sequence = [IntroPage,
+                 _02_Trading,
+                 _03_BorrowingCash,
+                 _04_ShortingStock,
+                 _15_EndOfMarket,
+                 _12_MarketPage2,
+                 _13_ForecastPage2,
+                 _14_PeriodSummary2,
+                 _06_MarketRestrictions_2,
+                 _06_MarketRestrictions_3,
+                 _09_AutoTransactions,
+                 _10_Bankruptcy,
                  Quiz02,
                  OutroPage]
