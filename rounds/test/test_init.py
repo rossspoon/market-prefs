@@ -241,15 +241,17 @@ class TestInitFunctions(unittest.TestCase):
         self.assertIsNone(q)
 
     @patch('rounds.is_order_form_valid', return_value=(999, None, None, None))
-    def test_is_order_valid_form_not_valid(self, _):
-        error_code = rounds.is_order_valid({}, {})
+    @patch('rounds.is_borrowing_too_much', return_value=False)
+    def test_is_order_valid_form_not_valid(self, _, _1):
+        error_code = rounds.is_order_valid(None, {}, {})
 
         # Assert
         self.assertEqual(error_code, 999)
 
     @patch('rounds.is_order_form_valid', return_value=(0, None, -1, -2))
-    def test_is_order_valid_neg_price_and_quant(self, _):
-        error_code = rounds.is_order_valid({}, {})
+    @patch('rounds.is_borrowing_too_much', return_value=False)
+    def test_is_order_valid_neg_price_and_quant(self, _, _1):
+        error_code = rounds.is_order_valid(None, {}, {})
 
         expected_error_code = OrderErrorCode.PRICE_NEGATIVE.value + \
                               OrderErrorCode.QUANT_NEGATIVE.value
@@ -258,8 +260,9 @@ class TestInitFunctions(unittest.TestCase):
         self.assertEqual(error_code, expected_error_code)
 
     @patch('rounds.is_order_form_valid', return_value=(0, None, -1, 2))
-    def test_is_order_valid_neg_price(self, _):
-        error_code = rounds.is_order_valid({}, {})
+    @patch('rounds.is_borrowing_too_much', return_value=False)
+    def test_is_order_valid_neg_price(self, _, _1):
+        error_code = rounds.is_order_valid(None, {}, {})
 
         expected_error_code = OrderErrorCode.PRICE_NEGATIVE.value
 
@@ -267,8 +270,9 @@ class TestInitFunctions(unittest.TestCase):
         self.assertEqual(error_code, expected_error_code)
 
     @patch('rounds.is_order_form_valid', return_value=(0, None, 1, -2))
-    def test_is_order_valid_neg_quant(self, _):
-        error_code = rounds.is_order_valid({}, {})
+    @patch('rounds.is_borrowing_too_much', return_value=False)
+    def test_is_order_valid_neg_quant(self, _, _1):
+        error_code = rounds.is_order_valid(None, {}, {})
 
         expected_error_code = OrderErrorCode.QUANT_NEGATIVE.value
 
@@ -276,7 +280,8 @@ class TestInitFunctions(unittest.TestCase):
         self.assertEqual(error_code, expected_error_code)
 
     @patch('rounds.is_order_form_valid', return_value=(0, OrderType.BID, 4000, 2))
-    def test_is_order_valid_buy_price_above_sell(self, _):
+    @patch('rounds.is_borrowing_too_much', return_value=False)
+    def test_is_order_valid_buy_price_above_sell(self, _, _1):
         # Set-up
         player = basic_player(id_in_group=-99)
         order = get_order(player=player, order_type=1, price=4000)
@@ -284,14 +289,15 @@ class TestInitFunctions(unittest.TestCase):
         orders_by_price[OrderType.OFFER] = [order]
 
         # Test
-        error_code = rounds.is_order_valid({}, orders_by_price)
+        error_code = rounds.is_order_valid(player, {}, orders_by_price)
 
         # Assert
         expected_error_code = OrderErrorCode.BID_GREATER_THAN_ASK.value
         self.assertEqual(error_code, expected_error_code)
 
     @patch('rounds.is_order_form_valid', return_value=(0, OrderType.OFFER, 4000, 2))
-    def test_is_order_valid_sell_price_below_buy(self, _):
+    @patch('rounds.is_borrowing_too_much', return_value=False)
+    def test_is_order_valid_sell_price_below_buy(self, _, _1):
         # Set-up
         player = basic_player(id_in_group=-99)
         order = get_order(player=player, order_type=-1, price=4000)
@@ -299,14 +305,15 @@ class TestInitFunctions(unittest.TestCase):
         orders_by_price[OrderType.BID] = [order]
 
         # Test
-        error_code = rounds.is_order_valid({}, orders_by_price)
+        error_code = rounds.is_order_valid(player, {}, orders_by_price)
 
         # Assert
         expected_error_code = OrderErrorCode.ASK_LESS_THAN_BID.value
         self.assertEqual(error_code, expected_error_code)
 
     @patch('rounds.is_order_form_valid', return_value=(0, OrderType.OFFER, 4000, 2))
-    def test_is_order_valid_sell(self, _):
+    @patch('rounds.is_borrowing_too_much', return_value=False)
+    def test_is_order_valid_sell(self, _, _1):
         # Set-up
         player = basic_player(id_in_group=-99)
         sell = get_order(player=player, order_type=1, price=4001)
@@ -316,13 +323,14 @@ class TestInitFunctions(unittest.TestCase):
         orders_by_price[OrderType.BID] = [buy]
 
         # Test
-        error_code = rounds.is_order_valid({}, orders_by_price)
+        error_code = rounds.is_order_valid(player, {}, orders_by_price)
 
         # Assert
         self.assertEqual(error_code, 0)
 
     @patch('rounds.is_order_form_valid', return_value=(0, OrderType.BID, 4000, 2))
-    def test_is_order_valid_buy(self, _):
+    @patch('rounds.is_borrowing_too_much', return_value=False)
+    def test_is_order_valid_buy(self, _, _1):
         # Set-up
         player = basic_player(id_in_group=-99)
         sell = get_order(player=player, order_type=1, price=4001)
@@ -332,7 +340,7 @@ class TestInitFunctions(unittest.TestCase):
         orders_by_price[OrderType.BID] = [buy]
 
         # Test
-        error_code = rounds.is_order_valid({}, orders_by_price)
+        error_code = rounds.is_order_valid(player, {}, orders_by_price)
 
         # Assert
         self.assertEqual(error_code, 0)
@@ -604,7 +612,7 @@ class TestInitFunctions(unittest.TestCase):
         o4p_m.assert_called_once_with(player, o_cls=ANY)
         obt_m.assert_called_once_with([])
         is_vf_m.assert_called_once_with(form_data)
-        is_v_m.assert_called_once_with(form_data, {})
+        is_v_m.assert_called_once_with(player, form_data, {})
         create_m.assert_not_called()
         o4pl_m.assert_not_called()
         warn_m.assert_called_once_with(player, 'no_order', 0, 0, {})
@@ -636,7 +644,7 @@ class TestInitFunctions(unittest.TestCase):
         o4p_m.assert_called_once_with(player, o_cls=ANY)
         obt_m.assert_called_once_with([])
         is_vf_m.assert_called_once_with(form_data)
-        is_v_m.assert_called_once_with(form_data, {})
+        is_v_m.assert_called_once_with(player, form_data, {})
         create_m.assert_not_called()
         o4pl_m.assert_not_called()
         warn_m.assert_called_once_with(player, 'no_order', 0, 0, {})
@@ -668,7 +676,7 @@ class TestInitFunctions(unittest.TestCase):
         o4p_m.assert_called_once_with(player, o_cls=ANY)
         obt_m.assert_called_once_with([])
         is_vf_m.assert_called_once_with(form_data)
-        is_v_m.assert_called_once_with(form_data, {})
+        is_v_m.assert_called_once_with(player, form_data, {})
         create_m.assert_called_once_with(player, OrderType.BID, 3890, 9, o_cls=ANY)
         o4pl_m.assert_not_called()
         warn_m.assert_called_once_with(player, OrderType.BID, 3890, 9, {})
@@ -714,8 +722,10 @@ class TestInitFunctions(unittest.TestCase):
     def test_FinalResultsPage_vars(self):
         # Set-up
         p = basic_player(shares=3, cash=1.5)
-        p.participant = Participant()
+        p.participant = MagicMock()
         p.participant.payoff = cu(1000)
+        p.participant.vars = {'MARKET_PAYMENT': cu(4.56), 'FORECAST_PAYMENT': cu(7.89)}
+        p.participant.payoff_plus_participation_fee = MagicMock(return_value=25.55)
         session = Session()
         config = {'real_world_currency_per_point': 0.02, 'participation_fee': 5.55}
         session.config = config
@@ -727,7 +737,7 @@ class TestInitFunctions(unittest.TestCase):
         d = page.vars_for_template(p)
 
         # Assert
-        self.assertEqual({'bonus_rwc': 20, 'total_pay': 25.55}, d)
+        self.assertEqual({'forecast_bonus': cu(0.16), 'market_bonus': cu(0.09), 'total_pay': 25.55}, d)
 
 
 if __name__ == '__main__':

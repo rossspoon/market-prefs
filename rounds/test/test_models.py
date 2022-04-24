@@ -455,7 +455,7 @@ class TestPlayerMethods(unittest.TestCase):
         # Assert
         self.assert_equal_or_none(p.forecast_reward, reward)
         self.assert_equal_or_none(p.forecast_error, error)
-        self.assert_equal_or_none(p.cash_result, reward)
+        self.assert_equal_or_none(p.cash_result, 0)
 
     def test_forecasts(self):
         self.generic_forecast_test(f0=1000, price=750, reward=500, error=250)
