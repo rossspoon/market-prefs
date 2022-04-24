@@ -30,10 +30,18 @@ def creating_session(subsession):
     stock_endowments = scf.get_endow_stocks(subsession)
     worth = scf.get_endow_worth(subsession)
     fund_val = scf.get_fundamental_value(subsession)
+    num_players = len(subsession.get_players())
 
-    for p in subsession.get_players():
-        stock_idx = (p.id_in_group - 1) % len(stock_endowments)
-        shares = stock_endowments[stock_idx]
+    # Remainder - This part is particular to the experiment and based on three possible opening share positions
+    remainder = num_players % 3
+    whole_quotient = num_players // 3
+    stock_for_players = stock_endowments * whole_quotient
+    if remainder == 1:
+        stock_for_players = stock_for_players + stock_endowments[1:2]
+    elif remainder == 2:
+        stock_for_players = stock_for_players + [stock_endowments[0], stock_endowments[2]]
+
+    for p, shares in zip(subsession.get_players(), stock_for_players):
         p.shares = shares
         p.cash = worth - shares * fund_val
 
