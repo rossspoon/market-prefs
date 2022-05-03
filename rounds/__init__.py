@@ -502,7 +502,7 @@ def vars_for_round_results_template(player: Player):
     ret['filled_amount'] = filled_amount
     ret['trans_type'] = trans_type
     ret['trans_cost'] = filled_amount * player.group.price
-    ret['bankrupt'] = player.shares_result < 0 and player.cash_result < 0
+    ret['bankrupt'] = player.is_bankrupt(results=True)
     ret['show_form'] = 'results'
     ret['attn_cls'] = 'attention_slow'
     ret['messages'] = get_round_result_messages(player, ret)
@@ -526,6 +526,13 @@ def get_round_result_messages(player: Player, d: dict):
     # Volume message
     msg = f"Market volume this period: {player.group.volume} shares"
     messages.append(dict(class_attr='result-msg', msg=msg))
+
+    # Bankrupt
+    if d.get('bankrupt'):
+        msg = f"You are now bankrupt and will be unable to participate the in market.  You will be directed to the" \
+              f" survey portion of the experiment.  Afterward you will be able to collect your $10.00 participation" \
+              f" fee plus any forecast bonus that you earned during the experiment."
+    messages.append(dict(class_attr='alert-danger', msg=msg))
 
     return messages
 
@@ -641,7 +648,15 @@ class RoundResultsPage(Page):
         if not upcoming_apps or len(upcoming_apps) == 0:
             return None
 
-        if player.is_bankrupt():
+        if player.is_bankrupt(results=True):
+            participant = player.participant
+            participant.MARKET_PAYMENT = cu(0)
+
+            forecast_bonus = 0
+            for p in player.in_all_rounds():
+                forecast_bonus += p.forecast_reward
+            participant.FORECAST_PAYMENT = cu(forecast_bonus)
+
             return upcoming_apps[0]
 
     @staticmethod

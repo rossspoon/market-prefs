@@ -194,9 +194,12 @@ class Player(BasePlayer):
     def is_debt(self):
         return self.cash < 0
 
-    def is_bankrupt(self):
+    def is_bankrupt(self, results=False):
         price = self.group.get_last_period_price()
-        _, equity, _, _, _ = self.get_holding_details(price)
+        if results:
+            price = self.group.price
+
+        _, equity, _, _, _ = self.get_holding_details(price, results=results)
         return equity <= 0
 
     def in_round_or_null(self, round_number):
