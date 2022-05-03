@@ -188,7 +188,7 @@ class Player(BasePlayer):
     def is_debt(self):
         return self.cash < 0
 
-    def is_bankrupt(self):
+    def is_bankrupt(self, results=False):
         return self.shares < 0 and self.cash < 0
 
     def in_round_or_null(self, round_number):
