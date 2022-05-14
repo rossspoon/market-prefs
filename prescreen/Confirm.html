@@ -1,0 +1,21 @@
+{{ block title }}
+    Thank You for Your Selection
+{{ endblock }}
+
+
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'css/global.css' }}">
+    <link rel="stylesheet" href="{{ static 'prescreen/css/prescreen.css' }}">
+
+    <ul>
+        {{ for s in slots }}
+            <li>
+                <span class="label"> {{ s.to_date }} <span class="r_just"> {{ s.to_time }} to {{ s.to_end_time }}</span></span>
+            </li>
+        {{ endfor }}
+    </ul>
+
+    Click <a href="{{ session.prolific_completion_url }}">here</a> to complete the study.
+{{ endblock }}
+
+

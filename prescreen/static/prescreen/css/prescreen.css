@@ -1,0 +1,19 @@
+li {
+    list-style: none;
+    font-size: 1.6em;
+    font-weight: 600;
+    margin: 20px;
+}
+li:nth-child(even)  .label {background: #eee}
+input:checked + .label {
+    background-color: #88b1fa;
+}
+.label {
+    position: relative;
+    display: inline-block;
+    width: 700px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-left: 30px;
+    border-radius: 8px;
+}

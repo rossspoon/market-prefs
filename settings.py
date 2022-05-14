@@ -60,13 +60,24 @@ SESSION_CONFIGS = [
     )
     , dict(
         name='whole_experiment',
-        app_sequence=['consent', 'instructions','rounds', 'survey', 'payment'],
+        app_sequence=['consent', 'instructions', 'rounds', 'survey', 'payment'],
         num_demo_participants=2,
     )
     , dict(
         name='consent_then_rounds',
-        app_sequence=['consent',  'rounds', 'payment'],
+        app_sequence=['consent', 'rounds', 'payment'],
         num_demo_participants=2,
+    )
+    , dict(
+        name='prescreen',
+        app_sequence=['prescreen'],
+        num_demo_participants=1,
+
+        slot_01='202205261200',
+        slot_02='202205261400',
+        slot_03='202205261600',
+        slot_04='202205271200',
+        slot_05='202205271400',
     )
 ]
 
@@ -102,8 +113,8 @@ SESSION_CONFIG_DEFAULTS = dict(
     show_next=False,
 )
 
-PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT']
-SESSION_FIELDS = []
+PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT', 'finished']
+SESSION_FIELDS = ['prolific_completion_url']
 
 # ISO-639 code
 # for example: de, fr, ja, ko, zh-hans
