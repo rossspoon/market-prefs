@@ -118,8 +118,10 @@ def te(key):
 
 def custom_export(players):
     """ Custom export for prescreen app """
+    yield ['participant', 'timeslot', 'finished']
+
     for p in players:
-        finished = p.participant.get('finished')
+        finished = p.participant.vars.get('finished')
         for ts in TimeSlot.filter(player=p):
             yield [p.participant.label, ts.date, finished]
 
