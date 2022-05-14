@@ -120,7 +120,7 @@ def custom_export(players):
     """ Custom export for prescreen app """
     for p in players:
         for ts in TimeSlot.filter(player=p):
-            yield [ts.player, ts.date]
+            yield [p.participant.label, ts.date]
 
 
 # PAGES
