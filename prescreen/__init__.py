@@ -119,8 +119,9 @@ def te(key):
 def custom_export(players):
     """ Custom export for prescreen app """
     for p in players:
+        finished = p.participant.get('finished')
         for ts in TimeSlot.filter(player=p):
-            yield [p.participant.label, ts.date]
+            yield [p.participant.label, ts.date, finished]
 
 
 # PAGES
