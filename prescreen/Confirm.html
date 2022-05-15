@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="{{ static 'prescreen/css/prescreen.css' }}">
 
     <p>Thank you for your choice.  You have indicated that you will be available during the following timeslots.
-    If we are able to run an experimental session during one of the times that you have selected, we will send you
-    a invitation through <em>prolific.co</em>.</p>
+    If you are selected to participate in a session, we will send you
+    an invitation through <em>prolific.co</em>.</p>
     <ul>
         {{ for s in slots }}
             <li>
@@ -17,9 +17,8 @@
         {{ endfor }}
     </ul>
 
-    <p>Click <a href="{{ session.prolific_completion_url }}">here</a> to complete the survey.</p>
-    <p><em>Note to Dr. Smith:    This link doesn't work yet.
-        This link should work when properly connected to prolific.co.</em></p>
+    <p>Click <a href="{{ prolific_completion_url }}">here</a> to complete the survey.</p>
+
 {{ endblock }}
 
 

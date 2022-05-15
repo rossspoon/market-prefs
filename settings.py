@@ -69,15 +69,21 @@ SESSION_CONFIGS = [
         num_demo_participants=2,
     )
     , dict(
+        participation_fee=1.00,
+
         name='prescreen',
         app_sequence=['prescreen'],
         num_demo_participants=1,
 
-        slot_01='202205261200',
-        slot_02='202205261420',
-        slot_03='202205261640',
-        slot_04='202205271200',
-        slot_05='202205271420',
+        slot_01='202205251200',
+        slot_02='202205251420',
+        slot_03='202205251640',
+        slot_04='202205261200',
+        slot_05='202205261420',
+        slot_06='202205261640',
+        slot_07='202205271200',
+        slot_08='202205271420',
+        slot_09='202205271640',
     )
 ]
 
@@ -144,5 +150,9 @@ ROOMS = [
     dict(
         name='market2',
         display_name='Market Experiment (w/o participant labels)'
+    ),
+    dict(
+        name='prescreen',
+        display_name='Pre-Screen Survey Room'
     )
 ]
