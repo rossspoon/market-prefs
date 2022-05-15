@@ -132,6 +132,41 @@ class Player(BasePlayer):
                                         [4, 'I vote only in major elections '],
                                         [5, 'I vote in all elections  ']
                                     ])
+
+    # Financial Literacy
+    five_years = models.IntegerField(blank=True,
+                                     label="Suppose you had $100 in a savings account and the interest rate was 2% "
+                                           "per year. After 5years, how much do you think you would have in the "
+                                           "account if you left the money to grow?",
+                                     choices=[
+                                         [0, 'More than $102'],
+                                         [1, 'Exactly $102'],
+                                         [2, 'Less than $102'],
+                                         [3, 'Do not know'],
+                                         [4, 'Refuse to answer']
+                                     ])
+    one_year = models.IntegerField(blank=True,
+                                   label="Imagine that the interest rate on your savings account was 1% per year"
+                                         " and inflation was 2% per year. After 1 year, how much would you be able"
+                                         " to buy with the money in this account?",
+                                   choices=[
+                                       [0, 'More than today'],
+                                       [1, 'Exactly the same'],
+                                       [2, 'Less than today'],
+                                       [3, 'Do not know'],
+                                       [4, 'Refuse to answer']
+                                   ])
+    stock_safer = models.IntegerField(black=True,
+                                      label="Please tell me whether this statement is true or false. \"Buying a "
+                                            "single company’s stock usually provides a safer return than a stock "
+                                            "mutual fund.\"",
+                                      choices=[
+                                          [0, 'True'],
+                                          [1, 'False'],
+                                          [2, 'Do not know'],
+                                          [3, 'Refuse to answer'],
+                                      ])
+
     politics = make_likert_scale(
         """Please describe your political orientation in general, using a scale from 0 to 10, where 0 means you are 
         “complete conservative” and 10 means you are “complete liberal.”""")
@@ -248,9 +283,11 @@ class SurveyPage_03(SurveyBasePage):
     template_name = 'survey/survey_page_likert.html'
 
 
-# class SurveyPage_04(SurveyBasePage):
-#     form_fields = ['pos_reciprocity', 'neg_reciprocity', 'good_cause', 'good_intent']
-#     template_name = 'survey/survey_page_likert.html'
+class SurveyPage_04(SurveyBasePage):
+    form_fields = ['five_years', 'one_year', 'stock_safer']
+    template_name = 'survey/survey_page_side_by_side.html'
+
+
 #
 #
 # class SurveyPage_05(SurveyBasePage):
