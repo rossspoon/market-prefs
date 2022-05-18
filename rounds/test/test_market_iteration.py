@@ -633,7 +633,7 @@ class TestMarketIteration(unittest.TestCase):
         self.assertTrue(mi.recommend_iteration())
 
     ##########################
-    # TEST RECOMMEND BUY - END
+    # TEST RECOMMEND BUY - BEGIN
     def test_recommend_buy_none_pending(self):
         # Set-up
         mi = MarketIteration(None, None, get_group([]), None)
@@ -649,6 +649,7 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_buy_first_time(self):
         # Set-up
         mi = MarketIteration(None, None, get_group([]), None)
+        mi.old_buy_in_price = 1
         pending_buy = get_order(quantity=1)
         mi.pending_buy_ins = [pending_buy]
 
@@ -658,12 +659,13 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_buy_demand_less_supply_unfilled_buy_in(self):
         # Set-up
         # This set up should result in a return of True, unless the initial checks pass
-        buy_in = get_order(quantity=2, quantity_final=1)
-        bid = get_order(quantity=1, quantity_final=1)
-        offer = get_order(quantity=1)
-        sell_off = get_order(quantity=2)
+        buy_in = get_order(quantity=2, quantity_final=1, price=5)
+        bid = get_order(quantity=1, quantity_final=1, price=5)
+        offer = get_order(quantity=1, price=5)
+        sell_off = get_order(quantity=2, price=5)
 
         mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        mi.old_buy_in_price = 1
         pending_buy = get_order(quantity=1)
         mi.pending_buy_ins = [pending_buy]
         mi.is_first_time = False
@@ -674,12 +676,13 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_buy_demand_less_supply_filled_by_in(self):
         # Set-up
         # This set up should result in a return of True, unless the initial checks pass
-        buy_in = get_order(quantity=2, quantity_final=2)
-        bid = get_order(quantity=1, quantity_final=0)
-        offer = get_order(quantity=1)
-        sell_off = get_order(quantity=2)
+        buy_in = get_order(quantity=2, quantity_final=2, price=5)
+        bid = get_order(quantity=1, quantity_final=0, price=5)
+        offer = get_order(quantity=1, price=5)
+        sell_off = get_order(quantity=2, price=5)
 
         mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        mi.old_buy_in_price = 1
         pending_buy = get_order(quantity=1)
         mi.pending_buy_ins = [pending_buy]
         mi.is_first_time = False
@@ -690,12 +693,13 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_buy_demand_great_supply_filled_bids(self):
         # Set-up
         # This set up should result in a return of True, unless the initial checks pass
-        buy_in = get_order(quantity=2, quantity_final=2)
-        bid = get_order(quantity=2, quantity_final=1)
-        offer = get_order(quantity=1, quantity_final=2)
-        sell_off = get_order(quantity=2, quantity_final=2)
+        buy_in = get_order(quantity=2, quantity_final=2, price=5)
+        bid = get_order(quantity=2, quantity_final=1, price=5)
+        offer = get_order(quantity=1, quantity_final=2, price=5)
+        sell_off = get_order(quantity=2, quantity_final=2, price=5)
 
         mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        mi.old_buy_in_price = 1
         pending_buy = get_order(quantity=1)
         mi.pending_buy_ins = [pending_buy]
         mi.is_first_time = False
@@ -706,12 +710,13 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_buy_demand_great_supply_unfilled_sells(self):
         # Set-up
         # This set up should result in a return of True, unless the initial checks pass
-        buy_in = get_order(quantity=2, quantity_final=2)
-        bid = get_order(quantity=2, quantity_final=1)
-        offer = get_order(quantity=1, quantity_final=1)
-        sell_off = get_order(quantity=2, quantity_final=1)
+        buy_in = get_order(quantity=2, quantity_final=2, price=5)
+        bid = get_order(quantity=2, quantity_final=1, price=5)
+        offer = get_order(quantity=1, quantity_final=1, price=5)
+        sell_off = get_order(quantity=2, quantity_final=1, price=5)
 
         mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        mi.old_buy_in_price = 1
         pending_buy = get_order(quantity=1)
         mi.pending_buy_ins = [pending_buy]
         mi.is_first_time = False
@@ -722,12 +727,13 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_buy_demand_great_supply_unfilled_sells2(self):
         # Set-up
         # This set up should result in a return of True, unless the initial checks pass
-        buy_in = get_order(quantity=2, quantity_final=2)
-        bid = get_order(quantity=2, quantity_final=1)
-        offer = get_order(quantity=1, quantity_final=0)
-        sell_off = get_order(quantity=2, quantity_final=2)
+        buy_in = get_order(quantity=2, quantity_final=2, price=5)
+        bid = get_order(quantity=2, quantity_final=1, price=5)
+        offer = get_order(quantity=1, quantity_final=0, price=5)
+        sell_off = get_order(quantity=2, quantity_final=2, price=5)
 
         mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        mi.old_buy_in_price = 1
         pending_buy = get_order(quantity=1)
         mi.pending_buy_ins = [pending_buy]
         mi.is_first_time = False
@@ -738,12 +744,13 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_buy_demand_great_no_bid_fill_all_sells_fill(self):
         # Set-up
         # This set up should result in a return of True, unless the initial checks pass
-        buy_in = get_order(quantity=2, quantity_final=2)
-        bid = get_order(quantity=2, quantity_final=0)
-        offer = get_order(quantity=1, quantity_final=1)
-        sell_off = get_order(quantity=2, quantity_final=2)
+        buy_in = get_order(quantity=2, quantity_final=2, price=5)
+        bid = get_order(quantity=2, quantity_final=0, price=5)
+        offer = get_order(quantity=1, quantity_final=1, price=5)
+        sell_off = get_order(quantity=2, quantity_final=2, price=5)
 
         mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        mi.old_buy_in_price = 1
         pending_buy = get_order(quantity=1)
         mi.pending_buy_ins = [pending_buy]
         mi.is_first_time = False
@@ -755,7 +762,7 @@ class TestMarketIteration(unittest.TestCase):
     ##########################
 
     ##########################
-    # TEST RECOMMEND SELL - END
+    # TEST RECOMMEND SELL - BEGIN
     def test_recommend_sell_none_pending(self):
         # Set-up
         mi = MarketIteration(None, None, get_group([]), None)
@@ -771,6 +778,7 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_sell_first_time(self):
         # Set-up
         mi = MarketIteration(None, None, get_group([]), None)
+        mi.old_sell_off_price = 9999
         pending_sell = get_order(quantity=1)
         mi.pending_sell_offs = [pending_sell]
 
@@ -780,12 +788,13 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_sell_supply_less_demand_unfilled_sell_off(self):
         # Set-up
         # This set up should result in a return of True, unless the initial checks pass
-        buy_in = get_order(quantity=2)
-        bid = get_order(quantity=1)
-        offer = get_order(quantity=1)
-        sell_off = get_order(quantity=2)
+        buy_in = get_order(quantity=2, price=5)
+        bid = get_order(quantity=1, price=5)
+        offer = get_order(quantity=1, price=5)
+        sell_off = get_order(quantity=2, price=5)
 
         mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        mi.old_sell_off_price = 9999
         pending_sell = get_order(quantity=1)
         mi.pending_sell_offs = [pending_sell]
         mi.is_first_time = False
@@ -796,12 +805,13 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_sell_supply_less_demand_filled_sell_off(self):
         # Set-up
         # This set up should result in a return of True, unless the initial checks pass
-        buy_in = get_order(quantity=2)
-        bid = get_order(quantity=1, quantity_final=0)
-        offer = get_order(quantity=1)
-        sell_off = get_order(quantity=2, quantity_final=2)
+        buy_in = get_order(quantity=2, price=5)
+        bid = get_order(quantity=1, quantity_final=0, price=5)
+        offer = get_order(quantity=1, price=5)
+        sell_off = get_order(quantity=2, quantity_final=2, price=5)
 
         mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        mi.old_sell_off_price = 9999
         pending_sell = get_order(quantity=1)
         mi.pending_sell_offs = [pending_sell]
         mi.is_first_time = False
@@ -812,12 +822,13 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_sell_supply_great_demand_filled_sells(self):
         # Set-up
         # This set up should result in a return of True, unless the initial checks pass
-        buy_in = get_order(quantity=2, quantity_final=2)
-        bid = get_order(quantity=1, quantity_final=2)
-        offer = get_order(quantity=2, quantity_final=1)
-        sell_off = get_order(quantity=2, quantity_final=0)
+        buy_in = get_order(quantity=2, quantity_final=2, price=5)
+        bid = get_order(quantity=1, quantity_final=2, price=5)
+        offer = get_order(quantity=2, quantity_final=1, price=5)
+        sell_off = get_order(quantity=2, quantity_final=0, price=5)
 
         mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        mi.old_sell_off_price = 9999
         pending_sell = get_order(quantity=1)
         mi.pending_sell_offs = [pending_sell]
         mi.is_first_time = False
@@ -828,12 +839,13 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_sell_supply_great_demand_unfilled_buys(self):
         # Set-up
         # This set up should result in a return of True, unless the initial checks pass
-        buy_in = get_order(quantity=2, quantity_final=2)
-        bid = get_order(quantity=1, quantity_final=0)
-        offer = get_order(quantity=2, quantity_final=0)
-        sell_off = get_order(quantity=2, quantity_final=1)
+        buy_in = get_order(quantity=2, quantity_final=2, price=5)
+        bid = get_order(quantity=1, quantity_final=0, price=5)
+        offer = get_order(quantity=2, quantity_final=0, price=5)
+        sell_off = get_order(quantity=2, quantity_final=1, price=5)
 
         mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        mi.old_sell_off_price = 9999
         pending_sell = get_order(quantity=1)
         mi.pending_sell_offs = [pending_sell]
         mi.is_first_time = False
@@ -844,12 +856,13 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_sell_supply_great_demand_unfilled_buys2(self):
         # Set-up
         # This set up should result in a return of True, unless the initial checks pass
-        buy_in = get_order(quantity=2, quantity_final=1)
-        bid = get_order(quantity=1, quantity_final=1)
-        offer = get_order(quantity=2, quantity_final=0)
-        sell_off = get_order(quantity=2, quantity_final=2)
+        buy_in = get_order(quantity=2, quantity_final=1, price=5)
+        bid = get_order(quantity=1, quantity_final=1, price=5)
+        offer = get_order(quantity=2, quantity_final=0, price=5)
+        sell_off = get_order(quantity=2, quantity_final=2, price=5)
 
         mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        mi.old_sell_off_price = 9999
         pending_sell = get_order(quantity=1)
         mi.pending_sell_offs = [pending_sell]
         mi.is_first_time = False
@@ -860,12 +873,13 @@ class TestMarketIteration(unittest.TestCase):
     def test_recommend_sell_demand_great_no_offer_fill_all_buys_fill(self):
         # Set-up
         # This set up should result in a return of True, unless the initial checks pass
-        buy_in = get_order(quantity=2, quantity_final=2)
-        bid = get_order(quantity=1, quantity_final=1)
-        offer = get_order(quantity=2, quantity_final=0)
-        sell_off = get_order(quantity=2, quantity_final=2)
+        buy_in = get_order(quantity=2, quantity_final=2, price=5)
+        bid = get_order(quantity=1, quantity_final=1, price=5)
+        offer = get_order(quantity=2, quantity_final=0, price=5)
+        sell_off = get_order(quantity=2, quantity_final=2, price=5)
 
         mi = MarketIteration([bid], [offer], get_group([]), None, buy_ins=[buy_in], sell_offs=[sell_off])
+        mi.old_sell_off_price = 9999
         pending_sell = get_order(quantity=1)
         mi.pending_sell_offs = [pending_sell]
         mi.is_first_time = False
@@ -912,4 +926,3 @@ class TestMarketIteration(unittest.TestCase):
         self.assertFalse(next_mi.is_first_time)
         self.assertEqual(next_mi.dividend, 4)
         self.assertEqual(next_mi.group, g)
-
