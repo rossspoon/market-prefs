@@ -29,7 +29,8 @@ class CallMarket:
 
         cnt = 0
         iteration = None
-        while (iteration is None or iteration.recommend_iteration()) and cnt < 100:
+        # This will cap out the 1.1^8 = 2.1 times the original market price.
+        while (iteration is None or iteration.recommend_iteration()) and cnt < 9:
             if iteration is None:
                 iteration = MarketIteration(self.bids, self.offers, self.group, dividend)
             else:

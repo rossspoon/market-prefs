@@ -31,6 +31,8 @@ class MarketIteration:
         self.sell_off_price = None
         self.buy_recommended = False
         self.sell_recommended = False
+        self.old_buy_in_price = None
+        self.old_sell_off_price = None
 
         # get session parameters
         # These dict references will cause ValueErrors if they are missing
@@ -68,10 +70,12 @@ class MarketIteration:
         # Update buy-in and sell off price
         if self.buy_in_price is None:
             self.buy_in_price = market_price
+        self.old_buy_in_price = self.buy_in_price
         self.buy_in_price = self.buy_in_price * (1 + self.margin_premium)
 
         if self.sell_off_price is None:
             self.sell_off_price = market_price
+        self.old_sell_off_price = self.sell_off_price
         self.sell_off_price = self.sell_off_price * (1 - self.margin_premium)
 
         # Compute new player positions
@@ -140,6 +144,14 @@ class MarketIteration:
         supply = self.get_total_quantity(self.offers) + \
                  self.get_total_quantity(self.sell_offs)
 
+        max_sell_price = max_price([self.offers, self.sell_offs])
+
+        # The old buy in price was used during this iteration.
+        # So if we get to here the market was run once with a buy in price greater than
+        # the max sell price.  Further increases in price will not have an effect.
+        if self.old_buy_in_price > max_sell_price:
+            return False
+
         any_unfilled_buy_ins = any(o.quantity != o.quantity_final for o in self.buy_ins)
         any_filled_bids = any(o.quantity_final != 0 for o in self.bids)
         any_unfilled_sells = any(o.quantity != o.quantity_final for o
@@ -165,10 +177,17 @@ class MarketIteration:
         supply = self.get_total_quantity(self.offers) + \
                  self.get_total_quantity(self.sell_offs)
 
+        # The old sell off price was used during this iteration.
+        # So if we get to here the market was run once with a sell off price less than
+        # the min buy price.  Further decreases in price will not have an effect.
+        min_buy_price = min_price([self.bids, self.buy_ins])
+        if self.old_sell_off_price < min_buy_price:
+            return False
+
         any_unfilled_sell_offs = any(o.quantity != o.quantity_final for o in self.sell_offs)
         any_filled_offers = any(o.quantity_final != 0 for o in self.offers)
         any_unfilled_buys = any(o.quantity != o.quantity_final for o
-                                 in concat_or_null([self.bids, self.buy_ins]))
+                                in concat_or_null([self.bids, self.buy_ins]))
 
         if supply <= demand and any_unfilled_sell_offs:
             return True
@@ -326,3 +345,21 @@ def concat_or_null(list_of_list_of_orders):
         if o_list is not None:
             ret.extend(o_list)
     return ret
+
+
+def max_price(order_itr):
+    orders = concat_or_null(order_itr)
+    if orders is None or len(orders) == 0:
+        return 0
+
+    prices = [o.price for o in orders]
+    return max(prices)
+
+
+def min_price(order_itr):
+    orders = concat_or_null(order_itr)
+    if orders is None or len(orders) == 0:
+        return 999999
+
+    prices = [o.price for o in orders]
+    return min(prices)
