@@ -122,6 +122,7 @@ def forecast_before_next_page(player: Player, timeout_happened):
 # PAGES
 class PracticeMarketPage(Page):
     template_name = 'rounds/Market.html'
+    timer_text = 'Time Left:'
     form_model = Player
     form_fields = ['type', 'price', 'quantity']
     get_timeout_seconds = scf.get_market_time
@@ -134,6 +135,7 @@ class PracticeMarketPage(Page):
 
 class PracticeForecastPage(Page):
     template_name = 'rounds/Market.html'
+    timer_text = 'Time Left:'
     form_fields = ['f0']
     form_model = 'player'
     get_timeout_seconds = scf.get_forecast_time
@@ -145,6 +147,7 @@ class PracticeForecastPage(Page):
 
 class PracticeRoundResultsPage(Page):
     template_name = 'rounds/Market.html'
+    timer_text = 'Time Left:'
     form_model = 'player'
     js_vars = rounds.get_js_vars_round_results
     get_timeout_seconds = scf.get_summary_time

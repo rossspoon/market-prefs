@@ -1,17 +1,18 @@
 .otree-form{
     margin-top: -30px;
+    margin-top: -30px;
 }
 
 /* Main Grid layout */
 .layout-box {
     display: grid;
-    grid-template-columns: 4fr 4fr;
-    grid-template-rows: 50px 120px auto 300px;
+    grid-template-columns: 3fr 1fr 3fr;
+    grid-template-rows: 50px 90px auto 300px;
     gap: 10px;
     margin-top: 40px;
 }
 .vitals{
-    grid-column: 1/3;
+    grid-column: 1/4;
     grid-row: 1;
     padding-top: 10px;
     font-weight: 500;
@@ -23,12 +24,12 @@
 }
 
 .order-form-box{
-    grid-column: 2/3;
+    grid-column: 2/4;
     grid-row: 2;
 }
 
 .stats-box {
-    grid-column: 1;
+    grid-column: 1/3;
     grid-row: 4;
 
     display: grid;
@@ -38,14 +39,14 @@
 }
 
 .message-box{
-    grid-column: 2/3;
+    grid-column: 3/4;
     grid-row: 4;
     font-size: 1.1em;
 }
 
 .orders-box {
     padding: 10px;
-    grid-column: 2/3;
+    grid-column: 2/4;
     grid-row: 3;
 }
 
@@ -83,8 +84,10 @@
 /* BEGIN - Forecast Form*/
 #forcast-form{
     font-size: 1.0em;
-    margin-top: 15px;
-    margin-left: 20px;
+    margin: auto;
+}
+#forcast-form input{
+    width: 100px;
 }
 
 .ilb{
@@ -101,11 +104,12 @@
 }
 .results-form{
     padding-top: 10px;
+    margin: auto;
 }
 .result-msg{
-    font-size: 1.6em;
+    font-size: 1.2em;
     margin: 10px auto;
-    width: 80%;
+    width: 95%;
     background-color: #f5f5f5;
     border-radius: 20px;
 }
@@ -113,11 +117,12 @@
 .stats-box table {
     width: 85%;
     margin: auto;
+    height: 98%;
 }
 .stats-box td {
-    font-size: 1.3em;
+    font-size: 1.1em;
     width: 50%;
-    padding-top: 5px;
+    padding-top: 2px;
 }
 .stats-box th {
     text-align: center;

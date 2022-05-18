@@ -532,7 +532,7 @@ def get_round_result_messages(player: Player, d: dict):
         msg = f"You are now bankrupt and will be unable to participate the in market.  You will be directed to the" \
               f" survey portion of the experiment.  Afterward you will be able to collect your $10.00 participation" \
               f" fee plus any forecast bonus that you earned during the experiment."
-    messages.append(dict(class_attr='alert-danger', msg=msg))
+        messages.append(dict(class_attr='alert-danger', msg=msg))
 
     return messages
 
@@ -621,6 +621,7 @@ class ForecastPage(Page):
     template_name = 'rounds/Market.html'
     form_model = 'player'
     form_fields = ['f0']
+    timer_text = 'Time Left:'
 
     js_vars = get_js_vars_forcast_page
     vars_for_template = vars_for_forecast_template
@@ -636,6 +637,7 @@ class MarketWaitPage(WaitPage):
 class RoundResultsPage(Page):
     template_name = 'rounds/Market.html'
     form_model = 'player'
+    timer_text = 'Time Left:'
 
     js_vars = get_js_vars_round_results
     vars_for_template = vars_for_round_results_template

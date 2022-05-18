@@ -58,7 +58,7 @@
 
 /* Order List Styles*/
 #order-list{
-    width: 90%;
+    width: 95%;
     margin: auto;
 }
 
@@ -86,13 +86,11 @@
     width: 30px;
 }
 .quant-col {
-    width: 50px;
+    width: 30px;
 }
-.shares-at-col {
-    width: 120px;
-}
+.shares-at-col {}
 .price-col {
-    width: 40px;
+    width: 70px;
 }
 
 .order-list-item{
@@ -106,7 +104,7 @@
 .order-details{
     display: inline-block;
     position: relative;
-    margin-left: 10px;
+    margin-left: 3px;
 }
 
 .lpad {
