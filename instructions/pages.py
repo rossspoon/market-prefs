@@ -1,7 +1,7 @@
 import datetime
 import random
 
-from otree.api import cu
+from otree.api import cu, WaitPage
 
 import common.SessionConfigFunctions as scf
 import practice
@@ -294,11 +294,11 @@ class Quiz02(QuizPage):
 
         if values['quiz_3'] != 56:
             ret['quiz_3'] = f'At the end of the experiment, all STOCK is bought back at a price of {fundamental}.' \
-                           f'You will receive 4 x {fundamental} = {cu(4 * fundamental)}.'
+                            f'You will receive 4 x {fundamental} = {cu(4 * fundamental)}.'
 
         if values['quiz_4'] != 110:
             ret['quiz_4'] = f'You will receive 5% on you CASH or 5.00 points, and 1.00 point for each of your' \
-                           f'shares.  Your final CASH position will be: 100.00 + 5.00 + (1.00 x 5) = 110.00 points.'
+                            f'shares.  Your final CASH position will be: 100.00 + 5.00 + (1.00 x 5) = 110.00 points.'
 
         return ret
 
@@ -307,17 +307,30 @@ class OutroPage(Page):
     vars_for_template = vars_for_temp_common
 
 
+class InstWaitPage(WaitPage):
+    pass
+
+
 page_sequence = [IntroPage,
                  _02_Trading,
+                 InstWaitPage,
                  _03_BorrowingCash,
                  _04_ShortingStock,
+                 InstWaitPage,
                  _15_EndOfMarket,
+                 InstWaitPage,
                  _12_MarketPage2,
+                 InstWaitPage,
                  _13_ForecastPage2,
+                 InstWaitPage,
                  _14_PeriodSummary2,
+                 InstWaitPage,
                  _06_MarketRestrictions_2,
                  _06_MarketRestrictions_3,
+                 InstWaitPage,
                  _09_AutoTransactions,
                  _10_Bankruptcy,
                  Quiz02,
-                 OutroPage]
+                 OutroPage,
+                 InstWaitPage,
+                 ]
