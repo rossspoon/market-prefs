@@ -1,4 +1,5 @@
 from ._builtin import Page
+import common.SessionConfigFunctions as scf
 
 
 class ConsentDeniedPage(Page):
@@ -13,9 +14,12 @@ class FinalResultsPage(Page):
         session = self.player.session
         market_bonus = participant.vars.get('MARKET_PAYMENT').to_real_world_currency(session)
         forecast_bonus = participant.vars.get('FORECAST_PAYMENT').to_real_world_currency(session)
+        is_online = scf.is_online(self.player)
         return {'market_bonus': market_bonus,
                 'forecast_bonus': forecast_bonus,
-                'total_pay': participant.payoff_plus_participation_fee()}
+                'total_bonus': market_bonus + forecast_bonus,
+                'total_pay': participant.payoff_plus_participation_fee(),
+                'is_online': is_online}
 
     def is_displayed(self):
         participant = self.player.participant

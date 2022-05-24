@@ -687,9 +687,11 @@ class RoundResultsPage(Page):
 
         # Determine total bonus and round up to whole dollar amount.
         bonus = market_bonus + forecast_bonus
-        conversion = 1 / scf.get_conversion_rate(player)
-        bonus_rounded_up = ceil(bonus / conversion) * conversion
-        participant.payoff = max(bonus_rounded_up, 0)
+        is_online = scf.is_online(player)
+        if not is_online:   # only round up for in-person sessions
+            conversion = 1 / scf.get_conversion_rate(player)
+            bonus = ceil(bonus / conversion) * conversion
+        participant.payoff = max(bonus, 0)
 
 
 class FinalResultsPage(Page):
