@@ -7,21 +7,25 @@
 
     <div class="layout-box">
     <div class="main-block">
-        <p>At the end of {{ num_rounds }} periods of trading, each unit of STOCK is automatically traded in
+        <p>At the end of {{ num_rounds }} periods of trading, each unit of STOCK is bought back
             for 14.00 CASH.  If you end the experiment with negative shares (a short position) 14.00
             CASH will be deducted from your CASH for every share short.  Additionally, any forecast rewards earned
             throughout the experiment will be included at this time.
         </p>
-        <p>After that your experiment CASH units are converted to US dollars at a rate of 100 CASH = $1 US,
+        <p>After that your experiment CASH units are converted to US dollars at a rate of 100 CASH = $1 USD,
             to determine
             how much you will be paid at the end of the experiment.</p>
 
         <div class="example">
-        <p>Suppose in a period you have 120 units of CASH and 5 units of STOCK, and the dividend
-        is 0.40 per unit of stock. Then your new CASH amount would be a 5% increase times 120 (a gain of 6) and
-        total dividends of 0.40 x 5 = 2. Your total CASH would therefore increase by 6 + 2 = 8 units.  Then your
-        STOCK will be traded in for 14.00 CASH or 5 x 14.00 = 70.00.  Your resulting CASH will then be
-            120 + 8 + 70 = 198.  That will get converted to $1.98 which will be rounded up to $2.00.</p>
+            <p>Suppose that at the end of the experiment you have 120 units of CASH and 5 shares of STOCK, and
+            the dividend is 0.40 per unit of STOCK.  Your CASH will be updated to:</p>
+            <ul>
+                <li>Interest Payment:  120.00 x 5% = 6.00</li>
+                <li>Dividend Payment:  5 x 0.40 = 2.00</li>
+                <li>STOCK buy back: 5 x 14.00 = 170.00</li>
+            </ul>
+            <p>Your final CASH amount is then, 120 + 6 + 8 + 70 = 198 units of CASH.</p>
+            <p>This will be converted to a bonus payment of $1.98 USD.</p>
         </div>
 
         <p>Notice:
