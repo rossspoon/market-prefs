@@ -1,7 +1,7 @@
 import random
 
 from otree.api import (
-    BaseSubsession,
+    BaseSubsession, cu,
 )
 from otree.models import Participant
 from common import SessionConfigFunctions as scf
@@ -17,12 +17,18 @@ def generate_participant_id(x):
 
 
 def generate_participant_ids(subsession: BaseSubsession):
+
+    # initialize participant fields
+    players = subsession.get_players()
+    for p in players:
+        p.participant.MARKET_PAYMENT = cu(0)
+        p.participant.FORECAST_PAYMENT = cu(0)
+
     print(scf.is_online(subsession))
     if scf.is_online(subsession):
         return
 
     population = list(range(PARTICIPANT_ID_SPACE))
-    players = subsession.get_players()
     num_parts = len(players)
     ids = [generate_participant_id(x) for x in random.sample(population, num_parts)]
     for pid, player in zip(ids, players):
