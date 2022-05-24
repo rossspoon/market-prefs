@@ -72,5 +72,8 @@
 .gray {
     background-color: #aaa;
 }
+        .otree-timer {
+            display: none;
+        }
 
 /* END intruction pop ups*/

@@ -6,6 +6,7 @@ from otree.api import cu, WaitPage
 import common.SessionConfigFunctions as scf
 import practice
 import rounds
+from common.CommonPges import UpdatedWaitPage
 from ._builtin import Page
 from .models import Player
 
@@ -118,30 +119,35 @@ def vars_for_15_template(player: Player):
 
 class IntroPage(Page):
     vars_for_template = vars_for_temp_common
+    timeout_seconds = 120
 
 
 class _01_Assets(Page):
-    pass
+    timeout_seconds = 120
 
 
 class _02_Trading(Page):
-    pass
+    timeout_seconds = 120
 
 
 class _03_BorrowingCash(Page):
     vars_for_template = vars_for_temp_common
+    timeout_seconds = 180
+
 
 
 class _04_ShortingStock(Page):
     vars_for_template = vars_for_temp_common
+    timeout_seconds = 180
+
 
 
 class _05_MarketRestrictions_1(Page):
-    pass
+    timeout_seconds = 180
 
 
 class _06_MarketRestrictions_2(Page):
-    pass
+    timeout_seconds = 180
 
 
 class _06_MarketRestrictions_3(Page):
@@ -149,66 +155,63 @@ class _06_MarketRestrictions_3(Page):
         return scf.get_float_ratio_cap(self.player) is not None
 
     vars_for_template = vars_for_temp_common
+    timeout_seconds = 180
 
 
 class _07_MarketPeriod(Page):
     vars_for_template = vars_for_temp_common
+    timeout_seconds = 180
 
 
 class _08_Equity(Page):
     vars_for_template = vars_for_temp_common
+    timeout_seconds = 180
 
 
 class _09_AutoTransactions(Page):
     vars_for_template = vars_for_temp_common
+    timeout_seconds = 180
 
 
 class _10_Bankruptcy(Page):
-    pass
+    timeout_seconds = 180
 
 
 class _11_MarketPeriod_2(Page):
-    pass
-
-
-class _12_MarketPage(Page):
-    vars_for_template = vars_for_temp_common
+    timeout_seconds = 180
 
 
 class _12_MarketPage2(Page):
     template_name = "instructions/Market_ins.html"
     vars_for_template = vars_for_market_ins_template
     js_vars = js_vars_for_market_ins
-
-
-class _13_ForecastingPage(Page):
-    vars_for_template = vars_for_temp_common
+    timeout_seconds = 420
 
 
 class _13_ForecastPage2(Page):
     template_name = "instructions/Forecast_ins.html"
     vars_for_template = vars_for_market_ins_template
     js_vars = js_vars_for_market_ins
-
-
-class _14_PeriodSummary(Page):
-    pass
+    timeout_seconds = 300
 
 
 class _14_PeriodSummary2(Page):
     template_name = "instructions/Summary_ins.html"
     vars_for_template = vars_for_market_ins_template
     js_vars = js_vars_for_market_ins
+    timeout_seconds = 300
 
 
 class _15_EndOfMarket(Page):
     vars_for_template = vars_for_15_template
+    timeout_seconds = 180
 
 
 class QuizPage(Page):
     template_name = 'instructions/Quiz_template.html'
     form_model = Player
     attempted_field = ''
+    timeout_seconds = 300
 
     def grade_quiz(self, values):
         raise NotImplementedError("Please Implement this method")
@@ -305,10 +308,11 @@ class Quiz02(QuizPage):
 
 class OutroPage(Page):
     vars_for_template = vars_for_temp_common
+    timeout_seconds = 120
 
 
-class InstWaitPage(WaitPage):
-    pass
+class InstWaitPage(UpdatedWaitPage):
+    body_text = "Please wait for the other participants to progress through the instructions."
 
 
 page_sequence = [IntroPage,
@@ -316,7 +320,6 @@ page_sequence = [IntroPage,
                  InstWaitPage,
                  _03_BorrowingCash,
                  _04_ShortingStock,
-                 InstWaitPage,
                  _15_EndOfMarket,
                  InstWaitPage,
                  _12_MarketPage2,

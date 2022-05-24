@@ -1,3 +1,7 @@
+from otree.api import WaitPage
+from otree.models import Participant
+
+from common.CommonPges import UpdatedWaitPage
 from ._builtin import Page
 from .models import Player
 
@@ -29,4 +33,9 @@ class IdPage(Page):
     is_displayed = show_id_page
 
 
-page_sequence = [ConsentPage, IdPage]
+class ConsentWaitPage(UpdatedWaitPage):
+    body_text = "Welcome to the Virginia Tech Econ Lab Market experiment.  " \
+                "The experiment will start when all participants have joined. Please be patient."
+
+
+page_sequence = [ConsentWaitPage, ConsentPage, IdPage]

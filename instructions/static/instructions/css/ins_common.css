@@ -124,4 +124,7 @@ li.normal:before {
     top: 10px;
     left: -50px;
 }
+.otree-timer {
+    display: none;
+}
 

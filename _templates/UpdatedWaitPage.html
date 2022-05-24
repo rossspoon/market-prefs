@@ -1,0 +1,47 @@
+{{ extends 'otree/WaitPage.html' }}
+{{ block title }}
+    {{ title_text}}
+{{ endblock }}
+
+{{ block content }}
+<style>
+    .bar_base{
+        width: 100%;
+        background-color: #aaaaaa;
+        border-radius: 10px;
+    }
+    .bar_prog{
+        width: {{ pct }};
+        background-color: #337cf4;
+        border-radius: 10px;
+        height: 35px;
+        display: flex;
+    }
+    .text_in_bar{
+        color: white;
+        margin: auto;
+        width: fit-content;
+        background-color: #337cf4aa;
+        border-radius: 10px;
+        padding: 2px;
+    }
+</style>
+
+<script>
+    setTimeout(function(){
+        location.reload();
+    }, 5000);
+
+    $(window).on('load', function () {
+        //Move the timer
+        const timer = $('.progress').detach();
+    })
+</script>
+<div>{{ body_text}}</div>
+
+<div class="bar_base progress-bar-striped progress-bar-animated">
+    <div class="bar_prog">
+        <p class="text_in_bar">{{ cnt }} of {{ N }}</p></div>
+</div>
+
+{{ endblock }}
