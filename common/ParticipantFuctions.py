@@ -24,7 +24,6 @@ def generate_participant_ids(subsession: BaseSubsession):
         p.participant.MARKET_PAYMENT = cu(0)
         p.participant.FORECAST_PAYMENT = cu(0)
 
-    print(scf.is_online(subsession))
     if scf.is_online(subsession):
         return
 
