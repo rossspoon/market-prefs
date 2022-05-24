@@ -4,6 +4,7 @@ from otree.api import (
     BaseSubsession,
 )
 from otree.models import Participant
+from common import SessionConfigFunctions as scf
 
 PARTICIPANT_ID_SPACE = 99 * 26 + 26
 
@@ -16,6 +17,10 @@ def generate_participant_id(x):
 
 
 def generate_participant_ids(subsession: BaseSubsession):
+    print(scf.is_online(subsession))
+    if scf.is_online(subsession):
+        return
+
     population = list(range(PARTICIPANT_ID_SPACE))
     players = subsession.get_players()
     num_parts = len(players)
@@ -26,14 +31,6 @@ def generate_participant_ids(subsession: BaseSubsession):
             player.participant.PART_ID = pid
             player.participant.label = pid
 
-
-# def generate_participant_ids(subsession: BaseSubsession):
-#    for player in subsession.get_players():
-#        participant = player.participant
-#        existing = player.participant.vars.get('PART_ID')
-#        pid = participant.code[-3:].upper()
-#        if not existing:
-#            player.participant.PART_ID = pid
 
 def ensure_participant(obj):
     if type(obj) == Participant:

@@ -23,6 +23,7 @@ SK_ENDOW_STOCK = 'endow_stock'
 SK_ENDOW_WORTH = 'endow_worth'
 SK_SHOW_NEXT = 'show_next'
 SK_CONVERSION_RATE = 'real_world_currency_per_point'
+SK_IS_ONLINE = 'is_online'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -219,3 +220,8 @@ def show_next_button(obj):
 def get_conversion_rate(obj):
     config = ensure_config(obj)
     return get_item_as_float(config, SK_CONVERSION_RATE)
+
+
+def is_online(obj):
+    config = ensure_config(obj)
+    return get_item_as_bool(config, SK_IS_ONLINE)
