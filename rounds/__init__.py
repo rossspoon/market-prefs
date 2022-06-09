@@ -9,12 +9,18 @@ from .models import *
 import common.SessionConfigFunctions as scf
 from common.ParticipantFuctions import generate_participant_ids
 from otree import database
+import os
+
+NUM_ROUNDS = os.getenv('SSE_NUM_ROUNDS')
 
 
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
-    num_rounds = 3
+    if NUM_ROUNDS:
+        num_rounds = int(NUM_ROUNDS)
+    else:
+        num_rounds = 50
 
 
 # assign treatments
@@ -688,7 +694,7 @@ class RoundResultsPage(Page):
         # Determine total bonus and round up to whole dollar amount.
         bonus = market_bonus + forecast_bonus
         is_online = scf.is_online(player)
-        if not is_online:   # only round up for in-person sessions
+        if not is_online:  # only round up for in-person sessions
             conversion = 1 / scf.get_conversion_rate(player)
             bonus = ceil(bonus / conversion) * conversion
         participant.payoff = max(bonus, 0)
