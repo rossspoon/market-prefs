@@ -32,6 +32,11 @@ class ConsentPage(Page):
 class IdPage(Page):
     is_displayed = show_id_page
 
+    def vars_for_template(self):
+        p = self.player
+        is_online = scf.is_online(p)
+        return dict(is_online = is_online)
+
 
 class ConsentWaitPage(UpdatedWaitPage):
     body_text = "Welcome to the Virginia Tech Econ Lab Market experiment.  " \
