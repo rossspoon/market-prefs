@@ -4,6 +4,7 @@ from otree.models import Participant
 from common.CommonPges import UpdatedWaitPage
 from ._builtin import Page
 from .models import Player
+import common.SessionConfigFunctions as scf
 
 
 def determine_app(self, upcoming_apps):
@@ -13,6 +14,10 @@ def determine_app(self, upcoming_apps):
 
 
 def show_id_page(self):
+    # Don't show this page for online experiments
+    if scf.is_online(self.player):
+        return False
+
     player = self.player
     return player.consent_given
 
