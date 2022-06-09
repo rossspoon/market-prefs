@@ -716,7 +716,8 @@ class FinalResultsPage(Page):
         forecast_bonus = participant.vars.get('FORECAST_PAYMENT').to_real_world_currency(session)
         return {'market_bonus': market_bonus,
                 'forecast_bonus': forecast_bonus,
-                'total_pay': participant.payoff_plus_participation_fee()}
+                'total_pay': participant.payoff_plus_participation_fee(),
+                'is_online': scf.is_online(player)}
 
 
 page_sequence = [PreMarketWait, Market, ForecastPage, MarketWaitPage, RoundResultsPage, FinalResultsPage]

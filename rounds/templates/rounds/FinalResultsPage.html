@@ -50,7 +50,11 @@
                     <td> {{ forecast_bonus }}</td>
                 </tr>
                 <tr>
-                    <td class="bold-text">Total Payment (rounded)</td>
+                    {{ if is_online }}
+                        <td class="bold-text">Total Payment</td>
+                    {{ else }}
+                        <td class="bold-text">Total Payment (rounded)</td>
+                    {{ endif }}
                     <td class="bold-text">{{ total_pay }}</td>
                 </tr>
             </table>
