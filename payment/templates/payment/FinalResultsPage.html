@@ -33,6 +33,7 @@
                     <p>A bonus payment of {{ total_bonus }} will be made through the
                     <em>prolific.co</em> site.</p>
                 {{ endif }}
+
             {{ else }}
                 <p>Please remain seated while the attendants prepare your final payout.</p>
                 <p>When called to lobby area, please claim your payment with the participant code below.</p>
@@ -43,7 +44,11 @@
 
     <div class="main-block centered">
         {{ if is_online }}
+            <div class="big">&nbsp;</div>
             <span class="big"> Thank you for you participation. </span>
+            <div class="big">&nbsp;</div>
+            <div class="centered">Click <a href="{{ prolific_completion_url }}">here</a>
+                                to complete the study.</div>
         {{ else }}
             <span class="really_big"> {{ player.participant.label }}</span>
         {{ endif }}

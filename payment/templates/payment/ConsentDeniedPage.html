@@ -10,14 +10,19 @@
     <div class="top-row">
         <div class="centered">
             <p>You have earned a participation fee of {{ session.participation_fee }}.</p>
-            <p>Use the participant id code below to claim your payment.</p>
         </div>
 
     </div>
 
     <div class="main-block centered">
-        <div class="really_big"> {{ player.participant.label }}</div>
-        <div class="centered">You are free to leave at any time.   Have a nice day.</div>
+        {{ if is_online }}
+            <div class="centered">Click <a href="{{ prolific_completion_url }}">here</a>
+                to complete the study.</div>
+        {{ else }}
+            <p>Use the participant id code below to claim your payment.</p>
+           <div class="really_big"> {{ player.participant.label }}</div>
+            <div class="centered">You are free to leave at any time.   Have a nice day.</div>
+        {{ endif }}
     </div>
     </div>
 {% endblock %}
