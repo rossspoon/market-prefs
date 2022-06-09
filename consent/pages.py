@@ -23,8 +23,12 @@ def show_id_page(self):
 
 
 def record_consent(self):
-    self.player.participant.CONSENT = self.player.consent_given
-    self.player.participant.CONSENT_BUTTON_CLICKED = self.player.button_clicked
+    player = self.player
+    player.participant.CONSENT = self.player.consent_given
+    player.participant.CONSENT_BUTTON_CLICKED = self.player.button_clicked
+
+    if not player.consent_given:
+        player.participant.finished = True
 
 
 class ConsentPage(Page):
