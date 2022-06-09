@@ -156,7 +156,7 @@ class Player(BasePlayer):
                                        [3, 'Do not know'],
                                        [4, 'Refuse to answer']
                                    ])
-    stock_safer = models.IntegerField(black=True,
+    stock_safer = models.IntegerField(blank=True,
                                       label="Please tell me whether this statement is true or false. \"Buying a "
                                             "single company’s stock usually provides a safer return than a stock "
                                             "mutual fund.\"",
