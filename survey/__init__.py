@@ -299,5 +299,8 @@ class SurveyPage_06(SurveyBasePage):
     form_fields = ['bat_and_ball', 'widgets', 'lilies_on_lake', 'confuse', 'anything_else']
     template_name = 'survey/survey_page_side_by_side.html'
 
+    def before_next_page(player: Player, timeout_happened):
+        player.participant.finished = True
+
 
 page_sequence = [IntroPage] + get_SP_classes()
