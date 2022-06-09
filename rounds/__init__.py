@@ -703,6 +703,8 @@ class RoundResultsPage(Page):
 class FinalResultsPage(Page):
     js_vars = get_js_vars_round_results
     form_model = 'player'
+    timeout_seconds = 120
+    timer_text = "Survey starts in:"
 
     @staticmethod
     def is_displayed(player: Player):
