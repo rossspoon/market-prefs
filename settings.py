@@ -60,7 +60,7 @@ SESSION_CONFIGS = [
     )
     , dict(
         name='whole_experiment',
-        app_sequence=['consent', 'instructions', 'rounds', 'survey', 'payment'],
+        app_sequence=['consent', 'instructions', 'practice', 'rounds', 'survey', 'payment'],
         num_demo_participants=2,
     )
     , dict(
