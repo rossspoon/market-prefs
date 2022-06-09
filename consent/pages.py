@@ -35,6 +35,7 @@ class ConsentPage(Page):
 
 
 class IdPage(Page):
+    timeout_seconds = 120
     is_displayed = show_id_page
 
     def vars_for_template(self):
