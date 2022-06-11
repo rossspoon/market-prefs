@@ -31,11 +31,27 @@ def record_consent(self):
         player.participant.finished = True
 
 
+class InfoSheet(Page):
+    form_model = Player
+    form_fields = ['consent_given', 'button_clicked']
+    app_after_this_page = determine_app
+    before_next_page = record_consent
+    timeout_seconds = 600
+
+    def is_displayed(self):
+        player = self.player
+        return scf.is_online(player)
+
+
 class ConsentPage(Page):
     form_model = Player
     form_fields = ['consent_given', 'button_clicked']
     app_after_this_page = determine_app
     before_next_page = record_consent
+
+    def is_displayed(self):
+        player = self.player
+        return not scf.is_online(player)
 
 
 class IdPage(Page):
@@ -53,4 +69,4 @@ class ConsentWaitPage(UpdatedWaitPage):
                 "The experiment will start when all participants have joined. Please be patient."
 
 
-page_sequence = [ConsentWaitPage, ConsentPage, IdPage]
+page_sequence = [ConsentWaitPage, InfoSheet, ConsentPage, IdPage]
