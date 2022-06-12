@@ -83,6 +83,7 @@ class ActorRound:
         self.expected_values = {}
         self.expected_orders = []
         self.order_count = -1  # Setting to zero signals to expect exactly zero orders.
+        self.is_finished = False
 
     # Configure Interface
     def set(self, cash, shares):
@@ -122,6 +123,9 @@ class ActorRound:
                                          quant_orig=quant_orig, quant_final=quant_final))
         self.order_count = 1 if self.order_count < 1 else self.order_count + 1
         return self
+
+    def finished(self):
+        self.is_finished = True
 
     # Bot Interface
     def do_set(self):
@@ -226,7 +230,8 @@ class MarketRound:
         # tell the MarketTest object about this
         self.tests.actor_names.add(name)
         self.player_actions[name] = ar
-        setup(ar)
+        if setup is not None:
+            setup(ar)
         return self
 
     def finish(self):
@@ -302,9 +307,12 @@ class ScriptedBot(Bot):
             player.periods_until_auto_buy = -99
             player.periods_until_auto_sell = -99
 
-        yield Submission(Market, dict(), timeout_happened=True, check_html=False)
-        yield Submission(ForecastPage, dict(f0=0))
-        yield RoundResultsPage
+        if this_round and this_round.is_finished:
+            yield FinalResultsPage
+        else:
+            yield Submission(Market, dict(), timeout_happened=True, check_html=False)
+            yield Submission(ForecastPage, dict(f0=0))
+            yield RoundResultsPage
         if this_round:
             self.after_market_page_tests(actor_name, this_round)
 
@@ -601,7 +609,6 @@ market.round(14) \
            .expect_order(price=5.0, quant=0, quant_final=0, quant_orig=1, otype=SELL, is_auto=False)
            .expect_num_orders(2))
 
-
 #  Test Case:  Buy-in when the trade already happened
 # The buyer and seller actors trade and the treated player has to compete
 market.round(15) \
@@ -649,6 +656,24 @@ market.round(18) \
     .actor("Seller", lambda ar: ar.expect(cash=218.00, shares=9)) \
     .actor("Treated", lambda ar: ar.expect(cash=-202.30, shares=2, periods_until_auto_sell=0)
            .expect_order(price=137.70, quant=3, quant_final=1, otype=SELL, is_auto=True).expect_num_orders(1))
+
+#  These rounds where intended to test bankruptcy, but this is proving to be too difficult to get to this point
+# market.round(19) \
+#     .actor("Buyer", lambda ar: ar.set(400.00, 18)
+#            .buy(1, at=100.00)
+#            .expect(cash=300.00, shares=19, periods_until_auto_buy=-99)) \
+#     .actor("Seller", lambda ar: ar.set(50.00, 10)
+#            .sell(1, at=100.00)
+#            .expect(cash=150.00, shares=9, periods_until_auto_buy=-99)
+#            .expect_order(price=100.00, quant=1, quant_final=1, otype=SELL, quant_orig=None)) \
+#     .actor("Treated", lambda ar: ar.set(-301.00, 3)
+#            .expect(cash=-301, shares=3)
+#            .expect_num_orders(0))
+#
+# market.round(20) \
+#     .actor("Buyer", None) \
+#     .actor("Seller", None) \
+#     .actor("Treated", lambda ar: ar.finished())
 
 #  Test Case:  Sell - Generated and requires multiple iterations
 #  The buy price is less than 90% of the market price
