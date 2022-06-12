@@ -135,11 +135,9 @@ class _03_BorrowingCash(Page):
     timeout_seconds = 180
 
 
-
 class _04_ShortingStock(Page):
     vars_for_template = vars_for_temp_common
     timeout_seconds = 180
-
 
 
 class _05_MarketRestrictions_1(Page):
