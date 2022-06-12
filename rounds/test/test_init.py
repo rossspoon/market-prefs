@@ -737,7 +737,7 @@ class TestInitFunctions(unittest.TestCase):
         d = page.vars_for_template(p)
 
         # Assert
-        self.assertEqual({'forecast_bonus': cu(0.16), 'market_bonus': cu(0.09), 'total_pay': 25.55}, d)
+        self.assertEqual({'forecast_bonus': cu(0.16), 'market_bonus': cu(0.09), 'total_pay': 25.55, 'is_online': False}, d)
 
 
 if __name__ == '__main__':
