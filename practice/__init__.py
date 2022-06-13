@@ -163,6 +163,7 @@ class PracticeRoundResultsPage(Page):
 
 
 class PracticeEndPage(Page):
+    timeout_seconds = 120
     is_displayed = is_last_round
 
 
