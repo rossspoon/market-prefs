@@ -18,3 +18,4 @@ export_tests/
 ./run_it.*
 run_it.bat
 /simulation_results/
+~$Cost_and_Time.xlsx
