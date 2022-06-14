@@ -90,7 +90,7 @@ def get_vars_for_temp_schedule(player):
 
 def get_vars_for_confirm_page(player):
     slots = TimeSlot.filter(player=player)
-    url = player.session.vars.get('prolific_completion_url','http://www.vt.edu')
+    url = player.session.vars.get('prolific_completion_url', 'http://www.vt.edu')
     return {'slots': slots,
             'prolific_completion_url': url}
 
@@ -128,6 +128,10 @@ def custom_export(players):
         for ts in TimeSlot.filter(player=p):
             yield [p.session.code, p.participant.label, ts.date, finished]
 
+
+def vars_for_admin_report(subsession):
+    slots = get_date_times(subsession)
+    return {'slots': slots.values()}
 
 # PAGES
 class Introduction(Page):

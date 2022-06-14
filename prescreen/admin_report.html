@@ -1,0 +1,10 @@
+{{ block title }}
+    Admin Report
+{{ endblock }}
+<ul>
+    {{ for s in slots }}
+    <li>{{ s }}</li>
+    {{ endfor }}
+</ul>
+{{ block content }}
+{{ endblock }}
