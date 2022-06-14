@@ -89,7 +89,7 @@ def get_vars_for_temp_schedule(player):
 
 def get_vars_for_confirm_page(player):
     slots = TimeSlot.filter(player=player)
-    url = player.session.config.get('prolific_completion_url','http://www.vt.edu')
+    url = player.session.vars.get('prolific_completion_url','http://www.vt.edu')
     return {'slots': slots,
             'prolific_completion_url': url}
 
