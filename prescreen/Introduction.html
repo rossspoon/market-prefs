@@ -19,7 +19,11 @@ This study will involve making interactive decisions on a computer, completing a
 
 <p>Participants in the market experiment will receive</p>
 <ul>
+    {{ if expected_time == 1 }}
+    <li>$8 as compensation for your time,</li>
+  {{ else }}
     <li>$16 as compensation for your time,</li>
+    {{ endif }}
     <li>a possible additional payment depending on your choices in the experiment.</li>
 </ul>
 

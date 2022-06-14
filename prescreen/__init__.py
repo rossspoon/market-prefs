@@ -2,6 +2,7 @@ from otree.api import *
 from datetime import datetime, timedelta
 
 from otree.templating.filters import register
+import common.SessionConfigFunctions as scf
 
 doc = """
 Pre-screen app for scheduling participants for the on-line version.
@@ -120,17 +121,19 @@ def te(key):
 
 def custom_export(players):
     """ Custom export for prescreen app """
-    yield ['participant', 'timeslot', 'finished']
+    yield ['session', 'participant', 'timeslot', 'finished']
 
     for p in players:
         finished = p.participant.vars.get('finished')
         for ts in TimeSlot.filter(player=p):
-            yield [p.participant.label, ts.date, finished]
+            yield [p.session.code, p.participant.label, ts.date, finished]
 
 
 # PAGES
 class Introduction(Page):
-    pass
+    @staticmethod
+    def vars_for_template(player: Player):
+        return scf.ensure_config(player)
 
 
 class Schedule(Page):
