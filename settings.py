@@ -118,6 +118,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     summary_time=15,
     show_next=False,
     is_online=True,
+    expected_time=2
 )
 
 PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT', 'finished']

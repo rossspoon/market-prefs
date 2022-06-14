@@ -172,7 +172,7 @@ style='font-size:12.0pt;font-family:"Arial",sans-serif'>&nbsp;</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;line-height:normal'><span
 style='font-size:12.0pt;font-family:"Arial",sans-serif'>The study should take
-approximately 2 hours of your time.  You will first read a set of instructions
+approximately {{ expected_time }} hours of your time.  You will first read a set of instructions
 to learn how the market will operate.  There will be a short quiz to help you
 recall important points in the instructions.  Correct answers will be provided
 to you afterward, and performance on the quiz will not affect your payment.
@@ -183,7 +183,7 @@ survey.  Lastly, you will collect the earnings from the experiment in cash.</sp
 style='font-size:12.0pt;font-family:"Arial",sans-serif'>&nbsp;</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;line-height:normal'><span
-style='font-size:12.0pt;font-family:"Arial",sans-serif'>You will be paid $16 as
+style='font-size:12.0pt;font-family:"Arial",sans-serif'>You will be paid {{ session.participation_fee }} as
 payment for showing up, and have the opportunity earn additional payment depending
 on your outcome at the end of the market.</span></p>
 
@@ -257,7 +257,11 @@ font-family:"Arial",sans-serif'>irb@vt.edu)</span></a><span style='font-size:
 
 <p class=MsoNormal><b><i><span style='font-size:12.0pt;line-height:115%;
 font-family:"Arial",sans-serif'>Please click
+    {{ if expected_time == 1 }}
+    <a href="{{ static 'consent/InfoSheet_pilot.pdf' }}" download="VT_Market_Experiment_Info_Sheet.pdf">here</a>
+    {{ else }}
     <a href="{{ static 'consent/InfoSheet.pdf' }}" download="VT_Market_Experiment_Info_Sheet.pdf">here</a>
+    {{ endif }}
 to download a copy of this information sheet for your records.</span></i></b></p>
 
 <p class=MsoNormal><b><i><span style='font-family:"Times New Roman",serif'>By

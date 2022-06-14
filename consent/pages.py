@@ -42,6 +42,10 @@ class InfoSheet(Page):
         player = self.player
         return scf.is_online(player)
 
+    def vars_for_template(self):
+        player = self.player
+        return scf.ensure_config(player)
+
 
 class ConsentPage(Page):
     form_model = Player
