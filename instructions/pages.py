@@ -42,7 +42,7 @@ def vars_for_temp_common(player: Player):
     ret['market_time'] = scf.get_market_time(player)
     ret['forecast_thold'] = forecast_thold
     ret['forecast_reward'] = forecast_reward
-
+    ret['is_online'] = scf.is_online(player)
     return ret
 
 

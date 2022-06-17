@@ -50,7 +50,8 @@ class TimeSlot(ExtraModel):
         return datetime.strftime(self.dt(), '%I:%M %p')
 
     def to_end_time(self):
-        et = self.dt() + timedelta(hours=2)
+        delta = scf.get_expected_time(self.player)
+        et = self.dt() + timedelta(hours=delta)
         return datetime.strftime(et, '%I:%M %p')
 
 
@@ -87,12 +88,19 @@ def get_vars_for_temp_schedule(player):
     if len(TIME_SLOTS) == 0:
         creating_session(player)
 
+    exp_t = scf.get_expected_time(player)
+    is_prolific = scf.is_prolific(player)
+    is_mturk = scf.is_mturk(player)
+    return {'exp_t': exp_t,
+            'is_prolific': is_prolific,
+            'is_mturk': is_mturk}
+
 
 def get_vars_for_confirm_page(player):
-    slots = TimeSlot.filter(player=player)
-    url = player.session.vars.get('prolific_completion_url', 'http://www.vt.edu')
-    return {'slots': slots,
-            'prolific_completion_url': url}
+    ret = scf.ensure_config(player)
+    ret['slots'] = TimeSlot.filter(player=player)
+    ret['prolific_completion_url'] = player.session.vars.get('prolific_completion_url', 'http://www.vt.edu')
+    return ret
 
 
 @register
@@ -111,12 +119,21 @@ def t(key):
     return datetime.strftime(dt, '%I:%M %p')
 
 
-@register
-def te(key):
+def te(key, delta):
     """ Take a form fields in the template and use the name of the field to look up the date and return
-    a formatted end time that is 2 hours after the time"""
-    dt = TIME_SLOTS[key.name] + timedelta(hours=2)
+    a formatted end time that is the given number hours after the time"""
+    dt = TIME_SLOTS[key.name] + timedelta(hours=delta)
     return datetime.strftime(dt, '%I:%M %p')
+
+
+@register
+def te1(key):
+    return te(key, 1)
+
+
+@register
+def te2(key):
+    return te(key, 2)
 
 
 def custom_export(players):
@@ -126,12 +143,13 @@ def custom_export(players):
     for p in players:
         finished = p.participant.vars.get('finished')
         for ts in TimeSlot.filter(player=p):
-            yield [p.session.code, p.participant.label, ts.date, finished]
+            yield [p.session.code, p.participant.code, ts.date, finished]
 
 
 def vars_for_admin_report(subsession):
     slots = get_date_times(subsession)
     return {'slots': slots.values()}
+
 
 # PAGES
 class Introduction(Page):

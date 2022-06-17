@@ -69,7 +69,7 @@ SESSION_CONFIGS = [
         num_demo_participants=2,
     )
     , dict(
-        participation_fee=1.00,
+        participation_fee=0.25,
 
         name='prescreen',
         app_sequence=['prescreen'],
@@ -95,7 +95,7 @@ SESSION_CONFIGS = [
 
 SESSION_CONFIG_DEFAULTS = dict(
     real_world_currency_per_point=0.01,
-    participation_fee=16.00,
+    participation_fee=12.00,
     doc="",
     use_browser_bots=False,
     interest_rate=0.05,
@@ -118,10 +118,72 @@ SESSION_CONFIG_DEFAULTS = dict(
     forecast_time=15,
     summary_time=15,
     show_next=False,
-    is_online=True,
-    expected_time=2
-)
+    is_prolific=False,
+    is_mturk=True,
 
+    is_pilot=True,
+    expected_time_pilot=1,
+    expected_time_live=2,
+)
+if environ.get('MTURK_HIT_TYPE') == 'SCREEN_PILOT':
+    SESSION_CONFIG_DEFAULTS['mturk_hit_settings'] = dict(
+        keywords='bonus, study',
+        title='Pre-Screen Survey for a Market Pilot Experiment',
+        description='This is a pre-screening survey to determine participant availability for a forthcoming '
+                    'market experiment conducted by the VT Econ Lab at Virginia Tech University.  This research'
+                    ' studies how market institutions affect asset prices.',
+        frame_height=500,
+        template='global/mturk_screen_pilot_template.html',
+        minutes_allotted_per_assignment=15,
+        expiration_hours=3 * 24,
+        qualification_requirements=[]
+        # grant_qualification_id='YOUR_QUALIFICATION_ID_HERE', # to prevent retakes
+    )
+elif environ.get('MTURK_HIT_TYPE') == 'SCREEN':
+    SESSION_CONFIG_DEFAULTS['mturk_hit_settings'] = dict(
+        keywords='bonus, study',
+        title='Pre-Screen Survey for a Market Experiment',
+        description='This is a pre-screening survey to determine participant availability for a forthcoming '
+                    'market experiment conducted by the VT Econ Lab at Virginia Tech University.  This research'
+                    ' studies how market institutions affect asset prices.',
+        frame_height=500,
+        template='global/mturk_screen_live_template.html',
+        minutes_allotted_per_assignment=15,
+        expiration_hours=3 * 24,
+        qualification_requirements=[]
+        # grant_qualification_id='YOUR_QUALIFICATION_ID_HERE', # to prevent retakes
+    )
+elif environ.get('MTURK_HIT_TYPE') == 'EXP_PILOT':
+    SESSION_CONFIG_DEFAULTS['mturk_hit_settings'] = dict(
+        keywords='bonus, study',
+        title='VT Market Experiment Pilot',
+        description='This is a pilot study to test the experiment software.\n '
+                    'Participate is a market experiment where you will buy and sell shares of a risky asset '
+                    '(STOCK) with other traders in the market.  This research'
+                    ' studies how market institutions affect asset prices.\n '
+                    'This study will take about 1 hour to complete.',
+        frame_height=500,
+        template='global/mturk_exp_pilot_template.html',
+        minutes_allotted_per_assignment=300,
+        expiration_hours=3 * 24,
+        qualification_requirements=[]
+        # grant_qualification_id='YOUR_QUALIFICATION_ID_HERE', # to prevent retakes
+    )
+elif environ.get('MTURK_HIT_TYPE') == 'EXP':
+    SESSION_CONFIG_DEFAULTS['mturk_hit_settings'] = dict(
+        keywords='bonus, study',
+        title='VT Market Experiment',
+        description='Participate is a market experiment where you will buy and sell shares of a risky asset '
+                    '(STOCK) with other traders in the market.  This research'
+                    ' studies how market institutions affect asset prices.\n '
+                    'This study will take about 2 hours to complete.',
+        frame_height=500,
+        template='global/mturk_exp_template.html',
+        minutes_allotted_per_assignment=300,
+        expiration_hours=3 * 24,
+        qualification_requirements=[]
+        # grant_qualification_id='YOUR_QUALIFICATION_ID_HERE', # to prevent retakes
+    )
 PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT', 'finished']
 SESSION_FIELDS = ['prolific_completion_url']
 

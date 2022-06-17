@@ -30,8 +30,13 @@
             </table>
             {{ if is_online }}
                 {{ if total_bonus > 0 }}
-                    <p>A bonus payment of {{ total_bonus }} will be made through the
-                    <em>prolific.co</em> site.</p>
+                    <p>A bonus payment of {{ total_bonus }} will be made through
+                        {{ if is_prolific }}
+                            the <em>prolific.co</em> site.</p>
+                        {{ endif }}
+                        {{ if is_mturk }}
+                            Amazon mturk.
+                        {{ endif }}
                 {{ endif }}
 
             {{ else }}
@@ -47,8 +52,14 @@
             <div class="big">&nbsp;</div>
             <span class="big"> Thank you for you participation. </span>
             <div class="big">&nbsp;</div>
-            <div class="centered">Click <a href="{{ prolific_completion_url }}">here</a>
+            {{ if is_prolific }}
+                <div class="centered">Click <a href="{{ prolific_completion_url }}">here</a>
                                 to complete the study.</div>
+            {{ endif }}
+            {{ if is_mturk }}
+                <p>Please copy the following code and paste into the HIT page on Amazon Mturk to complete the HIT:</p>
+                <p style="font-size: 1.5em"><b>Completion Code:&nbsp; &nbsp; {{ participant.code }}</b></p>
+            {{ endif }}
         {{ else }}
             <span class="really_big"> {{ player.participant.label }}</span>
         {{ endif }}

@@ -23,7 +23,11 @@ SK_ENDOW_STOCK = 'endow_stock'
 SK_ENDOW_WORTH = 'endow_worth'
 SK_SHOW_NEXT = 'show_next'
 SK_CONVERSION_RATE = 'real_world_currency_per_point'
-SK_IS_ONLINE = 'is_online'
+SK_IS_PROLIFIC = 'is_prolific'
+SK_IS_MTURK = 'is_mturk'
+SK_IS_PILOT = 'is_pilot'
+SK_EXP_TIME_PILOT = 'expected_time_pilot'
+SK_EXP_TIME_LIVE = 'expected_time_live'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -222,6 +226,37 @@ def get_conversion_rate(obj):
     return get_item_as_float(config, SK_CONVERSION_RATE)
 
 
-def is_online(obj):
+def is_prolific(obj):
     config = ensure_config(obj)
-    return get_item_as_bool(config, SK_IS_ONLINE)
+    return get_item_as_bool(config, SK_IS_PROLIFIC)
+
+
+def is_mturk(obj):
+    config = ensure_config(obj)
+    return get_item_as_bool(config, SK_IS_MTURK)
+
+
+def is_online(obj):
+    return is_prolific(obj) or is_mturk(obj)
+
+
+def is_pilot(obj):
+    config = ensure_config(obj)
+    return get_item_as_bool(config, SK_IS_PILOT)
+
+
+def get_exp_time_pilot(obj):
+    config = ensure_config(obj)
+    return get_item_as_int(config, SK_EXP_TIME_PILOT)
+
+
+def get_exp_time_live(obj):
+    config = ensure_config(obj)
+    return get_item_as_int(config, SK_EXP_TIME_LIVE)
+
+
+def get_expected_time(obj):
+    if is_pilot(obj):
+        return get_exp_time_pilot(obj)
+    else:
+        return get_exp_time_live(obj)

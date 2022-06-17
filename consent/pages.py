@@ -44,7 +44,12 @@ class InfoSheet(Page):
 
     def vars_for_template(self):
         player = self.player
-        return scf.ensure_config(player)
+        ret = scf.ensure_config(player)
+        exp_time = scf.get_expected_time(player)
+        ret['expected_time'] = exp_time
+        s = 's' if exp_time > 1 else ''
+        ret['s'] = s
+        return ret
 
 
 class ConsentPage(Page):
@@ -65,7 +70,7 @@ class IdPage(Page):
     def vars_for_template(self):
         p = self.player
         is_online = scf.is_online(p)
-        return dict(is_online = is_online)
+        return dict(is_online=is_online)
 
 
 class ConsentWaitPage(UpdatedWaitPage):

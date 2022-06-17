@@ -16,8 +16,14 @@
 
     <div class="main-block centered">
         {{ if is_online }}
-            <div class="centered">Click <a href="{{ prolific_completion_url }}">here</a>
-                to complete the study.</div>
+            {{ if is_prolific }}
+                <div class="centered">Click <a href="{{ prolific_completion_url }}">here</a>
+                    to complete the study.</div>
+            {{ endif }}
+            {{ if is_mturk }}
+                <p>Please copy the following code and paste into the HIT page on Amazon Mturk to complete the HIT:</p>
+                <p style="font-size: 1.5em"><b>Completion Code:&nbsp; &nbsp; {{ participant.code }}</b></p>
+            {{ endif }}
         {{ else }}
             <p>Use the participant id code below to claim your payment.</p>
            <div class="really_big"> {{ player.participant.label }}</div>

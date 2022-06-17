@@ -13,16 +13,21 @@ This study will involve making interactive decisions on a computer, completing a
 <p>
     This is a brief survey to gauge availability for the experiment.  On the next screen, please indicate
     when you can be available to participate in the experiment.  We will invite participants to the study through
-    <em>prolific.co</em> based on the results of the survey.
-    You will be paid $1.00 today for providing your availability.
+    {{ if is_prolific }}
+    <em>prolific.co</em>
+    {{ else }}
+    <em>Mturk</em>
+    {{ endif }}
+    based on the results of the survey.
+    You will be paid {{ session.participation_fee }} today for providing your availability.
 </p>
 
 <p>Participants in the market experiment will receive</p>
 <ul>
-    {{ if expected_time == 1 }}
+    {{ if is_pilot }}
     <li>$8 as compensation for your time,</li>
   {{ else }}
-    <li>$16 as compensation for your time,</li>
+    <li>$12 as compensation for your time,</li>
     {{ endif }}
     <li>a possible additional payment depending on your choices in the experiment.</li>
 </ul>

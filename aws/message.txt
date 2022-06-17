@@ -1,0 +1,24 @@
+Dear Mturk Member,
+
+Earlier, you completed a prescreen survey in which you indicated your availability to take part is a market research study conducted by the VT Econ Lab.  We are writing you now to invite you to participate in a session we will run on {{ date }}, at {{ time }} EDT.
+
+Receiving this invitation does not guarantee a spot in the experiment.  The experiment will be opened starting precisely at {{ start_time }} EDT under the HIT Title "{{ hit_name }}"and will be available to the first {{ N }} participants to connect to it.
+
+=============================
+About the main experiment
+=============================
+{% if is_pilot %}
+    *** This is a pilot study to test our experiment and mturk processes. ***
+{% endif %}
+Participants will place buy and sell orders for a stock in a simulated market with {{ one_less }} other participants ({{ N }} in all).  The experiment will take about {{ duration }} hours to complete and will consist of the market simulation and a brief survey.
+
+Compensation for the experiment will be {{ part_fee }} for your time with a possibility to earn bonus payments depending on your performance in the market. To participate you must be 18 years of age or older and able to read and comprehend the English language.
+
+=============================
+Compatibility
+=============================
+•	The experiment must be run on a laptop or desktop computer.
+•	We recommend using either the Chrome, Firefox, or Safari web browser.  We cannot guarantee proper
+    performance with IE or Edge.
+
+If you have any questions, please write to the organizers of this experiment through the Mturk messaging system.

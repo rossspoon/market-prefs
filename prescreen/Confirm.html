@@ -8,7 +8,13 @@
 
     <p>Thank you for your choice.  You have indicated that you will be available during the following timeslots.</p>
     <p>If you are selected to participate in a session, we will send you
-    an invitation through <em>prolific.co</em>.</p>
+    an invitation through
+    {{ if is_prolific }}
+    <em>prolific.co</em>
+    {{ else }}
+    <em>Mturk</em>
+    {{ endif }}.
+    </p>
     <ul>
         {{ for s in slots }}
             <li>
@@ -17,7 +23,12 @@
         {{ endfor }}
     </ul>
 
-    <p style="font-size: 1.5em;">Click <a href="{{ prolific_completion_url }}">here</a> to complete the survey.</p>
+    {{ if is_prolific }}
+        <p style="font-size: 1.5em;">Click <a href="{{ prolific_completion_url }}">here</a> to complete the survey.</p>
+    {{ else }}
+        <p>Please copy the following code and paste into the HIT page on Amazon Mturk to complete the HIT.</p>
+        <p style="font-size: 1.5em"><b>Completion Code:&nbsp; &nbsp; {{ participant.code }}</b></p>
+    {{ endif }}
 
 {{ endblock }}
 

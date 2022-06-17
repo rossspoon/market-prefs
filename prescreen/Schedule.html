@@ -9,12 +9,24 @@
 
     <p>Please select all timeslots for which you will be available to participate.
         If we decide to run an experimental session during a timeslot that you have chosen, we will send you
-    and invitation through <em>prolific.co</em>.   Click "Next" to confirm your choices.</p>
+    and invitation through
+            {{ if is_prolific }}
+    <em>prolific.co</em>
+    {{ else }}
+    <em>Mturk</em>
+    {{ endif }}.
+        Click "Next" to confirm your choices.</p>
     <p> All time are in Eastern Daylight Time please plan accordingly.</p>
     <ul>
     {{ for f in form }}
         <li>
-        {{ f }}  <span class="label"> {{ f | d }} <span class="r_just"> {{ f | t }} to {{ f | te }} EDT</span></span>
+        {{ f }}  <span class="label"> {{ f | d }} <span class="r_just"> {{ f | t }} to
+            {{ if exp_t == 1 }}
+                {{ f | te1 }}
+            {{ else }}
+                {{ f | te2 }}
+            {{ endif }}
+            EDT</span></span>
         </li>
     {{ endfor }}
     </ul>
