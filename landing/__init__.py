@@ -107,11 +107,9 @@ class LandingPage(Page):
     def get_timeout_seconds(player: Player):
         start_time = scf.get_start_time(player)
         now = datetime.now()
-
-        if now >= start_time:
-            return None
-
-        return (start_time - now).seconds
+        # dattime.timestamp() returns the number of seconds since the epoch
+        diff = (start_time.timestamp() - now.timestamp())
+        return diff
 
     @staticmethod
     def vars_for_template(player: Player):
