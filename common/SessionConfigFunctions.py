@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from otree.api import Currency as cu
 from otree.models import Session
 import numpy as np
@@ -28,6 +30,8 @@ SK_IS_MTURK = 'is_mturk'
 SK_IS_PILOT = 'is_pilot'
 SK_EXP_TIME_PILOT = 'expected_time_pilot'
 SK_EXP_TIME_LIVE = 'expected_time_live'
+SK_START_TIME = 'start_time'
+SK_DEFAULT_URL = 'default_url'
 
 WHOLE_NUMBER_PERCENT = "{:.0%}"
 
@@ -260,3 +264,17 @@ def get_expected_time(obj):
         return get_exp_time_pilot(obj)
     else:
         return get_exp_time_live(obj)
+
+
+def get_start_time(obj):
+    config = ensure_config(obj)
+    raw_st = config.get(SK_START_TIME)
+    # allow this to raise an exception
+    # this should fail fast
+    dt = datetime.strptime(raw_st, '%Y%m%d%H%M')
+    return dt
+
+
+def get_default_url(obj):
+    config = ensure_config(obj)
+    return config.get(SK_DEFAULT_URL)

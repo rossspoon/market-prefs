@@ -69,7 +69,7 @@ SESSION_CONFIGS = [
         num_demo_participants=2,
     )
     , dict(
-        participation_fee=0.25,
+        participation_fee=0.75,
 
         name='prescreen',
         app_sequence=['prescreen'],
@@ -85,6 +85,14 @@ SESSION_CONFIGS = [
         slot_08='202206241420',
         slot_09='202206241640',
         slot_10='',
+    )
+    , dict(
+        name='landing',
+        app_sequence=['landing'],
+        num_demo_participants=1,
+        start_time='202206171530',
+        default_url='http://localhost:8000/room/market2?participant_label={}',
+        show_next=True,
     )
 ]
 
@@ -118,8 +126,8 @@ SESSION_CONFIG_DEFAULTS = dict(
     forecast_time=15,
     summary_time=15,
     show_next=False,
-    is_prolific=False,
-    is_mturk=True,
+    is_prolific=True,
+    is_mturk=False,
 
     is_pilot=True,
     expected_time_pilot=1,
@@ -219,5 +227,9 @@ ROOMS = [
     dict(
         name='prescreen',
         display_name='Pre-Screen Survey Room'
+    ),
+    dict(
+        name='landing',
+        display_name='Landing Page Room'
     )
 ]

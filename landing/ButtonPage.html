@@ -1,0 +1,82 @@
+{{ block title }}
+    Experiment Ready
+{{ endblock }}
+{{ block content }}
+<style>
+    .bar_base{
+        width: 100%;
+        background-color: #aaaaaa;
+        border-radius: 10px;
+    }
+    .bar_prog{
+        background-color: #337cf4;
+        border-radius: 10px;
+        height: 35px;
+        display: flex;
+    }
+    .text_in_bar{
+        color: white;
+        margin: auto;
+        width: fit-content;
+        background-color: #337cf4aa;
+        border-radius: 10px;
+        padding: 2px;
+    }
+
+    .spaced {margin-bottom: 50px;}
+    .big {font-size: 1.5em;}
+</style>
+<script>
+    let clicked = (js_vars.clicked);
+
+    $(window).on('load', function () {
+        $("#submit-btn").click(function() {
+            if (!clicked) {
+                clicked = true
+                liveSend({'func': 'click'});
+           }
+        });
+    });
+
+    function liveRecv(data) {
+        const func = data.func
+
+        // update bar info or advance to ExperimentFull
+        if (func == 'bar') {
+            const bar_info = data.bar_info;
+            const filled = data.filled
+
+            if (filled) {
+                document.getElementById("form").submit();
+                return;
+            }
+
+            $('#count').text(bar_info.count);
+            $('.bar_prog').css('width', bar_info.pct);
+            if (clicked) {
+                liveSend({'func': 'is_in'})
+            }
+        }
+        //result of a status request
+        if (func == 'is_in'){
+            const is_in = data.is_in
+            if (is_in) {
+                document.getElementById("form").submit();
+            }
+        }
+    }
+</script>
+<div class="big spaced">Please click on the  "Start" button to begin the experiment.</div>
+<div class="big spaced">We will accept the first {{ count }} participants.</div>
+
+<div class="big">Number of participants already joined:</div>
+
+<div class="bar_base progress-bar-striped progress-bar-animated spaced">
+    <div class="bar_prog" style="width: {{ pct }}">
+        <p class="text_in_bar"><span id="count">{{ count }}</span> of {{ N }}</p></div>
+</div>
+
+<div class="spaced">
+    <div id="submit-btn" class="btn btn-primary no-anim" tabindex="0">Start</div>
+</div>
+{{ endblock }}

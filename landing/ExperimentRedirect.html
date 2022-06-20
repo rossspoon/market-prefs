@@ -1,0 +1,9 @@
+{{ block title }}
+{{ endblock }}
+{{ block content }}
+    <script>
+          $(window).on('load', function () {
+              window.location = js_vars.url
+          });
+    </script>
+{{ endblock }}

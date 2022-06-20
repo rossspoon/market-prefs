@@ -1,11 +1,11 @@
 # oTree-may-overwrite-this-file
 # IF YOU MODIFY THIS FILE, remove this comment.
 # otherwise, oTree will automatically overwrite it.
-otree[mturk]>=5.0.0a21
+otree
 psycopg2>=2.8.4
-
-pandas~=1.0.0
-numpy~=1.21.4
+pandas
+numpy
 SQLAlchemy~=1.3.22
 pdflatex~=0.1.3
 Jinja2~=2.11.3
+requests

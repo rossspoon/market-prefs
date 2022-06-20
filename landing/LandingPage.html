@@ -1,0 +1,29 @@
+{{ block title }}
+    Welcome to the VT Market Experiment
+{{ endblock }}
+{{ block content }}
+
+<script>
+$(window).on('load', function () {
+    //Move the timer
+    var timer = $('.otree-timer').detach();
+    timer.removeClass('alert-warning')
+    $('#timer_box').prepend(timer);
+});
+</script>
+<link rel="stylesheet" href="{{ static 'css/global.css' }}">
+<style>
+    p {font-size: 1.5em;}
+    #timer_box {line-height: 1.1em;}
+</style>
+
+<h3>Thank you for your interest in out study</h3>
+<p>The experiment will begin at {{ start_time }} EDT.</p>
+<p>At that time you will see the experiment link.
+<p>We will accept the first {{ C.LIMIT }} participants to click on the experiment link once it appears.</p>
+<p>The Experiment will begin in:</p>
+<div id="timer_box" class="really_big"></div>
+{{ if show_next }}
+{{ next_button }}
+{{ endif }}
+{{ endblock }}
