@@ -38,7 +38,12 @@
 }
 
 .really_big {
-    font-size: 300px;
+    font-size: 150px;
+    font-family: serif;
+}
+
+.very_big {
+    font-size: 64px;
     font-family: serif;
 }
 
