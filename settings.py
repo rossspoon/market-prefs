@@ -8,12 +8,6 @@ SESSION_CONFIGS = [
         random_hist=False
     )
     , dict(
-        name='rounds_sell_off',
-        app_sequence=['rounds'],
-        num_demo_participants=2,
-        random_hist=False,
-    )
-    , dict(
         name='rounds_test',
         app_sequence=['rounds'],
         num_demo_participants=3,
@@ -64,11 +58,6 @@ SESSION_CONFIGS = [
         num_demo_participants=2,
     )
     , dict(
-        name='consent_then_rounds',
-        app_sequence=['consent', 'rounds', 'payment'],
-        num_demo_participants=2,
-    )
-    , dict(
         participation_fee=0.75,
 
         name='prescreen',
@@ -92,7 +81,6 @@ SESSION_CONFIGS = [
         num_demo_participants=1,
         start_time='202206171530',
         default_url='http://localhost:8000/room/market2?participant_label={}',
-        show_next=True,
     )
 ]
 
@@ -103,7 +91,7 @@ SESSION_CONFIGS = [
 
 SESSION_CONFIG_DEFAULTS = dict(
     real_world_currency_per_point=0.01,
-    participation_fee=12.00,
+    participation_fee=1.00,
     doc="",
     use_browser_bots=False,
     interest_rate=0.05,
