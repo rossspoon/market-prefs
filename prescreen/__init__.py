@@ -143,7 +143,7 @@ def custom_export(players):
     for p in players:
         finished = p.participant.vars.get('finished')
         for ts in TimeSlot.filter(player=p):
-            yield [p.session.code, p.participant.code, ts.date, finished]
+            yield [p.session.code, p.participant.label, ts.date, finished]
 
 
 def vars_for_admin_report(subsession):
