@@ -95,7 +95,7 @@ def make_screen(N, is_pilot, is_prolific, is_mturk, times, participation_fee=0.7
     resp_screen_create = call_api(POST, 'sessions',
                 session_config_name='prescreen',
                 room_name='prescreen',
-                num_participants=40,
+                num_participants=N,
                 modified_session_config_fields=session_configs,
                 )
     screen_code = resp_screen_create['code']

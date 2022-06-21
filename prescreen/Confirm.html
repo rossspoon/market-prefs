@@ -15,6 +15,10 @@
     <em>Mturk</em>
     {{ endif }}.
     </p>
+    {{ if is_prolific }}
+        <p>We recommend that you enable email notifications in <em>prolific</em> to receive word of the
+            experiment as soon as possible.</p>
+    {{ endif }}
     <ul>
         {{ for s in slots }}
             <li>
