@@ -169,10 +169,15 @@ def main(argv):
     if stage == 'exp':
         resp = make_exp(N, l_num, is_pilot, start_time, is_prolific, is_mturk, dist)
         pprint(resp)
+        print("SESSIONS CREATED:")
+        keys = list(resp.keys())
+        print(f"Landing: {keys[1]}")
+        print(f"Experiment: {keys[0]}")
 
     if stage == 'screen':
         resp = make_screen(N, is_pilot, is_prolific, is_mturk, times)
         pprint(resp)
+
 
 
 if __name__ == "__main__":

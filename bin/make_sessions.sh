@@ -1,6 +1,6 @@
 
 # PILOT - Experiment
-./bin/create_session.py -s exp -n 6 -l 20 -p  -t 202206211400 --dist="0 2 4" --local
+./bin/create_session.py -s exp -n 6 -l 50 -p  -t 202206211201 --dist="0 2 4"
 
 # PILOT - Screen
 ./bin/create_session.py -s screen -n 100 -p  \
