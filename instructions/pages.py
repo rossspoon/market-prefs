@@ -205,103 +205,69 @@ class _15_EndOfMarket(Page):
     timeout_seconds = 180
 
 
-class QuizPage(Page):
+class Quiz02(Page):
     template_name = 'instructions/Quiz_template.html'
+    form_fields = ['quiz_1', 'quiz_2', 'quiz_3', 'quiz_4']
     form_model = Player
-    attempted_field = ''
     timeout_seconds = 300
 
-    def grade_quiz(self, values):
-        raise NotImplementedError("Please Implement this method")
 
-    def js_vars(self):
-        question_class = {name: 'normal' for name in self.form_fields}
-        success = False
-        attempted = False
-
-        # if the page has already been submitted, we now have a form object,
-        # and it has been 'graded'.  determine the check/ex class of each question.
-        if getattr(self.player, self.attempted_field):
-            correct = {f.name: not bool(f.errors) for f in self.form}
-            question_class = {n: 'correct' if b else 'wrong' for n, b in correct.items()}
-
-            # This variable will signal the js to turn the error message green.
-            success = all(correct.values())
-
-            attempted = True
-
-        return {'q_class': question_class,
-                'success': success,
-                'attempted': attempted}
-
-    def error_message(self, values):
+    def before_next_page(self):
+        # Grade the quiz
         player = self.player
-
-        if getattr(player, self.attempted_field):
-            return
-
-        ret = self.grade_quiz(values)
-        setattr(player, self.attempted_field, True)
-
-        # if errors are present the truthiness of ret will be True
-        if ret:
-            num_wrong = len(ret)
-            s = '' if num_wrong == 1 else 's'
-            self.form.non_field_error = f"You missed {num_wrong} question{s}. &nbsp;&nbsp Please take note of the " \
-                                        f"correct answers and click ""Next"" to continue."
-        else:
-            self.form.non_field_error = "You answered all questions correctly. &nbsp;&nbsp Please click Next to " \
-                                        "continue. "
-        return ret
-
-
-class Quiz01(QuizPage):
-    form_fields = ['qz1q1', 'qz1q2', 'qz1q3', 'qz1q4']
-    attempted_field = 'qz1_attempted'
-
-    def grade_quiz(self, values):
-        ret = {}
-
-        if values['qz1q1'] != 6:
-            ret['qz1q1'] = "You are allowed up to 6 orders per market period."
-
-        if values['qz1q2'] is None or values['qz1q2']:
-            ret['qz1q2'] = "All BUY prices must all be less than your SELL prices."
-
-        if not values['qz1q3']:
-            ret['qz1q3'] = "When you short the STOCK, dividends  will be deducted from your CASH holdings."
-
-        ir = scf.as_wnp(scf.get_interest_rate(self.player))
-        if values['qz1q4'] != ir:
-            ret['qz1q4'] = f"Interest on CASH is earned at {ir}."
-
-        return ret
-
-
-class Quiz02(QuizPage):
-    form_fields = ['quiz_1', 'quiz_2', 'quiz_3', 'quiz_4']
-    attempted_field = 'qz_attempted'
-
-    def grade_quiz(self, values):
-        player = self.player
-        ret = {}
-
-        if values['quiz_1'] is None or values['quiz_1']:
-            ret['quiz_1'] = "All BUY prices must all be less than your SELL prices."
-
         fundamental = cu(scf.get_fundamental_value(player))
-        if values['quiz_2'] != fundamental:
-            ret['quiz_2'] = f'The system will buy back shares of STOCK at a price of {fundamental}.'
 
-        if values['quiz_3'] != 56:
-            ret['quiz_3'] = f'At the end of the experiment, all STOCK is bought back at a price of {fundamental}.' \
+        ans1 = player.field_maybe_none('quiz_1')
+        ans2 = player.field_maybe_none('quiz_2')
+        ans3 = player.field_maybe_none('quiz_3')
+        ans4 = player.field_maybe_none('quiz_4')
+
+        player.quiz_1_score = ans1 is not None and not ans1
+        player.quiz_2_score = ans2 == fundamental
+        player.quiz_3_score = ans3 == 56
+        player.quiz_4_score = ans4 == 110
+
+
+class Quiz02Results(Page):
+    template_name = 'instructions/QuizResults_template.html'
+    form_fields = ['quiz_1', 'quiz_2', 'quiz_3', 'quiz_4']
+    form_model = Player
+    timeout_seconds = 120
+
+    def get_messages(self):
+        player = self.player
+        ret = {}
+        fundamental = cu(scf.get_fundamental_value(player))
+
+        ret['quiz_1'] = "" if player.quiz_1_score else "All BUY prices must all be less than your SELL prices."
+
+        ret['quiz_2'] = "" if player.quiz_2_score else f'The system will buy back shares of STOCK at a price of {fundamental}.'
+
+        ret['quiz_3'] = "" if player.quiz_3_score else f'At the end of the experiment, all STOCK is bought back at a price of {fundamental}.' \
                             f'You will receive 4 x {fundamental} = {cu(4 * fundamental)}.'
 
-        if values['quiz_4'] != 110:
-            ret['quiz_4'] = f'You will receive 5% on you CASH or 5.00 points, and 1.00 point for each of your' \
+        ret['quiz_4'] = "" if player.quiz_4_score else f'You will receive 5% on you CASH or 5.00 points, and 1.00 point for each of your' \
                             f'shares.  Your final CASH position will be: 100.00 + 5.00 + (1.00 x 5) = 110.00 points.'
 
         return ret
+
+    def js_vars(self):
+        player = self.player
+        success = False
+
+        fields_to_check = {f: f"{f}_score" for f in self.form_fields}
+        scored = {f: bool(player.field_maybe_none(s)) for f, s in fields_to_check.items()}
+        question_class = {n: 'correct' if b else 'wrong' for n, b in scored.items()}
+
+        # This variable will signal the js to turn the error message green.
+        success = all(scored.values())
+
+        attempted = True
+
+        return {'q_class': question_class,
+                'success': success,
+                'attempted': attempted,
+                'errors': self.get_messages()}
 
 
 class OutroPage(Page):
@@ -332,6 +298,7 @@ page_sequence = [IntroPage,
                  _09_AutoTransactions,
                  _10_Bankruptcy,
                  Quiz02,
+                 Quiz02Results,
                  OutroPage,
                  InstWaitPage,
                  ]

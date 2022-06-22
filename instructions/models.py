@@ -73,6 +73,12 @@ class Player(BasePlayer):
                                  blank=True,
                                  choices=[[105, cu(105)], [110, cu(110)], [100, cu(100)], [114, cu(114)]]
                                  )
+
+    quiz_1_score = models.BooleanField()
+    quiz_2_score = models.BooleanField()
+    quiz_3_score = models.BooleanField()
+    quiz_4_score = models.BooleanField()
+
     qz_attempted = models.BooleanField(initial=False)
 
     @staticmethod

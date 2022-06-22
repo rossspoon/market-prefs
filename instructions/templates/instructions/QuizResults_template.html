@@ -11,8 +11,11 @@
     Before continuing, please answer the following questions.
         <ul>
         {{ for f in form }}
-            <li id="{{ f.name }}" class="quiz-question normal">
-                {{ f.label }}{{ f }}{{ formfield_errors f.name }}
+            <li id="{{ f.name }}" class="quiz-question">
+
+                {{ f.label }}{{ f }}
+                <div id="{{ f.name }}_err" class="form-control-errors"></div>
+                {{ formfield_errors f.name }}
             </li>
         {{ endfor }}
         </ul>
