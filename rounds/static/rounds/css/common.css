@@ -114,3 +114,42 @@
 .neg-val {
     color: tomato;
 }
+
+.round-pop-up{
+    z-index: 20;
+    font-size: 18px;
+    font-weight: 350;
+    background-color: lightyellow;
+    color: #559;
+    padding: 10px;
+    border-radius: 10px;
+    border: 2px dashed #555599;
+    position: absolute;
+
+    width: 375px;
+    margin-left: 40%;
+    margin-top: 20%;
+    left: 0;
+    top: 0;
+
+    animation-name: tt-hover;
+    animation-duration: .3s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+}
+
+.round-pop-up div{
+    margin: 10px;
+}
+
+#gray-out{
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    background-color: black;
+    filter: alpha(opacity=30);
+    opacity: 0.3;
+}

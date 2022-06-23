@@ -187,4 +187,17 @@
         </div>
     </div>
 {{ endif }}
+{{ if show_pop_up }}
+<span id="round_num_alert" class="round-pop-up">
+    <p>
+        {{ if num_rounds_left == 1 }}
+            This is the last round.
+        {{ else }}
+            Remaining Market Periods: {{ num_rounds_left }}
+        {{ endif }}
+    <span class="bottom-row">&nbsp;<div id="pop-up-btn" class="btn btn-primary r_just" tabindex="1">Ok</div></span></p>
+</span>
+<div id="gray-out"></div>
+{{ endif }}
+
 {{ endblock }}

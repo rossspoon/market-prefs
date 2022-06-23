@@ -352,6 +352,8 @@ def standard_vars_for_template(player: Player):
 
     ret['messages'] = []  # The market page will populate this
     ret['attn_cls'] = ''
+    ret['show_pop_up'] = False
+    ret['num_rounds_left'] = 99
 
     return ret
 
@@ -459,6 +461,9 @@ def vars_for_market_template(player: Player):
     ret = standard_vars_for_template(player)
     ret['messages'] = get_messages(player, ret)
     ret['show_form'] = 'order'
+    ret['show_pop_up'] = player.round_number > (Constants.num_rounds - 5)
+    ret['num_rounds_left'] = Constants.num_rounds - player.round_number + 1
+
     return ret
 
 
