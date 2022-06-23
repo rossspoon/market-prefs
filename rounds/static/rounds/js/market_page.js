@@ -9,14 +9,15 @@ $(window).on('load', function () {
         $('#notes-col').removeClass('hidden')
         $('#fulfilled-col').removeClass('hidden')
     }
+
+    $("#pop-up-btn").click(function(){
+        $("#round_num_alert").detach();
+        $("#gray-out").detach();
+    });
     
     // This requests all the orders
     // If the page is reloaded then we need to see any existing orders
     liveSend({'func': 'get_orders_for_player'});
-
-    //Move the timer
-    //var timer = $('.otree-timer').detach();
-    //$('.message-box').prepend(timer);
 
     //Add placeholder on the order form
     $('#id_quantity').attr('placeholder', 'Quantity')
