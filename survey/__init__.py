@@ -136,7 +136,7 @@ class Player(BasePlayer):
     # Financial Literacy
     five_years = models.IntegerField(blank=True,
                                      label="Suppose you had $100 in a savings account and the interest rate was 2% "
-                                           "per year. After 5years, how much do you think you would have in the "
+                                           "per year. After 5 years, how much do you think you would have in the "
                                            "account if you left the money to grow?",
                                      choices=[
                                          [0, 'More than $102'],
