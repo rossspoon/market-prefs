@@ -119,33 +119,39 @@ def vars_for_15_template(player: Player):
 
 class IntroPage(Page):
     vars_for_template = vars_for_temp_common
-    timeout_seconds = 120
+    # timeout_seconds = 120
+    pass
 
 
 class _01_Assets(Page):
-    timeout_seconds = 120
-
+    # timeout_seconds = 120
+    pass
 
 class _02_Trading(Page):
-    timeout_seconds = 120
+    # timeout_seconds = 120
+    pass
 
 
 class _03_BorrowingCash(Page):
     vars_for_template = vars_for_temp_common
-    timeout_seconds = 180
+    # timeout_seconds = 180
+    pass
 
 
 class _04_ShortingStock(Page):
     vars_for_template = vars_for_temp_common
-    timeout_seconds = 180
+    # timeout_seconds = 180
+    pass
 
 
 class _05_MarketRestrictions_1(Page):
-    timeout_seconds = 180
+    # timeout_seconds = 180
+    pass
 
 
 class _06_MarketRestrictions_2(Page):
-    timeout_seconds = 180
+    # timeout_seconds = 180
+    pass
 
 
 class _06_MarketRestrictions_3(Page):
@@ -153,63 +159,64 @@ class _06_MarketRestrictions_3(Page):
         return scf.get_float_ratio_cap(self.player) is not None
 
     vars_for_template = vars_for_temp_common
-    timeout_seconds = 180
+    # timeout_seconds = 180
 
 
 class _07_MarketPeriod(Page):
     vars_for_template = vars_for_temp_common
-    timeout_seconds = 180
-
+    # timeout_seconds = 180
+    pass
 
 class _08_Equity(Page):
     vars_for_template = vars_for_temp_common
-    timeout_seconds = 180
-
+    # timeout_seconds = 180
+    pass
 
 class _09_AutoTransactions(Page):
     vars_for_template = vars_for_temp_common
-    timeout_seconds = 180
+    # timeout_seconds = 180
 
 
 class _10_Bankruptcy(Page):
-    timeout_seconds = 180
+    # timeout_seconds = 180
+    pass
 
 
 class _11_MarketPeriod_2(Page):
-    timeout_seconds = 180
-
+    # timeout_seconds = 180
+    pass
 
 class _12_MarketPage2(Page):
     template_name = "instructions/Market_ins.html"
     vars_for_template = vars_for_market_ins_template
     js_vars = js_vars_for_market_ins
-    timeout_seconds = 420
+    # timeout_seconds = 420
 
 
 class _13_ForecastPage2(Page):
     template_name = "instructions/Forecast_ins.html"
     vars_for_template = vars_for_market_ins_template
     js_vars = js_vars_for_market_ins
-    timeout_seconds = 300
+    # timeout_seconds = 300
 
 
 class _14_PeriodSummary2(Page):
     template_name = "instructions/Summary_ins.html"
     vars_for_template = vars_for_market_ins_template
     js_vars = js_vars_for_market_ins
-    timeout_seconds = 300
+    # timeout_seconds = 300
 
 
 class _15_EndOfMarket(Page):
     vars_for_template = vars_for_15_template
-    timeout_seconds = 180
+    # timeout_seconds = 180
 
 
 class Quiz02(Page):
     template_name = 'instructions/Quiz_template.html'
     form_fields = ['quiz_1', 'quiz_2', 'quiz_3', 'quiz_4']
     form_model = Player
-    timeout_seconds = 300
+    # timeout_seconds = 300
 
 
     def before_next_page(self):
@@ -232,7 +239,7 @@ class Quiz02Results(Page):
     template_name = 'instructions/QuizResults_template.html'
     form_fields = ['quiz_1', 'quiz_2', 'quiz_3', 'quiz_4']
     form_model = Player
-    timeout_seconds = 120
+    # timeout_seconds = 120
 
     def get_messages(self):
         player = self.player
@@ -272,8 +279,8 @@ class Quiz02Results(Page):
 
 class OutroPage(Page):
     vars_for_template = vars_for_temp_common
-    timeout_seconds = 120
-
+    # timeout_seconds = 120
+    pass
 
 class InstWaitPage(UpdatedWaitPage):
     body_text = "Please wait for the other participants to progress through the instructions."

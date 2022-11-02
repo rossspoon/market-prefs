@@ -91,7 +91,7 @@ SESSION_CONFIGS = [
 
 SESSION_CONFIG_DEFAULTS = dict(
     real_world_currency_per_point=0.01,
-    participation_fee=1.00,
+    participation_fee=10.00,
     doc="",
     use_browser_bots=False,
     interest_rate=0.05,
@@ -114,10 +114,10 @@ SESSION_CONFIG_DEFAULTS = dict(
     forecast_time=15,
     summary_time=15,
     show_next=False,
-    is_prolific=True,
+    is_prolific=False,
     is_mturk=False,
 
-    is_pilot=True,
+    is_pilot=False,
     expected_time_pilot=1,
     expected_time_live=2,
 )
