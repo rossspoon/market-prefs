@@ -223,3 +223,19 @@
     border-color: transparent transparent #555599  transparent;
 }
 /*END Tooltip Stuff */
+
+
+.left-side{
+    position: absolute;
+    left: 10px;
+}
+.right-side{
+    position: absolute;
+    right: 40px;
+}
+
+.page_width{
+    margin-top:10px;
+    position: relative;
+    width: 100%;
+}
