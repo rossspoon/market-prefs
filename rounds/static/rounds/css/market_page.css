@@ -208,21 +208,6 @@
     margin-bottom: 3px;
 }
 
-.left-side{
-    position: absolute;
-    left: 10px;
-}
-.right-side{
-    position: absolute;
-    right: 40px;
-}
-
-.page_width{
-    margin-top:10px;
-    position: relative;
-    width: 100%;
-}
-
 .canceled-order{
     color: white;
     background-color: tomato;
