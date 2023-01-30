@@ -30,6 +30,8 @@ def record_consent(self):
     if not player.consent_given:
         player.participant.finished = True
 
+class SplashPage(Page):
+    pass
 
 class InfoSheet(Page):
     form_model = Player
@@ -78,4 +80,4 @@ class ConsentWaitPage(UpdatedWaitPage):
                 "The experiment will start when all participants have joined. Please be patient."
 
 
-page_sequence = [ConsentWaitPage, InfoSheet, ConsentPage, IdPage]
+page_sequence = [SplashPage, ConsentWaitPage, InfoSheet, ConsentPage, IdPage]

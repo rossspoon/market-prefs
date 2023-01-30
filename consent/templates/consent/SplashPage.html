@@ -1,0 +1,29 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="{{ static 'css/global.css' }}">
+
+    <div class="page_width" style="height: 200px;">
+        <span class="left-side">
+                <img  src="{{ static 'img/vtel.png' }}"/>
+        </span>
+        <span class="right-side">
+                <img  src="{{ static 'consent/img/image001.jpg' }}"/>
+        </span>
+    </div>
+
+
+    <div style="margin: auto; text-align: center">
+        <p class="really_big">Welcome to the market experiment!</p>
+    </div>
+    <div style="margin: auto; text-align: center">
+        <p class="very_big"> Please wait for all participants to arrive.  We will begin shortly.</p>
+    </div>
+
+{% endblock %}
+
+
