@@ -1,11 +1,7 @@
-from otree.api import WaitPage
-from otree.models import Participant
-
+import common.SessionConfigFunctions as scf
 from common.CommonPges import UpdatedWaitPage
 from ._builtin import Page
 from .models import Player
-import common.SessionConfigFunctions as scf
-
 
 def determine_app(self, upcoming_apps):
     player = self.player
@@ -31,14 +27,18 @@ def record_consent(self):
         player.participant.finished = True
 
 class SplashPage(Page):
-    pass
+    def vars_for_template(self):
+        p = self.player
+        show_next = scf.show_next_button(p)
+        return dict(show_next=show_next)
+
 
 class InfoSheet(Page):
     form_model = Player
     form_fields = ['consent_given', 'button_clicked']
     app_after_this_page = determine_app
     before_next_page = record_consent
-    timeout_seconds = 600
+    #timeout_seconds = 600
 
     def is_displayed(self):
         player = self.player
@@ -66,13 +66,14 @@ class ConsentPage(Page):
 
 
 class IdPage(Page):
-    timeout_seconds = 120
+    #timeout_seconds = 120
     is_displayed = show_id_page
 
     def vars_for_template(self):
         p = self.player
         is_online = scf.is_online(p)
-        return dict(is_online=is_online)
+        show_next = scf.show_next_button(p)
+        return dict(is_online=is_online, show_next=show_next)
 
 
 class ConsentWaitPage(UpdatedWaitPage):

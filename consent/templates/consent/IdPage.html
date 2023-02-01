@@ -23,20 +23,25 @@
     {{ else }}
         <p>For this experiment you are assigned a participation id.  Use this number at the end of the experiment to
             collect your payment.  </p>
-        <p>There is no need to write this down, you will see this number again throughout
-            the experiment.</p>
-        </div>
 
-        <div class="main-block">
+        <div class="main-block centered">
             <span class="really_big"> {{ player.participant.label }}</span>
         </div>
-    {{ endif }}
 
-    <div class="bottom-row">
-        <div class="next-button-div">
-            {{ next_button }}
+        <p>
+            In front of you is a blank receipt.  Please fill out that receipt with your name and Hokie Id number
+            (if applicable) and write the code above in the "Participant ID" field in the upper left-hand corner.
+        </p>
+    {{ endif }}
         </div>
-    </div>
+
+    {{ if show_next }}
+        <div class="bottom-row">
+            <div class="next-button-div">
+                {{ next_button }}
+            </div>
+        </div>
+    {{ endif}}
     </div>
 {% endblock %}
 

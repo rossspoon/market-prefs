@@ -24,6 +24,13 @@
         <p class="very_big"> Please wait for all participants to arrive.  We will begin shortly.</p>
     </div>
 
+    {{ if show_next }}
+        <div class="bottom-row">
+            <div class="next-button-div">
+                {{ next_button }}
+            </div>
+        </div>
+    {{ endif}}
 {% endblock %}
 
 
