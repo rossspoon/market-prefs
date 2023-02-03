@@ -239,3 +239,7 @@
     position: relative;
     width: 100%;
 }
+
+.hilite{
+    border: 2px dashed red;
+}

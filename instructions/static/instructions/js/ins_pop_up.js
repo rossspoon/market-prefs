@@ -47,11 +47,20 @@ $(document).on('keypress', ".ins-btn", function(event){
     }
 });
 function go_to_next(elem){
+    $('.hilite').each(function(){
+        $(this).removeClass('hilite')
+    });
+
     let pop_up = elem.parents('.ins-pop-up');
     pop_up.removeClass('on')
     let next_id = pop_up[0].getAttribute('next')
     let next = document.getElementById(next_id)
     next.classList.add('on')
+
+    let hilite = next.closest('.hi-lite-on-pop')
+    if (hilite != null){
+        hilite.classList.add('hilite')
+    }
     // $('#'+next_id+ ' .ins-btn').focus();
 }
 
