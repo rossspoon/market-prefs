@@ -3,6 +3,7 @@ from datetime import datetime
 from otree.api import Currency as cu
 from otree.models import Session
 import numpy as np
+from  copy import deepcopy
 
 SK_INTEREST_RATE = 'interest_rate'
 SK_DIV_AMOUNT = 'div_amount'
@@ -40,9 +41,9 @@ def ensure_config(obj):
     if type(obj) == dict:
         return obj
     elif type(obj) == Session:
-        return obj.config
+        return deepcopy(obj.config)
     else:
-        return obj.session.config
+        return deepcopy(obj.session.config)
 
 
 def get_item_as_int(config, key, default=0, return_none=False):
