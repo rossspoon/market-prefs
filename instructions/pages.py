@@ -287,6 +287,7 @@ class InstWaitPage(UpdatedWaitPage):
 
 
 page_sequence = [IntroPage,
+                 _01_Assets,
                  _02_Trading,
                  # InstWaitPage,
                  _03_BorrowingCash,

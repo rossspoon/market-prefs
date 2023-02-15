@@ -227,8 +227,7 @@
 </span>
 <span id="13_messages" class="ins-pop-up front-center shift-up-a-bit" rel="messages" next="14_stock_val">
     <div>Messages will appear in this area.  Messages can be information that you are about to borrow CASH or
-        short STOCK, or a warning that the system is going to automatically submit a buy or sell order on
-        your behalf.</div>
+        short STOCK, or other relevant information.</div>
 </span>
 <span id="14_stock_val" class="ins-pop-up tool-tip-text tt-right" rel="stat_stock_value" next="15_debt">
     <p>This section contains various personal and market statistics starting with the value of your STOCK.</p>
@@ -257,7 +256,7 @@
     </p>
 </span>
 <span id="18_float" class="ins-pop-up tool-tip-text tt-right" rel="stat_stock_float" next="19_shorted">
-    <p>This is the total number of shares in the market.</p>
+    <p>This is the total number of shares in the market. This amount is often call the float.</p>
     {{if short_cap_exist }}
     <p>During the experiment, the system will limit the total amount of shares shorted to {{ short_cap }} of
         the float.</p>
@@ -266,14 +265,14 @@
 <span id="19_shorted" class="ins-pop-up tool-tip-text tt-right" rel="stat_total_short" next="20_interest_rate">
     <p>This is the total number of shares shorted by all participants in the market.</p>
     {{if short_cap_exist }}
-        <p>Again this amount will be limited to {{ short_cap }} of the float.  Any sell orders that would cause
+        <p>This amount will be limited to {{ short_cap }} of the float.  Any sell orders that would cause
         the market to be shorted above this amount will be canceled.</p>
     {{ endif }}
 
 </span>
 <span id="20_interest_rate" class="ins-pop-up tool-tip-text tt-right" rel="stat_int_rate" next="21_dividend">
     <p>This is the interest rate earned on CASH calculated after the shares have been traded.</p>
-    <p>Example:  If you end the market period with 10.00 units CASH, you will earn 0.50 units in
+    <p>Example:  If you end the market period with 10.00 ECU in CASH, you will earn 0.50 ECU in
     interest.</p>
     <p>If you borrow CASH, you will pay out interest at this rate.</p>
 </span>
@@ -283,7 +282,7 @@
     If you have shorted STOCK, then you will pay out this amount for every share shorted.
 </span>
 <span id="22_buy_back" class="ins-pop-up dont-add-button tool-tip-text tt-right" rel="stat_buy_back">
-    <p>At the end of the experiment we will exchange each unit of STOCK for {{ buy_back }} units CASH.</p>
+    <p>At the end of the experiment we will exchange each unit of STOCK for {{ buy_back }} ECU.</p>
     <p>If you are trying to earn the most money you might think about whether holding CASH or trading
         STOCK at a given price creates more earnings.</p>
     <div class="bottom-row">&nbsp;<span class="r_just">{{ next_button }}</span></div>

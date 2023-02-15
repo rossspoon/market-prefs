@@ -8,22 +8,22 @@
     <div class="layout-box">
     <div class="main-block">
         <p>At the end of {{ num_rounds }} periods of trading, each unit of STOCK is automatically traded in
-            for {{ fund_value }} CASH.  If you end the experiment with negative shares (a short position) {{ fund_value }}
-            CASH will be deducted from your CASH for every share short.
+            for {{ fund_value }} ECU.  If you end the experiment with negative shares (a short position)
+            {{ fund_value }} ECU will be deducted from your CASH for every share short.
         </p>
-        <p>After that, your experiment CASH units are converted to US dollars at a rate of 100 CASH = $1 USD,
+        <p>After that, your experiment CASH units are converted to US dollars at a rate of 100 ECU = $1 USD,
             to determine
             how much you will be paid at the end of the experiment.</p>
 
         <div class="example">
-            <p>Suppose that at the end of the experiment you have 100 units of CASH and 5 shares of STOCK, and
+            <p>Suppose that at the end of the experiment you have 100 ECU of CASH and 5 shares of STOCK, and
             the dividend is 1.00 per unit of STOCK.  Your CASH will be updated to:</p>
             <ul>
-                <li>Interest Payment:  100.00 x 5% = 5.00</li>
-                <li>Dividend Payment:  5 x 1.00 = 5.00</li>
-                <li>STOCK buy back: 5 x 14.00 = 70.00</li>
+                <li>Interest Payment:  100.00 x 5% = 5.00 ECU</li>
+                <li>Dividend Payment:  5 x 1.00 = 5.00 ECU</li>
+                <li>STOCK buy back: 5 x 14.00 = 70.00 ECU</li>
             </ul>
-            <p>Your final CASH amount is then, 100 + 5 + 5 + 70 = 180 units of CASH.</p>
+            <p>Your final CASH amount is then, 100 + 5 + 5 + 70 = 180 ECU.</p>
             <p>This will be converted to a bonus payment.</p>
         </div>
 
