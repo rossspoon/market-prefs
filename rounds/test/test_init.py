@@ -11,7 +11,7 @@ from otree.api import cu
 from otree.models import Session, Participant
 
 import rounds
-from rounds import get_debt_message, Subsession, OrderType, OrderErrorCode, Order
+from rounds import get_debt_message, Group, OrderType, OrderErrorCode, Order
 from rounds import get_short_message
 from rounds import Constants
 from rounds.test.test_call_market import get_order
@@ -126,51 +126,155 @@ class TestInitFunctions(unittest.TestCase):
         self.assertEqual(cls, 'alert-danger')
         self.assertRegex(msg, "a future period")
 
-    def test_endowments(self):
+    def test_endowments_1(self):
         # Set-up
-        players = [basic_player(id_in_group=x) for x in range(1, 9)]
+        players = [basic_player(id_in_group=x) for x in range(1, 7)]
         config = {scf.SK_ENDOW_WORTH: 50000,
-                  scf.SK_ENDOW_STOCK: '-10 -5 6 12',
+                  scf.SK_ENDOW_STOCK: '-10 -5 6',
+                  # These following settings make the fundamental value: 2000
                   scf.SK_INTEREST_RATE: 0.025,
                   scf.SK_DIV_DIST: '.5 .5',
                   scf.SK_DIV_AMOUNT: '0 100'
                   }
         session = Session()
         session.config = config
-        subsession = Subsession()
-        subsession.session = session
-        subsession.round_number = 1
-        subsession.get_players = MagicMock(return_value=players)
-        group = get_group(players)
-        subsession.get_groups = MagicMock(return_value=[group])
+        group = Group()
+        group.session = session
+        group.round_number = 1
+        group.get_players = MagicMock(return_value=players)
+
 
         # Test
-        rounds.creating_session(subsession)
-        fund_val = scf.get_fundamental_value(subsession)
+        rounds.assign_endowments(group)
+        fund_val = scf.get_fundamental_value(group)
 
         # Assert
         self.assertEqual(fund_val, 2000)
         self.assertEqual(players[0].shares, -10)
-        self.assertEqual(players[4].shares, -10)
         self.assertEqual(players[1].shares, -5)
-        self.assertEqual(players[5].shares, -5)
         self.assertEqual(players[2].shares, 6)
-        self.assertEqual(players[6].shares, 6)
-        self.assertEqual(players[3].shares, 12)
-        self.assertEqual(players[7].shares, 12)
+        self.assertEqual(players[3].shares, -10)
+        self.assertEqual(players[4].shares, -5)
+        self.assertEqual(players[5].shares, 6)
+
 
         self.assertEqual(players[0].cash, 70000)
-        self.assertEqual(players[4].cash, 70000)
         self.assertEqual(players[1].cash, 60000)
-        self.assertEqual(players[5].cash, 60000)
         self.assertEqual(players[2].cash, 38000)
-        self.assertEqual(players[6].cash, 38000)
-        self.assertEqual(players[3].cash, 26000)
-        self.assertEqual(players[7].cash, 26000)
+        self.assertEqual(players[3].cash, 70000)
+        self.assertEqual(players[4].cash, 60000)
+        self.assertEqual(players[5].cash, 38000)
 
         for p in players:
             worth = p.cash + p.shares * fund_val
             self.assertEqual(worth, 50000)
+
+    def test_is_order_form_valid(self):
+        # Set-up
+        data = dict(type='-1', price='3000', quantity='2')
+
+        # Test
+        code, t, p, q = rounds.is_order_form_valid(data)
+
+        # Assert
+        self.assertEqual(code, 0)
+        self.assertEqual(t, OrderType.BID)
+        self.assertEqual(p, 3000)
+        self.assertEqual(q, 2)
+
+    #Test endowments with one non-clicker
+    def test_endowments_2(self):
+        # Set-up
+        players = [basic_player(id_in_group=x) for x in range(1, 7)]
+        players[5].participant.vars = {'CONSENT_BUTTON_CLICKED':False}
+        config = {scf.SK_ENDOW_WORTH: 50000,
+                  scf.SK_ENDOW_STOCK: '-10 -5 6',
+                  # These following settings make the fundamental value: 2000
+                  scf.SK_INTEREST_RATE: 0.025,
+                  scf.SK_DIV_DIST: '.5 .5',
+                  scf.SK_DIV_AMOUNT: '0 100'
+                  }
+        session = Session()
+        session.config = config
+        group = Group()
+        group.session = session
+        group.round_number = 1
+        group.get_players = MagicMock(return_value=players)
+
+
+        # Test
+        rounds.assign_endowments(group)
+        fund_val = scf.get_fundamental_value(group)
+
+        # Assert
+        self.assertEqual(fund_val, 2000)
+        self.assertEqual(players[0].shares, -10)
+        self.assertEqual(players[1].shares, -5)
+        self.assertEqual(players[2].shares, 6)
+        self.assertEqual(players[3].shares, -10)
+        self.assertEqual(players[4].shares, 6)
+        self.assertEqual(players[5].shares, 0)
+
+
+        self.assertEqual(players[0].cash, 70000)
+        self.assertEqual(players[1].cash, 60000)
+        self.assertEqual(players[2].cash, 38000)
+        self.assertEqual(players[3].cash, 70000)
+        self.assertEqual(players[4].cash, 38000)
+        self.assertEqual(players[5].cash, 0)
+
+        for p in players[0:5]:
+            worth = p.cash + p.shares * fund_val
+            self.assertEqual(worth, 50000)
+
+
+
+    #Test endowments with two non-clickers
+    def test_endowments_3(self):
+        # Set-up
+        players = [basic_player(id_in_group=x) for x in range(1, 7)]
+        players[4].participant.vars = {'CONSENT_BUTTON_CLICKED':False}
+        players[5].participant.vars = {'CONSENT_BUTTON_CLICKED':False}
+        config = {scf.SK_ENDOW_WORTH: 50000,
+                  scf.SK_ENDOW_STOCK: '-10 -5 6',
+                  # These following settings make the fundamental value: 2000
+                  scf.SK_INTEREST_RATE: 0.025,
+                  scf.SK_DIV_DIST: '.5 .5',
+                  scf.SK_DIV_AMOUNT: '0 100'
+                  }
+        session = Session()
+        session.config = config
+        group = Group()
+        group.session = session
+        group.round_number = 1
+        group.get_players = MagicMock(return_value=players)
+
+
+        # Test
+        rounds.assign_endowments(group)
+        fund_val = scf.get_fundamental_value(group)
+
+        # Assert
+        self.assertEqual(fund_val, 2000)
+        self.assertEqual(players[0].shares, -10)
+        self.assertEqual(players[1].shares, -5)
+        self.assertEqual(players[2].shares, 6)
+        self.assertEqual(players[3].shares, -5)
+        self.assertEqual(players[4].shares, 0)
+        self.assertEqual(players[5].shares, 0)
+
+
+        self.assertEqual(players[0].cash, 70000)
+        self.assertEqual(players[1].cash, 60000)
+        self.assertEqual(players[2].cash, 38000)
+        self.assertEqual(players[3].cash, 60000)
+        self.assertEqual(players[4].cash, 0)
+        self.assertEqual(players[5].cash, 0)
+
+        for p in players[0:4]:
+            worth = p.cash + p.shares * fund_val
+            self.assertEqual(worth, 50000)
+
 
     def test_is_order_form_valid(self):
         # Set-up

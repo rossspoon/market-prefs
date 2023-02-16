@@ -429,7 +429,9 @@ def test_place_order(method, id_, type_, price, quant, valid=True, code_expect=N
     _price = str(price)
     _quant = str(quant)
     _type = str(type_)
-    res = method(id_, {'func': 'submit-order', 'data': {'type': _type, 'price': _price, 'quantity': _quant}})
+
+    req = {'func': 'submit-order', 'data': {'type': _type, 'price': _price, 'quantity': _quant}}
+    res = method(id_, req)
     data = res.get(id_)
 
     if type(code_expect) is OrderErrorCode:

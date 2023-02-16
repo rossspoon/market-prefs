@@ -7,7 +7,7 @@ from rounds.call_market import CallMarket
 from . import tool_tip
 from .models import *
 import common.SessionConfigFunctions as scf
-from common.ParticipantFuctions import generate_participant_ids
+from common.ParticipantFuctions import generate_participant_ids, is_button_click
 from otree import database
 import os
 
@@ -24,7 +24,7 @@ class Constants(BaseConstants):
 
 
 # assign treatments
-def creating_session(subsession):
+def assign_endowments(subsession):
     # only set up endowments in the first round
     if subsession.round_number != 1:
         return
@@ -36,20 +36,30 @@ def creating_session(subsession):
     stock_endowments = scf.get_endow_stocks(subsession)
     worth = scf.get_endow_worth(subsession)
     fund_val = scf.get_fundamental_value(subsession)
-    num_players = len(subsession.get_players())
+    clickers = list(filter(lambda x: is_button_click(x), subsession.get_players()))
+    num_click = len(clickers)
 
     # Remainder - This part is particular to the experiment and based on three possible opening share positions
-    remainder = num_players % 3
-    whole_quotient = num_players // 3
+    remainder = num_click % 3
+    whole_quotient = num_click // 3
     stock_for_players = stock_endowments * whole_quotient
     if remainder == 1:
         stock_for_players = stock_for_players + stock_endowments[1:2]
     elif remainder == 2:
         stock_for_players = stock_for_players + [stock_endowments[0], stock_endowments[2]]
 
-    for p, shares in zip(subsession.get_players(), stock_for_players):
+    idx = 0
+    for p in subsession.get_players():
+        shares =  0
+        worth_for_player = 0
+
+        if is_button_click(p):
+            shares = stock_for_players[idx]
+            worth_for_player = worth
+            idx += 1
+
         p.shares = shares
-        p.cash = worth - shares * fund_val
+        p.cash = worth_for_player - shares * fund_val
 
 
 def get_js_vars_forcast_page(player: Player):
@@ -549,6 +559,8 @@ def get_round_result_messages(player: Player, d: dict):
 
 
 def pre_round_tasks(group: Group):
+    assign_endowments(group)
+
     # Determine auto transaction statuses
     # And copy previous round results to the current player object
     for p in group.get_players():
