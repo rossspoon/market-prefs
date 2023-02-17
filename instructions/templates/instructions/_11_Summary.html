@@ -1,0 +1,31 @@
+{{ block title }}
+    SUMMARY
+{{ endblock }}
+{{ block content }}
+    <link rel="stylesheet" href="{{ static 'instructions/css/ins_common.css' }}">
+    <link rel="stylesheet" href="{{ static 'css/global.css' }}">
+
+    <div class="layout-box">
+    <div class="main-block">
+
+    <p>Here are a few points to keep in mind as you trade in the market.
+    </p>
+        <ul>
+            <li>You will be trading with others in the room.</li>
+            <li>You may hold CASH or STOCK in whatever combination you feel is best to maximize your bonus payment.</li>
+            <li>There will be 50 market periods.</li>
+            <li>At the end of the experiment, we will buy back each share of STOCK you own for 14.00 ECU.</li>
+        </ul>
+
+        <p style="font-weight: bold; margin-top: 100px;"><em>We will happily answer any questions you may have at this time.</em></p>
+        <p>Next, is a short quiz to assess your understanding of these instructions.  Your result on the
+        quiz will not affect your final payout in any way.</p>
+    </div>
+    <div class="bottom-row">
+        <div class="next-button-div">
+            {{ next_button }}
+        </div>
+    </div>
+    </div>
+
+{{ endblock }}

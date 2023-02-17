@@ -181,6 +181,9 @@ class _10_Bankruptcy(Page):
     # timeout_seconds = 180
     pass
 
+class _11_Summary(Page):
+    pass
+
 
 class _11_MarketPeriod_2(Page):
     # timeout_seconds = 180
@@ -248,13 +251,13 @@ class Quiz02Results(Page):
 
         ret['quiz_1'] = "" if player.quiz_1_score else "All BUY prices must all be less than your SELL prices."
 
-        ret['quiz_2'] = "" if player.quiz_2_score else f'The system will buy back shares of STOCK at a price of {fundamental}.'
+        ret['quiz_2'] = "" if player.quiz_2_score else f'The system will buy back shares of STOCK at a price of {fundamental} ECU.'
 
         ret['quiz_3'] = "" if player.quiz_3_score else f'At the end of the experiment, all STOCK is bought back at a price of {fundamental}.' \
                             f'You will receive 4 x {fundamental} = {cu(4 * fundamental)}.'
 
-        ret['quiz_4'] = "" if player.quiz_4_score else f'You will receive 5% on you CASH or 5.00 points, and 1.00 point for each of your' \
-                            f'shares.  Your final CASH position will be: 100.00 + 5.00 + (1.00 x 5) = 110.00 points.'
+        ret['quiz_4'] = "" if player.quiz_4_score else f'You will receive 5% on you CASH or 5.00 ECU, and 1.00 ECU for each of your ' \
+                            f' 5 shares (or 5.00 ECU).  Your final CASH position will be: 100.00 + 5.00 + 5.00 = 110.00 ECU.'
 
         return ret
 
@@ -305,8 +308,9 @@ page_sequence = [IntroPage,
                  # InstWaitPage,
                  _09_AutoTransactions,
                  _10_Bankruptcy,
+                 _11_Summary,
                  Quiz02,
                  Quiz02Results,
+                 InstWaitPage,
                  OutroPage,
-                 # InstWaitPage,
                  ]
