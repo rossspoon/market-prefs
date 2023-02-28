@@ -152,6 +152,9 @@ def is_borrowing_too_much(player, orders_by_type, o_type, price, quant):
     if o_type == OrderType.OFFER:
         return False
 
+    if player.is_short() <= 0:
+        return False
+
     # Get total cost
     buy_orders = orders_by_type[OrderType.BID]
     total_cost = sum(o.price * o.quantity for o in buy_orders) + price * quant
@@ -162,10 +165,7 @@ def is_borrowing_too_much(player, orders_by_type, o_type, price, quant):
     margin_ratio = scf.get_margin_ratio(player)
     lowest_possible_cash = cash - total_cost
 
-    if player.is_short() and lowest_possible_cash < (1 + margin_ratio) * value_of_stock:
-        return True
-
-    elif not player.is_short() \
+    if not player.is_short() \
             and lowest_possible_cash < 0 \
             and abs(lowest_possible_cash) >= value_of_stock / (1 + margin_ratio):
         return True
