@@ -618,6 +618,11 @@ def custom_export(players):
                    o.quantity_final, o.original_quantity, o.is_buy_in, group.price, group.volume]
 
 
+def vars_for_admin_report(subsession: BaseSubsession):
+    group = subsession.get_groups()[0]
+    return {"orders": Order.filter(group=group)}
+
+
 ############
 # PAGES
 ##########

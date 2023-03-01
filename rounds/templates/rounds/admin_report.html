@@ -1,0 +1,36 @@
+<style>
+    .main_tab{
+        width:80%;
+    }
+
+   .main_tab td {
+        border: 1px solid black;
+        text-align: center;
+   }
+</style>
+
+<table class="main_tab">
+    <tr>
+        <th>Player</th>
+        <th>Positions (c/s)</th>
+        <th>Type</th>
+        <th>Quantity</th>
+        <th>Price</th>
+        <th>Revised Quantity</th>
+    </tr>
+    {{ for o in orders }}
+        <tr>
+            <td>{{ o.player.id_in_group }} - {{ o.player.participant.vars.PART_ID}}</td>
+            <td> {{ o.player.cash }} / {{ o.player.shares }} </td>
+            <td>{{ if  o.order_type == -1 }}
+                    BUY
+                {{ else }}
+                    SELL
+                {{ endif }}
+            </td>
+            <td>{{ o.original_quantity }}</td>
+            <td>{{ o.price }}</td>
+            <td>{{ o.quantity }}</td>
+        </tr>
+    {{ endfor }}
+</table>

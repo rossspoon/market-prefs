@@ -502,6 +502,9 @@ class TestMarketIteration(unittest.TestCase):
         # Assert
         self.assertEqual(set(shorting), {player3, player4})
 
+    ######################################
+    ## Screen Orders for Over-shorting
+    ######################################
     def test_screen_orders_for_over_shorting_no_limit(self):
         # Set-up
         itr = basic_iteration(players=[p1, p2])
