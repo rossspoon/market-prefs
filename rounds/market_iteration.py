@@ -270,7 +270,7 @@ class MarketIteration:
                 break
 
             # determine how many shares this player is trying to short
-            player_shorting = short_amount_by_player.get(o.player)
+            player_shorting = short_amount_by_player.get(o.player, 0)
             if player_shorting <= 0:
                 continue
 
