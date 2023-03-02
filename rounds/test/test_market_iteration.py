@@ -20,6 +20,8 @@ def basic_player(pid=None, id_in_group=None, **kwargs):
     s = kwargs.get('shares', 0)
     c = kwargs.get('cash', 0)
 
+    player.is_short = MagicMock(return_value = s < 0)
+
     player.shares = s
     player.cash = c
     player.shares_result = kwargs.get('shares_result', 0)
@@ -517,7 +519,7 @@ class TestMarketIteration(unittest.TestCase):
         # Assert
         self.assertEqual(itr.get_shorting_players.call_count, 0)
 
-    def tests_screen_orders_for_over_shorting_at_limit(self):
+    def test_screen_orders_for_over_shorting_at_limit(self):
         # Set-up
         player1 = basic_player(shares=0)
         player2 = basic_player(shares=0)
@@ -539,7 +541,115 @@ class TestMarketIteration(unittest.TestCase):
         o1.original_quantity.assert_not_called()
         o2.original_quantity.assert_not_called()
 
-    def tests_screen_orders_for_over_shorting_cancel_partial(self):
+    def test_screen_orders_for_over_shorting_individual_reductions_1(self):
+        # Set-up
+        player1 = basic_player(id_in_group=1, shares=-1)
+        player2 = basic_player(id_in_group=2, shares=4)
+
+        o1 = get_order(player=player1, quantity=1, price=1, order_type=OFFER)
+        o21 = get_order(player=player2, quantity=2, price=20, order_type=OFFER)
+        o22 = get_order(player=player2, quantity=3, price=19, order_type=OFFER)
+
+        itr = basic_iteration(offers=[o1, o21, o22], players=[player1, player2])
+        itr.group.get_short_limit = MagicMock(return_value=0)
+
+        #Test
+        itr.screen_orders_for_over_shorting()
+        for o in itr.offers:
+            o.update_order()
+
+
+        #Assert
+        self.assertEqual(o1.quantity, 0)
+        self.assertEqual(o1.original_quantity, 1)
+        self.assertEqual(o21.quantity, 1)
+        self.assertEqual(o21.original_quantity, 2)
+        self.assertEqual(o22.quantity, 3)
+        self.assertIsNone(o22.original_quantity)
+
+    # Players 1 & 2, together, attempt to short 6
+    # The limit is 0, for an overage of 6
+    # 5 of the overage comes out of player 2 because that is his limit.
+    # The other 1 comes out of player 1.
+    def test_screen_orders_for_over_shorting_individual_reductions_2(self):
+        # Set-up
+        player1 = basic_player(id_in_group=1, shares=-1)
+        player2 = basic_player(id_in_group=2, shares=4)
+        player3 = basic_player(id_in_group=3, shares=2)
+
+        o1 = get_order(player=player1, quantity=1, price=1, order_type=OFFER)
+        o21 = get_order(player=player2, quantity=5, price=20, order_type=OFFER)
+        o22 = get_order(player=player2, quantity=3, price=19, order_type=OFFER)
+        o23 = get_order(player=player2, quantity=1, price=19, order_type=OFFER)
+        o3 = get_order(player=player3, quantity=2, price=21, order_type=OFFER)
+
+        itr = basic_iteration(offers=[o1, o21, o22, o23, o3], players=[player1, player2, player3])
+        itr.group.get_short_limit = MagicMock(return_value=0)
+
+        #Test
+        itr.screen_orders_for_over_shorting()
+        for o in itr.offers:
+            o.update_order()
+
+
+        #Assert
+        self.assertEqual(o1.quantity, 0)
+        self.assertEqual(o1.original_quantity, 1)
+
+        self.assertEqual(o21.quantity, 0)
+        self.assertEqual(o21.original_quantity, 5)
+
+        self.assertEqual(o22.quantity, 3)
+        self.assertIsNone(o22.original_quantity)
+
+        self.assertEqual(o23.quantity, 1)
+        self.assertIsNone(o23.original_quantity)
+
+        self.assertEqual(o3.quantity, 2)
+        self.assertIsNone(o3.original_quantity)
+
+
+    # Players 1 & 2, together, attempt to short 6
+    # The limit is 1, for an overage of 5
+    # All five of the overage comes out of player 2 because those offers are at a higher price.
+    def test_screen_orders_for_over_shorting_individual_reductions_3(self):
+        # Set-up
+        player1 = basic_player(id_in_group=1, shares=-1)
+        player2 = basic_player(id_in_group=2, shares=4)
+        player3 = basic_player(id_in_group=3, shares=2)
+
+        o1 = get_order(player=player1, quantity=1, price=1, order_type=OFFER)
+        o21 = get_order(player=player2, quantity=5, price=20, order_type=OFFER)
+        o22 = get_order(player=player2, quantity=3, price=19, order_type=OFFER)
+        o23 = get_order(player=player2, quantity=1, price=19, order_type=OFFER)
+        o3 = get_order(player=player3, quantity=2, price=21, order_type=OFFER)
+
+        itr = basic_iteration(offers=[o1, o21, o22, o23, o3], players=[player1, player2, player3])
+        itr.group.get_short_limit = MagicMock(return_value=1)
+
+        #Test
+        itr.screen_orders_for_over_shorting()
+        for o in itr.offers:
+            o.update_order()
+
+
+        #Assert
+        self.assertEqual(o1.quantity, 1)
+        self.assertIsNone(o1.original_quantity)
+
+        self.assertEqual(o21.quantity, 0)
+        self.assertEqual(o21.original_quantity, 5)
+
+        self.assertEqual(o22.quantity, 3)
+        self.assertIsNone(o22.original_quantity)
+
+        self.assertEqual(o23.quantity, 1)
+        self.assertIsNone(o23.original_quantity)
+
+        self.assertEqual(o3.quantity, 2)
+        self.assertIsNone(o3.original_quantity)
+
+    def test_screen_orders_for_over_shorting_cancel_partial(self):
         # Set-up
         player1 = basic_player(shares=0)
         player2 = basic_player(shares=0)
@@ -561,7 +671,7 @@ class TestMarketIteration(unittest.TestCase):
         self.assertIsNone(o2.original_quantity)
         self.assertEqual(o2.quantity, 2)
 
-    def tests_screen_orders_for_over_shorting_cancel_full(self):
+    def test_screen_orders_for_over_shorting_cancel_full(self):
         # Set-up
         player1 = basic_player(shares=0)
         player2 = basic_player(shares=0)
@@ -583,7 +693,7 @@ class TestMarketIteration(unittest.TestCase):
         self.assertEqual(o2.original_quantity, 3)
         self.assertEqual(o2.quantity, 1)
 
-    def tests_screen_orders_for_over_shorting_overage_just_zeroed(self):
+    def test_screen_orders_for_over_shorting_overage_just_zeroed(self):
         # Set-up
         player1 = basic_player(shares=0)
         player2 = basic_player(shares=0)

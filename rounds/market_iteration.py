@@ -237,8 +237,27 @@ class MarketIteration:
         # Get a list of players going short this rounds
         # Then get the offers of the shorting players
         shorting_players = self.get_shorting_players()
-        short_offers = self.get_orders_for_players(shorting_players)
-        total_short_supply = sum(o.quantity for o in short_offers)
+
+        #Determine how much each player is attempting to short and keep the results for later use
+        total_short_supply = 0
+        short_amount_by_player = {}
+        sell_orders_by_player = {}
+        for p in shorting_players:
+            orders = self.get_orders_for_players(p)
+            sell_total_for_player = sum(o.quantity for o in orders)
+
+            amount_player_shorting = 0
+            if p.is_short():
+                #If the player is already short, then all sell orders are an attempted short sale.
+                amount_player_shorting = sell_total_for_player
+            else:
+                #Otherwise, the amount shorted is the overage
+                amount_player_shorting = max(sell_total_for_player - p.shares, 0)
+
+            #remember the results
+            total_short_supply += amount_player_shorting
+            short_amount_by_player[p] = amount_player_shorting
+            sell_orders_by_player[p] = orders
 
         # skip out if nothing to do
         if total_short_supply <= round_limit:
@@ -246,19 +265,29 @@ class MarketIteration:
 
         # Start canceling orders - Start with the least likely to trade (the orders with the highest price)
         overage = total_short_supply - round_limit
-        for o in sorted(short_offers, key=lambda x: x.price, reverse=True):
+        for o in sorted(self.get_orders_for_players(shorting_players), key=lambda x: x.price, reverse=True):
             if overage <= 0:
                 break
 
-            order_supply = o.quantity
-            allowed_amount = None
-            if order_supply <= overage:
-                overage -= order_supply
-                allowed_amount = 0
-            elif order_supply > overage:
-                allowed_amount = o.quantity - overage
-                overage = 0
+            # determine how many shares this player is trying to short
+            player_shorting = short_amount_by_player.get(o.player)
+            if player_shorting <= 0:
+                continue
 
+            # determine the amount that we need to reduce for this player
+            overage_for_player = min(overage, player_shorting)
+            if o.quantity > overage_for_player:
+                allowed_amount = o.quantity - overage_for_player
+                amount_reduced = overage_for_player
+            else:
+                allowed_amount = 0
+                amount_reduced = o.quantity
+
+            # update the stored values
+            short_amount_by_player[o.player] = player_shorting - amount_reduced
+            overage -= amount_reduced
+
+            # update the order
             o.original_quantity = o.quantity
             o.quantity = allowed_amount
 
