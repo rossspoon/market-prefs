@@ -615,7 +615,8 @@ def custom_export(players):
         for o in orders:
             o_type = 'SELL' if o.order_type == 1 else 'BUY'
             yield [session.code, part.code, part.label, p.round_number, o_type, o.quantity, o.price,
-                   o.quantity_final, o.original_quantity, o.is_buy_in, group.price, group.volume]
+                   o.quantity_final, o.original_quantity, o.is_buy_in,
+                   group.field_maybe_none('price'), group.field_maybe_none('volume')]
 
 
 def vars_for_admin_report(subsession: BaseSubsession):
