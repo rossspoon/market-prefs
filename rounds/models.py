@@ -45,8 +45,10 @@ class OrderErrorCode(Enum):
     BORROWING_TOO_MUCH = (128, OrderField.QUANTITY, 'The cost of this order will increase your debt beyond your'
                                                     ' limit. \u000D\u000A '
                                                     'Either lower the price or reduce the number of shares.')
-    PRICE_TOO_LONG = (256, OrderField.PRICE, 'The price to less than 10,000.')
-    QUANT_TOO_LONG = (512, OrderField.QUANTITY, 'The quantity should be less than 100.')
+    PRICE_CEIL = (256, OrderField.PRICE, 'The price to less than 10,000.')
+    QUANT_CEIL = (512, OrderField.QUANTITY, 'The quantity should be less than 100.')
+    PRICE_LEN_RAW = (1024, OrderField.PRICE, 'This input is too long.  Please provide a shorter input.')
+    QUANT_LEN_RAW = (2048, OrderField.QUANTITY, 'This input is too long.  Please provide a shorter input.')
 
     def combine(self, code):
         if type(code) is OrderErrorCode:

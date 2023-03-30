@@ -188,18 +188,21 @@ def is_order_form_valid(data):
     raw_quant = data['quantity']
 
     error_code = 0
+    more_price_quant_checks = True
 
-    if len(raw_price) > 7:
-        print(f"len(raw_price) {len(raw_price)} rp: [{raw_price}]")
-        error_code = OrderErrorCode.PRICE_TOO_LONG.combine(error_code)
+    # Checks for raw length
+    print(f"raw_price: {raw_price}, len: {len(raw_price)}")
+    if len(raw_price) > 10:
+        error_code = OrderErrorCode.PRICE_LEN_RAW.combine(error_code)
+        more_price_quant_checks = False
 
-    if len(raw_quant) > 2:
-        error_code = OrderErrorCode.QUANT_TOO_LONG.combine(error_code)
+    if len(raw_quant) > 5:
+        error_code = OrderErrorCode.QUANT_LEN_RAW.combine(error_code)
+        more_price_quant_checks = False
 
-    # Numeric Tests  - Price and Quantity must be numeric
     price = None
     quant = None
-    o_type = None
+    # Numeric Tests  - Price and Quantity must be numeric
     try:
         price = cu(raw_price)
     except (ValueError, decimal.InvalidOperation):
@@ -210,6 +213,17 @@ def is_order_form_valid(data):
     else:
         quant = int(raw_quant)
 
+    # PRICE CEILING
+    if price and price >= 10000:
+        print(f"here: {price}")
+        error_code = OrderErrorCode.PRICE_CEIL.combine(error_code)
+
+    # QUANT CEILING
+    if quant and quant >= 100:
+         error_code = OrderErrorCode.QUANT_CEIL.combine(error_code)
+
+
+    o_type = None
     if raw_type not in ['-1', '1']:
         error_code = OrderErrorCode.BAD_TYPE.combine(error_code)
     else:
