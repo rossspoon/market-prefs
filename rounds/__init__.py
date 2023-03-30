@@ -186,7 +186,16 @@ def is_order_form_valid(data):
     raw_type = data['type']
     raw_price = data['price']
     raw_quant = data['quantity']
+
     error_code = 0
+
+    if len(raw_price) > 7:
+        print(f"len(raw_price) {len(raw_price)} rp: [{raw_price}]")
+        error_code = OrderErrorCode.PRICE_TOO_LONG.combine(error_code)
+
+    if len(raw_quant) > 2:
+        error_code = OrderErrorCode.QUANT_TOO_LONG.combine(error_code)
+
     # Numeric Tests  - Price and Quantity must be numeric
     price = None
     quant = None
