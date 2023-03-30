@@ -191,7 +191,6 @@ def is_order_form_valid(data):
     more_price_quant_checks = True
 
     # Checks for raw length
-    print(f"raw_price: {raw_price}, len: {len(raw_price)}")
     if len(raw_price) > 10:
         error_code = OrderErrorCode.PRICE_LEN_RAW.combine(error_code)
         more_price_quant_checks = False
@@ -215,7 +214,6 @@ def is_order_form_valid(data):
 
     # PRICE CEILING
     if price and price >= 10000:
-        print(f"here: {price}")
         error_code = OrderErrorCode.PRICE_CEIL.combine(error_code)
 
     # QUANT CEILING
@@ -223,6 +221,7 @@ def is_order_form_valid(data):
          error_code = OrderErrorCode.QUANT_CEIL.combine(error_code)
 
 
+    # Order type checks
     o_type = None
     if raw_type not in ['-1', '1']:
         error_code = OrderErrorCode.BAD_TYPE.combine(error_code)
