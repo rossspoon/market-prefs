@@ -49,6 +49,8 @@ class OrderErrorCode(Enum):
     QUANT_CEIL = (512, OrderField.QUANTITY, 'The quantity should be less than 100.')
     PRICE_LEN_RAW = (1024, OrderField.PRICE, 'This input is too long.  Please provide a shorter input.')
     QUANT_LEN_RAW = (2048, OrderField.QUANTITY, 'This input is too long.  Please provide a shorter input.')
+    SHORTING =  (4096, OrderField.QUANTITY, 'You are attempting to sell more shares that you have.  Please reduce the quantity.')
+    MARGIN =  (8192, OrderField.PRICE, 'The total cost of your combined BUYs exceeds your current amount of CASH. Please reduce either the price or quantity of this order.')
 
     def combine(self, code):
         if type(code) is OrderErrorCode:
