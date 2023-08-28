@@ -9,3 +9,4 @@ SQLAlchemy~=1.3.22
 pdflatex~=0.1.3
 Jinja2~=2.11.3
 requests
+git+https://github.com/rossspoon/call_market_price
