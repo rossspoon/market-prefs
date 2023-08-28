@@ -50,8 +50,13 @@ class CallMarket:
 
     def get_market_price(self):
         # Calculate the Market Price
-        b = concat_or_null([self.bids])
-        o = concat_or_null([self.offers])
+        algo_orders = self.get_algo_orders()
+        algo_bids = [o for o in algo_orders if OrderType(o.order_type) == OrderType.BID]
+        algo_offers = [o for o in algo_orders if OrderType(o.order_type) == OrderType.OFFER]
+
+
+        b = concat_or_null([self.bids, algo_bids])
+        o = concat_or_null([self.offers, algo_offers])
         last_price = self.group.get_last_period_price()
 
         mp = MarketPrice(b, o)
@@ -78,6 +83,10 @@ class CallMarket:
         self.group.price = market_price
         self.group.volume = market_volume
         self.group.dividend = self.dividend
+
+
+    def get_algo_orders(self):
+        return []
 
     @staticmethod
     def get_total_quantity(offers):
