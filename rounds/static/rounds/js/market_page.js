@@ -86,6 +86,7 @@ function remove_error_message(){
         $(this).removeAttr("err-message")
                 .parents('.controls')
                 .removeClass('with-error')
+                .removeClass('long-pseudo')
     }
 
 function get_order_details() {
@@ -235,6 +236,9 @@ function process_order_rejection(data) {
                 .parents('.controls')
                 .addClass('with-error')
                 .attr('err-message', code_data.desc)
+            if (code_data.desc.length > 45) {
+                $(field_select).parents('.controls').addClass('long-pseudo')
+            }
         }
     });
 }

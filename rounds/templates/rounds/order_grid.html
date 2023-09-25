@@ -1,0 +1,31 @@
+<script src="{{ static 'rounds/js/order_grid.js' }}"></script>
+<link rel="stylesheet" href="{{ static 'rounds/css/order_grid.css' }}">
+
+
+<div id="grid_order_layout">
+    <div id="current_order_box">
+        <table class="curr-ord-tab">
+            <tr><th colspan="2" class="box-header">Current Order</th></tr>
+            <tr>
+                <td>Type</td><td class="stat-value">
+                <span id="curr_ord_type_cell" class="r_just"></span></td>
+            </tr>
+            <tr>
+                <td>Quantity</td><td class="stat-value">
+                <span id="curr_ord_quant_cell" class="r_just"></span></td>
+            </tr>
+            <tr>
+                <td>Price</td><td class="stat-value">
+                <span id="curr_ord_price_cell" class="r_just"></span></td>
+            </tr>
+        </table>
+
+    </div>
+    <div id="order_grid_box">
+        <canvas id="price-grid"></canvas>
+    </div>
+    <div id="order_messages_box">
+        <div id="curr_ord_msg"></div>
+    </div>
+</div>
+

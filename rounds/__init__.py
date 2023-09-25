@@ -1,7 +1,10 @@
 import decimal
+import json
 import random
 from collections import defaultdict
 from math import ceil
+import asyncio
+from threading import Thread
 
 from rounds.call_market import CallMarket
 from . import tool_tip
@@ -10,6 +13,8 @@ import common.SessionConfigFunctions as scf
 from common.ParticipantFuctions import generate_participant_ids, is_button_click
 from otree import database
 import os
+
+from .trigger import SOCKETS
 
 NUM_ROUNDS = os.getenv('SSE_NUM_ROUNDS')
 
@@ -112,12 +117,23 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
 #########################
 # LIVE PAGES FUNCTIONS
 # noinspection DuplicatedCode
+
+
+
 def is_order_valid(player, data, orders_by_type):
+    """
+    Check order form information.  This is both a syntactic and semantic check.
+    @param data: Data from the otree live page's packet
+    @return: Error Code - 0 if valid
+    @return: An OrderType object if valid, None otherwise
+    @return: The price as an integer if valid, None otherwise
+    @return: The quantity as an integer if valid, None otherwise
+    """
     error_code, o_type, price, quant = is_order_form_valid(data)
 
     # All remaining tests depend on the numeric form data
     if error_code > 0:
-        return error_code
+        return error_code, o_type, price, quant
 
     # price tests
     if price <= 0:
@@ -129,48 +145,29 @@ def is_order_valid(player, data, orders_by_type):
 
     # All remaining tests depend on valid price and quant
     if error_code > 0:
-        return error_code
+        return error_code, o_type, price, quant
+
+    offers = orders_by_type[OrderType.OFFER]
+    bids = orders_by_type[OrderType.BID]
 
     # If this is a bid, then its price must be less than the lowest ask
-    min_ask = min([o.price for o in orders_by_type[OrderType.OFFER]], default=999999999)
-    max_bid = max([o.price for o in orders_by_type[OrderType.BID]], default=-999)
+    min_ask = min([o.price for o in offers], default=999999999)
+    max_bid = max([o.price for o in bids], default=-999)
 
     if o_type == OrderType.BID and price >= min_ask:
-        return OrderErrorCode.BID_GREATER_THAN_ASK.combine(error_code)
+        return OrderErrorCode.BID_GREATER_THAN_ASK.combine(error_code), o_type, price, quant
 
     if o_type == OrderType.OFFER and price <= max_bid:
-        return OrderErrorCode.ASK_LESS_THAN_BID.combine(error_code)
+        return OrderErrorCode.ASK_LESS_THAN_BID.combine(error_code), o_type, price, quant
 
-    # Check that buy orders don't violate margin requirements
-    if is_borrowing_too_much(player, orders_by_type, o_type, price, quant):
-        return OrderErrorCode.BORROWING_TOO_MUCH.value
+    # disallow margin trading and shorting
+    if o_type == OrderType.OFFER and is_shorting(player, offers, quant):
+        return OrderErrorCode.SHORTING.combine(error_code), o_type, price, quant
 
-    return error_code
+    if o_type == OrderType.BID and is_margin(player, bids, quant, price):
+        return OrderErrorCode.MARGIN.combine(error_code), o_type, price, quant
 
-
-def is_borrowing_too_much(player, orders_by_type, o_type, price, quant):
-    if o_type == OrderType.OFFER:
-        return False
-
-    if player.is_short() <= 0:
-        return False
-
-    # Get total cost
-    buy_orders = orders_by_type[OrderType.BID]
-    total_cost = sum(o.price * o.quantity for o in buy_orders) + price * quant
-
-    # player position information
-    cash = player.cash
-    value_of_stock = abs(player.shares * player.group.get_last_period_price())
-    margin_ratio = scf.get_margin_ratio(player)
-    lowest_possible_cash = cash - total_cost
-
-    if not player.is_short() \
-            and lowest_possible_cash < 0 \
-            and abs(lowest_possible_cash) >= value_of_stock / (1 + margin_ratio):
-        return True
-
-    return False
+    return error_code, o_type, price, quant
 
 
 def is_order_form_valid(data):
@@ -190,14 +187,14 @@ def is_order_form_valid(data):
     error_code = 0
     more_price_quant_checks = True
 
-    # Checks for raw length
-    if len(raw_price) > 10:
-        error_code = OrderErrorCode.PRICE_LEN_RAW.combine(error_code)
-        more_price_quant_checks = False
-
-    if len(raw_quant) > 5:
-        error_code = OrderErrorCode.QUANT_LEN_RAW.combine(error_code)
-        more_price_quant_checks = False
+    # # Checks for raw length
+    # if len(raw_price) > 10:
+    #     error_code = OrderErrorCode.PRICE_LEN_RAW.combine(error_code)
+    #     more_price_quant_checks = False
+    #
+    # if len(raw_quant) > 5:
+    #     error_code = OrderErrorCode.QUANT_LEN_RAW.combine(error_code)
+    #     more_price_quant_checks = False
 
     price = None
     quant = None
@@ -207,10 +204,10 @@ def is_order_form_valid(data):
     except (ValueError, decimal.InvalidOperation):
         error_code = OrderErrorCode.PRICE_NOT_NUM.combine(error_code)
 
-    if not raw_quant.lstrip('-').isnumeric():
-        error_code = OrderErrorCode.QUANT_NOT_NUM.combine(error_code)
-    else:
-        quant = int(raw_quant)
+    # if not raw_quant.lstrip('-').isnumeric():
+    #     error_code = OrderErrorCode.QUANT_NOT_NUM.combine(error_code)
+    # else:
+    quant = int(raw_quant)
 
     # PRICE CEILING
     if price and price >= 10000:
@@ -223,11 +220,22 @@ def is_order_form_valid(data):
 
     # Order type checks
     o_type = None
-    if raw_type not in ['-1', '1']:
+    if raw_type not in ['SELL', 'BUY']:
         error_code = OrderErrorCode.BAD_TYPE.combine(error_code)
     else:
-        o_type = OrderType(int(raw_type))
+        t = -1 if raw_type == 'BUY' else 1
+        o_type = OrderType(int(t))
     return error_code, o_type, price, quant
+
+
+def is_shorting(player, offers,  quant):
+    outstanding_quant = sum([o.quantity for o in offers])
+    return outstanding_quant + quant > player.shares
+
+
+def is_margin(player, bids, quant, price):
+    outstanding_cost = sum([o.quantity * o.price for o in bids])
+    return outstanding_cost + quant*price > player.cash
 
 
 def get_order_warnings(player, o_type, price, quant, orders_by_type):
@@ -325,10 +333,9 @@ def market_page_live_method(player, d, o_cls=Order, show_warnings=True, show_not
 
     if func == 'submit-order':
         data = d['data']
-        form_code, t, p, q = is_order_form_valid(data)
-        error_code = is_order_valid(player, data, orders_by_type)
+        error_code, t, p, q = is_order_valid(player, data, orders_by_type)
 
-        if form_code == 0 and error_code == 0:
+        if error_code == 0:
             ret.update(create_order_from_live_submit(player, t, p, q, o_cls=o_cls))
             this_order_q = q
             this_order_p = p
@@ -495,6 +502,7 @@ def vars_for_market_template(player: Player):
     ret['show_form'] = 'order'
     ret['show_pop_up'] = player.round_number > (Constants.num_rounds - 5)
     ret['num_rounds_left'] = Constants.num_rounds - player.round_number + 1
+    ret['action_include'] = 'order_grid.html'
 
     return ret
 
@@ -580,6 +588,21 @@ def get_round_result_messages(player: Player, d: dict):
     return messages
 
 
+async def await_send_signal(msg):
+    print(f"Sending Start Signal")
+    for socket in SOCKETS:
+        print(f"sending message {msg} to {socket}")
+        await socket.send(json.dumps(msg))
+
+
+def send_signal(msg):
+    asyncio.run(await_send_signal(msg))
+
+def send_signal_in_thread(msg):
+    t = Thread(target=send_signal, args=[msg])
+    t.start()
+    t.join()
+
 def pre_round_tasks(group: Group):
     assign_endowments(group)
 
@@ -604,6 +627,7 @@ def pre_round_tasks(group: Group):
     # Calculate total shorts
     group.short = abs(sum(p.shares for p in group.get_players() if p.shares < 0))
 
+    send_signal_in_thread({"type":"page", "page":"", "round": group.round_number})
 
 #######################################
 # CALCULATE MARKET
@@ -651,8 +675,6 @@ def vars_for_admin_report(subsession: BaseSubsession):
 ##########
 class PreMarketWait(WaitPage):
     body_text = "Waiting for the experiment to begin"
-    pass
-
     after_all_players_arrive = pre_round_tasks
 
 
@@ -666,6 +688,21 @@ class Market(Page):
     js_vars = get_js_vars
     vars_for_template = vars_for_market_template
     live_method = market_page_live_method
+
+
+class MarketGridChoice(Page):
+    get_timeout_seconds = scf.get_market_time
+    form_model = 'player'
+
+    # method bindings
+    js_vars = get_js_vars
+    vars_for_template = vars_for_market_template
+    live_method = market_page_live_method
+
+
+class Fixate(Page):
+    get_timeout_seconds = scf.get_market_pause_time
+    vars_for_template = vars_for_forecast_template
 
 
 class ForecastPage(Page):
@@ -767,4 +804,6 @@ class FinalResultsPage(Page):
                 'is_online': scf.is_online(player)}
 
 
-page_sequence = [PreMarketWait, Market, ForecastPage, MarketWaitPage, RoundResultsPage, FinalResultsPage]
+page_sequence = [PreMarketWait,
+                 MarketGridChoice,
+                 ForecastPage, MarketWaitPage, RoundResultsPage, FinalResultsPage]

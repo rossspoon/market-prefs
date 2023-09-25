@@ -1,0 +1,175 @@
+{{ block title }}
+{{ endblock }}
+{{ block content }}
+
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>-->
+{#<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>#}
+<script src="{{ static 'js/Chart.js' }}"></script>
+<script src="{{ static 'rounds/js/price_history.js' }}"></script>
+<script src="{{ static 'rounds/js/market_choice_page.js' }}"></script>
+<script src="{{ static 'rounds/js/move_timer.js' }}"></script>
+<script src="{{ static 'rounds/js/set_tool_tip.js' }}"></script>
+
+<link rel="stylesheet" href="{{ static 'css/global.css' }}">
+<link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
+<link rel="stylesheet" href="{{ static 'rounds/css/market_choice_page.css' }}">
+
+<div class="layout-box">
+        <div class="vitals boxed_area">
+            <ul>
+                <li> <div id="timer_box"></div></li>
+                <li> Period: {{ player.round_number }}
+                <li> Number of Shares: <span class="{{ attn_cls }}">{{ shares}}</span>
+                <li> Current Cash: <span class="{{ attn_cls }}">{{ cash }}</span>
+            </ul>
+        </div>
+
+        <div class="chart-box boxed_area">
+            <p class="box-header lpad">Market History</p>
+            <div class="chart-history-area">
+                <canvas id="gr_price" />
+            </div>
+            <div class="chart-volume-area">
+                <canvas id="gr_volume" />
+            </div>
+        </div>
+
+        <div class="order-form-box boxed_area">
+            <p class="at"> Select trade type and quantity for price {{  c_price }}</p>
+
+            <input type="range" min="0" max="10" value="0" id="q_slide_1" class="q-slide">
+            <span class="q-slide-val" id="q_slide_1_val">0</span>
+            <span class="btn-look-alike at choice-btn">Buy</span>
+            <span class="btn-look-alike at choice-btn">Hold</span>
+            <span class="btn-look-alike at choice-btn">Sell</span>
+
+        </div>
+
+        <div class="message-box" >
+
+            {{ for msg in messages }}
+                <div class="alert {{ msg.class_attr }}">
+                    <div class="message">
+                        {{ msg.msg }}
+                    </div>
+                </div>
+            {{  endfor }}
+        </div>
+
+        <div class="stats-box boxed_area">
+            <div>
+                <table class="left-tab">
+                    <tr>
+                         <th colspan="2" class="box-header">Personal Stats</th>
+                     </tr>
+                    <tr>
+                        <td>
+                            <div id="stat_stock_value">STOCK Value</div>
+                        </td>
+                        <td class="stat-value">&nbsp;<span class="r_just {{ vos_neg_cls }} {{ attn_cls }}">{{ stock_val }}</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div id="stat_debt">Debt</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just {{ dbt_neg_cls }} {{ attn_cls }}">{{ debt }}</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {{ if is_short }}
+                            <div id="stat_limit_short">Limit</div>
+                            {{ elif is_debt }}
+                            <div id="stat_limit_cash">Limit</div>
+                            {{ else }}
+                             <div id="stat_limit_none">Limit</div>
+                           {{ endif }}
+                        </td>
+                        <td class="stat-value">&nbsp;<span class="r_just {{ lim_neg_cls }} {{ attn_cls }}">{{ limit }}</span></td>
+                    </tr>
+                    {{ if for_results }}
+                    <tr>
+                        <td><div class="tool-tip">Dividend Earned
+                            <span class="tool-tip-text tt-right">
+                                <p>The amount or dividend payments you earned or paid out this market period</p>
+                            </span>
+                        </div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ player.dividend_earned }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><div class="tool-tip">Interest Earned
+                            <span class="tool-tip-text tt-right">
+                                <p>The amount of interest you earned or paid out this market period</p>
+                            </span>
+                        </div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ player.interest_earned }}</span></td>
+                    </tr>
+                   <tr>
+                        <td><div class="tool-tip">Forecast Payment
+                            <span class="tool-tip-text tt-right">
+                                <p>The amount awarded to you for guessing the market price within in
+                                {{ forecast_thold | cu }}</p>
+                            </span>
+                        </div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ player.forecast_reward }}</span></td>
+                    </tr>
+                    {{ else }}
+                    <tr><td colspan="2">&nbsp;</td> </tr>
+                    <tr><td colspan="2">&nbsp;</td> </tr>
+                    <tr><td colspan="2">&nbsp;</td> </tr>
+                    {{ endif }}
+                </table>
+            </div>
+            <div class="right-stat-div">
+                 <table>
+                     <tr>
+                         <th colspan="2" class="box-header">Market Stats</th>
+                     </tr>
+                     <tr>
+                         <td><div id="stat_market_price">Market Price</div></td>
+                         <td class="stat-value">&nbsp;<span class="r_just">{{ market_price | cu }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_stock_float">Float</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ group.float }} shares</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_total_short">Total Shorted</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ short }} shares </span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_int_rate">Interest Rate</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ interest_pct }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_dividends">Dividends</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ dividends }}</span></td>
+                    </tr>
+                   <tr>
+                        <td><div id="stat_buy_back">Stock Buy Back</div></td>
+                       <td class="stat-value">&nbsp;<span class="r_just">{{ buy_back }}</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+</div>
+{{ if show_next }}
+    <div class="page_width">
+        <div class="right-side">
+            {{ next_button }}
+        </div>
+    </div>
+{{ endif }}
+<!--{{ if show_pop_up }}-->
+<!--<span id="round_num_alert" class="round-pop-up">-->
+<!--    <p>-->
+<!--        {{ if num_rounds_left == 1 }}-->
+<!--            This is the last round.-->
+<!--        {{ else }}-->
+<!--            Remaining Market Periods: {{ num_rounds_left }}-->
+<!--        {{ endif }}-->
+<!--    <span class="bottom-row">&nbsp;<div id="pop-up-btn" class="btn btn-primary r_just" tabindex="1">Ok</div></span></p>-->
+<!--</span>-->
+<!--<div id="gray-out"></div>-->
+<!--{{ endif }}-->
+
+{{ endblock }}

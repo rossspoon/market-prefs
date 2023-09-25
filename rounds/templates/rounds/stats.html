@@ -1,0 +1,65 @@
+            <div>
+                <table class="left-tab">
+                    <tr>
+                         <th colspan="2" class="box-header">Personal Stats</th>
+                     </tr>
+                    <tr>
+                        <td>
+                            <div id="stat_stock_value">STOCK Value</div>
+                        </td>
+                        <td class="stat-value">&nbsp;<span class="r_just {{ vos_neg_cls }} {{ attn_cls }}">{{ stock_val }}</span></td>
+                    </tr>
+                   </tr>
+                    {{ if for_results }}
+                    <tr>
+                        <td><div class="tool-tip">Dividend Earned
+                            <span class="tool-tip-text tt-right">
+                                <p>The amount or dividend payments you earned or paid out this market period</p>
+                            </span>
+                        </div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ player.dividend_earned }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><div class="tool-tip">Interest Earned
+                            <span class="tool-tip-text tt-right">
+                                <p>The amount of interest you earned or paid out this market period</p>
+                            </span>
+                        </div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ player.interest_earned }}</span></td>
+                    </tr>
+                    {{ else }}
+                    <tr><td colspan="2">&nbsp;</td> </tr>
+                    <tr><td colspan="2">&nbsp;</td> </tr>
+                    {{ endif }}
+                    <tr><td colspan="2">&nbsp;</td> </tr>
+                    <tr><td colspan="2">&nbsp;</td> </tr>
+                </table>
+            </div>
+            <div class="right-stat-div">
+                 <table>
+                     <tr>
+                         <th colspan="2" class="box-header">Market Stats</th>
+                     </tr>
+                     <tr>
+                         <td><div id="stat_market_price">Market Price</div></td>
+                         <td class="stat-value">&nbsp;<span class="r_just">{{ market_price | cu }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_stock_float">Float</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ group.float }} shares</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_int_rate">Interest Rate</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ interest_pct }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_dividends">Dividends</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just">{{ dividends }}</span></td>
+                    </tr>
+                   <tr>
+                        <td><div id="stat_buy_back">Stock Buy Back</div></td>
+                       <td class="stat-value">&nbsp;<span class="r_just">{{ buy_back }}</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>

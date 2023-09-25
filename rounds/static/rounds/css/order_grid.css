@@ -1,0 +1,82 @@
+/* Main Grid layout */
+#grid_order_layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 4fr 1fr;
+    gap: 10px;
+    height: 100%;
+}
+#current_order_box{
+    grid-column: 1;
+    grid-row: 1;
+}
+
+#order_grid_box{
+    grid-column: 2;
+    grid-row: 1;
+    height: 100%;
+}
+
+#order_messages_box{
+    grid-column: 1/3;
+    grid-row: 2;
+}
+
+#price-grid {}
+
+#current_order{
+    font-size: 2em;
+}
+
+/* Current Order Message */
+#curr_ord_msg{
+    font-size: 2em;
+    text-align: center;
+}
+
+/* Current Order Pane */
+.curr-ord-tab {
+    width: 85%;
+    margin: auto;
+}
+
+.curr-ord-tab th{
+    text-align: center;
+    padding-bottom: 20%
+}
+
+.curr-ord-tab td {
+    font-size: 1.8em;
+    width: 50%;
+    padding-top: 10px;
+}
+
+.curr_ord_alert{
+    animation-name: curr_ord_attn;
+    animation-duration: .3s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+}
+@keyframes curr_ord_attn {
+    33%{
+        box-shadow: 0 0 0 0;
+    }
+
+    48% {
+        box-shadow: 0 0 0 .5rem rgb(255 99 71 / 40%);
+        color: tomato;
+   }
+    63%{
+        box-shadow: 0 0 0 .1rem rgb(255 99 71 / 40%);
+        color: tomato;
+    }
+    78% {
+        box-shadow: 0 0 0 .5rem rgb(255 99 71 / 40%);
+        color: tomato;
+    }
+
+    100%{
+        box-shadow: 0 0 0 0;
+        color: tomato;
+    }
+}

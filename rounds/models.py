@@ -49,6 +49,8 @@ class OrderErrorCode(Enum):
     QUANT_CEIL = (512, OrderField.QUANTITY, 'The quantity should be less than 100.')
     PRICE_LEN_RAW = (1024, OrderField.PRICE, 'This input is too long.  Please provide a shorter input.')
     QUANT_LEN_RAW = (2048, OrderField.QUANTITY, 'This input is too long.  Please provide a shorter input.')
+    SHORTING =  (4096, OrderField.QUANTITY, 'You are attempting to sell more shares that you have.  Please reduce the quantity.')
+    MARGIN =  (8192, OrderField.PRICE, 'The total cost of your combined BUYs exceeds your current amount of CASH. Please reduce either the price or quantity of this order.')
 
     def combine(self, code):
         if type(code) is OrderErrorCode:
@@ -118,12 +120,46 @@ class Group(BaseGroup):
 
 NO_AUTO_TRANS = -99
 
+def make_type_select():
+    return models.IntegerField(
+        choices=[
+            [-1, 'Buy'],
+            [0, 'Hold'],
+            [1, 'Sell'],
+        ],
+        blank=True
+    )
 
 # noinspection DuplicatedCode
 class Player(BasePlayer):
     cash = models.CurrencyField()
     shares = models.IntegerField()
 
+    price_1 = models.CurrencyField(blank=True)
+    quant_1 = models.IntegerField(blank=True)
+    type_1 =  make_type_select()
+
+    price_2 = models.CurrencyField(blank=True)
+    quant_2 = models.IntegerField(blank=True)
+    type_2 =  make_type_select()
+
+    price_3 = models.CurrencyField(blank=True)
+    quant_3 = models.IntegerField(blank=True)
+    type_3 =  make_type_select()
+
+    price_4 = models.CurrencyField(blank=True)
+    quant_4 = models.IntegerField(blank=True)
+    type_4 =  make_type_select()
+
+    price_5 = models.CurrencyField(blank=True)
+    quant_5 = models.IntegerField(blank=True)
+    type_5 =  make_type_select()
+
+    price_6 = models.CurrencyField(blank=True)
+    quant_6 = models.IntegerField(blank=True)
+    type_6 =  make_type_select()
+
+    #TODO:  Gravestone these
     #  These items just exist to drive the form on the page.
     # The actual price and quantity are stored in the Order model
     type = models.IntegerField(
@@ -136,6 +172,7 @@ class Player(BasePlayer):
     price = models.CurrencyField(blank=True)
     quantity = models.IntegerField(blank=True)
 
+    #TODO:  Gravestone these
     periods_until_auto_buy = models.IntegerField(initial=NO_AUTO_TRANS)
     periods_until_auto_sell = models.IntegerField(initial=NO_AUTO_TRANS)
 
