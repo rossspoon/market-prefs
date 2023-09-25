@@ -1,0 +1,71 @@
+{{ block title }}
+{{ endblock }}
+{{ block content }}
+
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>-->
+{#<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>#}
+<script src="{{ static 'js/Chart.js' }}"></script>
+<script src="{{ static 'rounds/js/price_history.js' }}"></script>
+<script src="{{ static 'rounds/js/move_timer.js' }}"></script>
+<script src="{{ static 'rounds/js/set_tool_tip.js' }}"></script>
+
+<link rel="stylesheet" href="{{ static 'css/global.css' }}">
+<link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
+<link rel="stylesheet" href="{{ static 'rounds/css/market_choice_page.css' }}">
+
+<div class="layout-box">
+        <div class="vitals boxed_area">
+            <ul>
+                <li> <div id="timer_box"></div></li>
+                <li> Period: {{ player.round_number }}
+                <li> Number of Shares: <span class="{{ attn_cls }}">{{ shares}}</span>
+                <li> Current Cash: <span class="{{ attn_cls }}">{{ cash }}</span>
+            </ul>
+        </div>
+
+        <div class="chart-box boxed_area">
+            <p class="box-header lpad">Market History</p>
+            <div class="chart-history-area">
+                <canvas id="gr_price" />
+            </div>
+            <div class="chart-volume-area">
+                <canvas id="gr_volume" />
+            </div>
+        </div>
+
+        <div class="action-box boxed_area">
+            {{ include_sibling action_include }}
+        </div>
+
+        <div class="orders-box boxed_area" >
+            <p class="box-header lpad">Submitted Orders</p>
+            <div id="order_list_grid">
+            </div>
+        </div>
+
+        <div class="stats-box boxed_area">
+            {{ include_sibling 'stats.html' }}
+        </div>
+
+</div>
+{{ if show_next }}
+    <div class="page_width">
+        <div class="right-side">
+            {{ next_button }}
+        </div>
+    </div>
+{{ endif }}
+<!--{{ if show_pop_up }}-->
+<!--<span id="round_num_alert" class="round-pop-up">-->
+<!--    <p>-->
+<!--        {{ if num_rounds_left == 1 }}-->
+<!--            This is the last round.-->
+<!--        {{ else }}-->
+<!--            Remaining Market Periods: {{ num_rounds_left }}-->
+<!--        {{ endif }}-->
+<!--    <span class="bottom-row">&nbsp;<div id="pop-up-btn" class="btn btn-primary r_just" tabindex="1">Ok</div></span></p>-->
+<!--</span>-->
+<!--<div id="gray-out"></div>-->
+<!--{{ endif }}-->
+
+{{ endblock }}

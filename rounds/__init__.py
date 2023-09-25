@@ -1,7 +1,10 @@
 import decimal
+import json
 import random
 from collections import defaultdict
 from math import ceil
+import asyncio
+from threading import Thread
 
 from rounds.call_market import CallMarket
 from . import tool_tip
@@ -10,6 +13,8 @@ import common.SessionConfigFunctions as scf
 from common.ParticipantFuctions import generate_participant_ids, is_button_click
 from otree import database
 import os
+
+from .trigger import SOCKETS
 
 NUM_ROUNDS = os.getenv('SSE_NUM_ROUNDS')
 
@@ -182,14 +187,14 @@ def is_order_form_valid(data):
     error_code = 0
     more_price_quant_checks = True
 
-    # Checks for raw length
-    if len(raw_price) > 10:
-        error_code = OrderErrorCode.PRICE_LEN_RAW.combine(error_code)
-        more_price_quant_checks = False
-
-    if len(raw_quant) > 5:
-        error_code = OrderErrorCode.QUANT_LEN_RAW.combine(error_code)
-        more_price_quant_checks = False
+    # # Checks for raw length
+    # if len(raw_price) > 10:
+    #     error_code = OrderErrorCode.PRICE_LEN_RAW.combine(error_code)
+    #     more_price_quant_checks = False
+    #
+    # if len(raw_quant) > 5:
+    #     error_code = OrderErrorCode.QUANT_LEN_RAW.combine(error_code)
+    #     more_price_quant_checks = False
 
     price = None
     quant = None
@@ -199,10 +204,10 @@ def is_order_form_valid(data):
     except (ValueError, decimal.InvalidOperation):
         error_code = OrderErrorCode.PRICE_NOT_NUM.combine(error_code)
 
-    if not raw_quant.lstrip('-').isnumeric():
-        error_code = OrderErrorCode.QUANT_NOT_NUM.combine(error_code)
-    else:
-        quant = int(raw_quant)
+    # if not raw_quant.lstrip('-').isnumeric():
+    #     error_code = OrderErrorCode.QUANT_NOT_NUM.combine(error_code)
+    # else:
+    quant = int(raw_quant)
 
     # PRICE CEILING
     if price and price >= 10000:
@@ -215,10 +220,11 @@ def is_order_form_valid(data):
 
     # Order type checks
     o_type = None
-    if raw_type not in ['-1', '1']:
+    if raw_type not in ['SELL', 'BUY']:
         error_code = OrderErrorCode.BAD_TYPE.combine(error_code)
     else:
-        o_type = OrderType(int(raw_type))
+        t = -1 if raw_type == 'BUY' else 1
+        o_type = OrderType(int(t))
     return error_code, o_type, price, quant
 
 
@@ -496,6 +502,7 @@ def vars_for_market_template(player: Player):
     ret['show_form'] = 'order'
     ret['show_pop_up'] = player.round_number > (Constants.num_rounds - 5)
     ret['num_rounds_left'] = Constants.num_rounds - player.round_number + 1
+    ret['action_include'] = 'order_grid.html'
 
     return ret
 
@@ -581,6 +588,21 @@ def get_round_result_messages(player: Player, d: dict):
     return messages
 
 
+async def await_send_signal(msg):
+    print(f"Sending Start Signal")
+    for socket in SOCKETS:
+        print(f"sending message {msg} to {socket}")
+        await socket.send(json.dumps(msg))
+
+
+def send_signal(msg):
+    asyncio.run(await_send_signal(msg))
+
+def send_signal_in_thread(msg):
+    t = Thread(target=send_signal, args=[msg])
+    t.start()
+    t.join()
+
 def pre_round_tasks(group: Group):
     assign_endowments(group)
 
@@ -605,6 +627,7 @@ def pre_round_tasks(group: Group):
     # Calculate total shorts
     group.short = abs(sum(p.shares for p in group.get_players() if p.shares < 0))
 
+    send_signal_in_thread({"type":"page", "page":"", "round": group.round_number})
 
 #######################################
 # CALCULATE MARKET
@@ -652,8 +675,6 @@ def vars_for_admin_report(subsession: BaseSubsession):
 ##########
 class PreMarketWait(WaitPage):
     body_text = "Waiting for the experiment to begin"
-    pass
-
     after_all_players_arrive = pre_round_tasks
 
 
@@ -667,6 +688,21 @@ class Market(Page):
     js_vars = get_js_vars
     vars_for_template = vars_for_market_template
     live_method = market_page_live_method
+
+
+class MarketGridChoice(Page):
+    get_timeout_seconds = scf.get_market_time
+    form_model = 'player'
+
+    # method bindings
+    js_vars = get_js_vars
+    vars_for_template = vars_for_market_template
+    live_method = market_page_live_method
+
+
+class Fixate(Page):
+    get_timeout_seconds = scf.get_market_pause_time
+    vars_for_template = vars_for_forecast_template
 
 
 class ForecastPage(Page):
@@ -768,4 +804,6 @@ class FinalResultsPage(Page):
                 'is_online': scf.is_online(player)}
 
 
-page_sequence = [PreMarketWait, Market, ForecastPage, MarketWaitPage, RoundResultsPage, FinalResultsPage]
+page_sequence = [PreMarketWait,
+                 MarketGridChoice,
+                 ForecastPage, MarketWaitPage, RoundResultsPage, FinalResultsPage]
