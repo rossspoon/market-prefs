@@ -3,6 +3,7 @@ import itertools
 import json
 import websockets
 from threading import Thread
+import os
 
 from rounds import Player
 
@@ -28,7 +29,7 @@ async def handler(websocket):
 
 
 async def main():
-    async with websockets.serve(handler, "", 8345):
+    async with websockets.serve(handler, "", port=int(os.environ["PORT"])):
         await asyncio.Future() # run Forever
 
 
