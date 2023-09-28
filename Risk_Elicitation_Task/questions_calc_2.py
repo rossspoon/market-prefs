@@ -15,7 +15,7 @@ pr = 1 / len(R)
 pmu = 1 / len(MU)
 
 # initial uniform prior
-P = np.full((len(R), len(MU)), pr * pmu)
+INIT_PRIOR = np.full((len(R), len(MU)), pr * pmu)
 
 # Initialize the models array
 M_values = np.empty((len(R), len(MU)), dtype=object)
@@ -107,7 +107,7 @@ class KLInfo:
         for i, row in enumerate(self.models):
             for j, element in enumerate(row):
                 m = self.models[i, j]
-                denom += P[i, j] * float(self.likelihoods[a, q, m[0], m[1]])
+                denom += self.priors[i, j] * float(self.likelihoods[a, q, m[0], m[1]])
         return denom
 
     def get_denominator(self, a: int, q: float, k: tuple):
@@ -123,7 +123,7 @@ class KLInfo:
         denom = self.full_denoms[(a, q)]
         i, j = k[0], k[1]
         r, mu = self.models[i, j]
-        return denom - self.priors[i, j] * float(self.likelihoods[a, q, r, mu])
+        return denom - (self.priors[i, j] * float(self.likelihoods[a, q, r, mu]))
 
     def get_information_number(self, q: float, k: tuple):
         """
@@ -137,7 +137,7 @@ class KLInfo:
             _r, _mu = self.models[k]
             l = float(self.likelihoods[a, q, _r, _mu])
             d = float(self.denoms[a, q, i, j])
-            I += l * np.log(1 - P[i, j] * l / d)
+            I += l * np.log(1 - self.priors[i, j] * l / d)
         return I
 
     def question_KL(self, q: float):
@@ -164,20 +164,21 @@ class KLInfo:
         a: question response
         q: question asked
         """
-        updated_P = np.zeros(self.priors.shape)
+        updated_p = np.zeros(self.priors.shape)
 
         denom = self.full_denoms[(a, q)]
         for i, row in enumerate(self.models):
             for j, element in enumerate(row):
                 m = self.models[i, j]
-                updated_P[i, j] = float(self.likelihoods[a, q, m[0], m[1]]) * self.priors[i, j] / denom
-        return updated_P
+                updated_p[i, j] = float(self.likelihoods[a, q, m[0], m[1]]) * self.priors[i, j] / denom
+        return updated_p
 
 
 # Main loop
 print("Entering main loop")
+p = INIT_PRIOR
 for i in range(4):
-    kli = KLInfo(ACTIONS, QUESTIONS, M_values, P, LIKELIHOODS)
+    kli = KLInfo(ACTIONS, QUESTIONS, M_values, p, LIKELIHOODS)
     q, inf = kli.get_next_Q()
     print(f"Next Question: {q}")
     p = kli.update_priors(0, q)
