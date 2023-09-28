@@ -137,7 +137,7 @@ class KLInfo:
             _r, _mu = self.models[k]
             l = float(self.likelihoods[a, q, _r, _mu])
             d = float(self.denoms[a, q, i, j])
-            I += l * np.log(1 - self.priors[i, j] * l / d)
+            I += l * np.log( (1 - self.priors[i, j]) * l / d)
         return I
 
     def question_KL(self, q: float):
@@ -177,8 +177,9 @@ class KLInfo:
 # Main loop
 print("Entering main loop")
 p = INIT_PRIOR
+choice = [0, 0, 0, 0]
 for i in range(4):
     kli = KLInfo(ACTIONS, QUESTIONS, M_values, p, LIKELIHOODS)
     q, inf = kli.get_next_Q()
     print(f"Next Question: {q}")
-    p = kli.update_priors(0, q)
+    p = kli.update_priors(choice[i], q)
