@@ -135,43 +135,6 @@ class Player(BasePlayer):
     cash = models.CurrencyField()
     shares = models.IntegerField()
 
-    price_1 = models.CurrencyField(blank=True)
-    quant_1 = models.IntegerField(blank=True)
-    type_1 =  make_type_select()
-
-    price_2 = models.CurrencyField(blank=True)
-    quant_2 = models.IntegerField(blank=True)
-    type_2 =  make_type_select()
-
-    price_3 = models.CurrencyField(blank=True)
-    quant_3 = models.IntegerField(blank=True)
-    type_3 =  make_type_select()
-
-    price_4 = models.CurrencyField(blank=True)
-    quant_4 = models.IntegerField(blank=True)
-    type_4 =  make_type_select()
-
-    price_5 = models.CurrencyField(blank=True)
-    quant_5 = models.IntegerField(blank=True)
-    type_5 =  make_type_select()
-
-    price_6 = models.CurrencyField(blank=True)
-    quant_6 = models.IntegerField(blank=True)
-    type_6 =  make_type_select()
-
-    #TODO:  Gravestone these
-    #  These items just exist to drive the form on the page.
-    # The actual price and quantity are stored in the Order model
-    type = models.IntegerField(
-        choices=[
-            [-1, 'Buy'],
-            [1, 'Sell'],
-        ],
-        blank=True
-    )
-    price = models.CurrencyField(blank=True)
-    quantity = models.IntegerField(blank=True)
-
     #TODO:  Gravestone these
     periods_until_auto_buy = models.IntegerField(initial=NO_AUTO_TRANS)
     periods_until_auto_sell = models.IntegerField(initial=NO_AUTO_TRANS)
@@ -191,6 +154,12 @@ class Player(BasePlayer):
     f0 = models.CurrencyField(blank=True)
     forecast_error = models.CurrencyField()
     forecast_reward = models.CurrencyField(initial=0)
+
+    # Risk Elicitation
+    risk_1 = models.StringField(blank=True)
+    risk_2 = models.StringField(blank=True)
+    risk_3 = models.StringField(blank=True)
+    risk_4 = models.StringField(blank=True)
 
     # Per-round Survey
     # emotion = models.IntegerField(

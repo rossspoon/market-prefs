@@ -1,11 +1,7 @@
 import decimal
-import json
 import random
 from collections import defaultdict
 from math import ceil
-import asyncio
-from threading import Thread
-
 from rounds.call_market import CallMarket
 from . import tool_tip
 from .models import *
@@ -13,7 +9,6 @@ import common.SessionConfigFunctions as scf
 from common.ParticipantFuctions import generate_participant_ids, is_button_click
 from otree import database
 import os
-
 
 NUM_ROUNDS = os.getenv('SSE_NUM_ROUNDS')
 
@@ -100,7 +95,6 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
     mp_str = f"{market_price:.2f}"
 
     page_name = player.participant._current_page_name
-
     return dict(
         labels=list(range(0, Constants.num_rounds + 1)),
         price_data=prices,
@@ -504,7 +498,6 @@ def get_short_message(limit, close, debt, delay, round_number):
 def vars_for_market_template(player: Player):
     ret = standard_vars_for_template(player)
     ret['messages'] = get_messages(player, ret)
-    ret['show_form'] = 'order'
     ret['show_pop_up'] = player.round_number > (Constants.num_rounds - 5)
     ret['num_rounds_left'] = Constants.num_rounds - player.round_number + 1
     ret['action_include'] = 'insert_order_grid.html'
@@ -514,7 +507,6 @@ def vars_for_market_template(player: Player):
 
 def vars_for_forecast_template(player: Player):
     ret = standard_vars_for_template(player)
-    ret['show_form'] = 'forecast'
     ret['action_include'] = 'insert_forecast.html'
     return ret
 
@@ -560,10 +552,27 @@ def vars_for_round_results_template(player: Player):
     ret['trans_type'] = trans_type
     ret['trans_cost'] = filled_amount * player.group.price
     ret['bankrupt'] = player.is_bankrupt(results=True)
-    ret['show_form'] = 'results'
     ret['attn_cls'] = 'attention_slow'
     ret['messages'] = get_round_result_messages(player, ret)
     ret['action_include'] = 'insert_round_results.html'
+    return ret
+
+
+def vars_for_risk_template(player: Player):
+    ret = standard_vars_for_template(player)
+    ret['action_include'] = 'insert_risk.html'
+
+    ret['s_hi'] = 10.00
+    ret['s_lo'] = 8.00
+    ret['r_hi'] = 19.25
+    ret['r_lo'] = 0.50
+
+    hi_p = random.randint(1,100)
+    lo_p = 100 - hi_p
+
+    ret['hi_prob'] = hi_p
+    ret['lo_prob'] = lo_p
+
     return ret
 
 
@@ -776,6 +785,31 @@ class RoundResultsPage(Page):
             bonus = ceil(bonus / conversion) * conversion
         participant.payoff = max(bonus, 0)
 
+class RiskWaitPage(WaitPage):
+    pass
+
+class RiskPage(Page):
+    template_name = 'rounds/MarketPageModular.html'
+    form_model = 'player'
+    timer_text = 'Time Left:'
+
+    js_vars = get_js_vars_round_results
+    vars_for_template = vars_for_risk_template
+    get_timeout_seconds = scf.get_risk_elic_time
+    is_displayed = not_displayed_for_simulation
+    live_method = result_page_live_method
+
+
+class RiskPage1(RiskPage):
+    form_fields = ['risk_1']
+class RiskPage2(RiskPage):
+    form_fields = ['risk_2']
+class RiskPage3(RiskPage):
+    form_fields = ['risk_3']
+class RiskPage4(RiskPage):
+    form_fields = ['risk_4']
+
+
 
 class FinalResultsPage(Page):
     js_vars = get_js_vars_round_results
@@ -804,4 +838,9 @@ page_sequence = [PreMarketWait,
                  ForecastPage,
                  MarketWaitPage,
                  RoundResultsPage,
+                 RiskWaitPage,
+                 RiskPage1,
+                 RiskPage2,
+                 RiskPage3,
+                 RiskPage4,
                  FinalResultsPage]
