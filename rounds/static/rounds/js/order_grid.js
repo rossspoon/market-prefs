@@ -377,7 +377,6 @@ function process_order_rejection(data) {
 }
 
 function liveRecv(data) {
-    console.log("Here:", data)
     const func = data.func;
 
     if (func === 'order_confirmed') {
