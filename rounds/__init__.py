@@ -514,6 +514,7 @@ def vars_for_market_template(player: Player):
 def vars_for_forecast_template(player: Player):
     ret = standard_vars_for_template(player)
     ret['show_form'] = 'forecast'
+    ret['action_include'] = 'forecast.html'
     return ret
 
 
@@ -561,11 +562,21 @@ def vars_for_round_results_template(player: Player):
     ret['show_form'] = 'results'
     ret['attn_cls'] = 'attention_slow'
     ret['messages'] = get_round_result_messages(player, ret)
+    ret['action_include'] = 'insert_round_results.html'
     return ret
 
 
 def get_round_result_messages(player: Player, d: dict):
     messages = []
+
+
+    # Price message
+    msg = f"Market price this period: {player.group.price}"
+    messages.append(dict(class_attr='result-msg', msg=msg))
+
+    # Volume message
+    msg = f"Market volume this period: {player.group.volume} shares"
+    messages.append(dict(class_attr='result-msg', msg=msg))
 
     # Determine the "you bought/sold" message
     which = "bought" if player.trans_cost < 0 else "sold"
@@ -578,10 +589,7 @@ def get_round_result_messages(player: Player, d: dict):
         msg = f"You {which} {abs(quant)} share{s} at {d.get('market_price')}"
     messages.append(dict(class_attr='result-msg', msg=msg))
 
-    # Volume message
-    msg = f"Market volume this period: {player.group.volume} shares"
-    messages.append(dict(class_attr='result-msg', msg=msg))
-
+    
     # Bankrupt
     if d.get('bankrupt'):
         msg = f"You are now bankrupt and will be unable to participate the in market.  You will be directed to the" \
@@ -680,6 +688,7 @@ class Market(Page):
 
 
 class MarketGridChoice(Page):
+    template_name = 'rounds/MarketPageModular.html'
     get_timeout_seconds = scf.get_market_time
     form_model = 'player'
     timer_text = 'Time Left:'
@@ -696,7 +705,7 @@ class Fixate(Page):
 
 
 class ForecastPage(Page):
-    template_name = 'rounds/Market.html'
+    template_name = 'rounds/MarketPageModular.html'
     form_model = 'player'
     form_fields = ['f0']
     timer_text = 'Time Left:'
@@ -713,7 +722,7 @@ class MarketWaitPage(WaitPage):
 
 
 class RoundResultsPage(Page):
-    template_name = 'rounds/Market.html'
+    template_name = 'rounds/MarketPageModular.html'
     form_model = 'player'
     timer_text = 'Time Left:'
 

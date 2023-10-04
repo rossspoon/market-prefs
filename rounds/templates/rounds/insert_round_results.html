@@ -1,0 +1,8 @@
+
+{{ for msg in messages }}
+<div class="alert {{ msg.class_attr }}">
+    <div class="message">
+        {{ msg.msg }}
+    </div>
+</div>
+{{  endfor }}
