@@ -506,7 +506,7 @@ def vars_for_market_template(player: Player):
     ret['show_form'] = 'order'
     ret['show_pop_up'] = player.round_number > (Constants.num_rounds - 5)
     ret['num_rounds_left'] = Constants.num_rounds - player.round_number + 1
-    ret['action_include'] = 'order_grid.html'
+    ret['action_include'] = 'insert_order_grid.html'
 
     return ret
 
@@ -514,7 +514,7 @@ def vars_for_market_template(player: Player):
 def vars_for_forecast_template(player: Player):
     ret = standard_vars_for_template(player)
     ret['show_form'] = 'forecast'
-    ret['action_include'] = 'forecast.html'
+    ret['action_include'] = 'insert_forecast.html'
     return ret
 
 
@@ -589,7 +589,7 @@ def get_round_result_messages(player: Player, d: dict):
         msg = f"You {which} {abs(quant)} share{s} at {d.get('market_price')}"
     messages.append(dict(class_attr='result-msg', msg=msg))
 
-    
+
     # Bankrupt
     if d.get('bankrupt'):
         msg = f"You are now bankrupt and will be unable to participate the in market.  You will be directed to the" \
@@ -699,11 +699,6 @@ class MarketGridChoice(Page):
     live_method = market_page_live_method
 
 
-class Fixate(Page):
-    get_timeout_seconds = scf.get_market_pause_time
-    vars_for_template = vars_for_forecast_template
-
-
 class ForecastPage(Page):
     template_name = 'rounds/MarketPageModular.html'
     form_model = 'player'
@@ -805,4 +800,7 @@ class FinalResultsPage(Page):
 
 page_sequence = [PreMarketWait,
                  MarketGridChoice,
-                 ForecastPage, MarketWaitPage, RoundResultsPage, FinalResultsPage]
+                 ForecastPage,
+                 MarketWaitPage,
+                 RoundResultsPage,
+                 FinalResultsPage]
