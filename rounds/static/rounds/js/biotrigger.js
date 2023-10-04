@@ -4,7 +4,8 @@ async function sendPageName(websocket) {
         type: "page_start",
         page_name: js_vars.page_name,
         round: js_vars.rnd,
-        label: js_vars.label,
+        p_label: js_vars.label,
+        participant: js_vars.part_code,
     }
 
     websocket.send(JSON.stringify(event))

@@ -115,6 +115,7 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
         page_name=page_name,
         rnd=player.round_number,
         label=player.participant.label,
+        part_code=player.participant.code,
     )
 
 
