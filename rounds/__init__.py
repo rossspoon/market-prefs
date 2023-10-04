@@ -14,7 +14,6 @@ from common.ParticipantFuctions import generate_participant_ids, is_button_click
 from otree import database
 import os
 
-from .trigger import SOCKETS
 
 NUM_ROUNDS = os.getenv('SSE_NUM_ROUNDS')
 
@@ -100,6 +99,8 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
     market_price = group.price if include_current else group.get_last_period_price()
     mp_str = f"{market_price:.2f}"
 
+    page_name = player.participant._current_page_name
+
     return dict(
         labels=list(range(0, Constants.num_rounds + 1)),
         price_data=prices,
@@ -111,6 +112,9 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
         market_price=market_price,
         market_price_str=mp_str,
         tt=tool_tip.get_tool_tip_data(player),
+        page_name=page_name,
+        rnd=player.round_number,
+        label=player.participant.label,
     )
 
 
@@ -588,20 +592,7 @@ def get_round_result_messages(player: Player, d: dict):
     return messages
 
 
-async def await_send_signal(msg):
-    print(f"Sending Start Signal")
-    for socket in SOCKETS:
-        print(f"sending message {msg} to {socket}")
-        await socket.send(json.dumps(msg))
 
-
-def send_signal(msg):
-    asyncio.run(await_send_signal(msg))
-
-def send_signal_in_thread(msg):
-    t = Thread(target=send_signal, args=[msg])
-    t.start()
-    t.join()
 
 def pre_round_tasks(group: Group):
     assign_endowments(group)
@@ -626,8 +617,6 @@ def pre_round_tasks(group: Group):
 
     # Calculate total shorts
     group.short = abs(sum(p.shares for p in group.get_players() if p.shares < 0))
-
-    send_signal_in_thread({"type":"page", "page":"", "round": group.round_number})
 
 #######################################
 # CALCULATE MARKET
@@ -693,6 +682,7 @@ class Market(Page):
 class MarketGridChoice(Page):
     get_timeout_seconds = scf.get_market_time
     form_model = 'player'
+    timer_text = 'Time Left:'
 
     # method bindings
     js_vars = get_js_vars
