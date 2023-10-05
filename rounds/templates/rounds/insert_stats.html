@@ -4,9 +4,15 @@
                          <th colspan="2" class="box-header">Personal Stats</th>
                      </tr>
                     <tr>
-                        <td>
-                            <div id="stat_stock_value">STOCK Value</div>
-                        </td>
+                        <td><div id="stat_stock_pos"># of Shares</div> </td>
+                        <td class="stat-value">&nbsp;<span class="r_just {{ vos_neg_cls }} {{ attn_cls }}">{{ player.shares }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_cash_pos">Current Cash</div></td>
+                        <td class="stat-value">&nbsp;<span class="r_just {{ vos_neg_cls }} {{ attn_cls }}">{{ player.cash }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><div id="stat_stock_value">STOCK Value</div></td>
                         <td class="stat-value">&nbsp;<span class="r_just {{ vos_neg_cls }} {{ attn_cls }}">{{ stock_val }}</span></td>
                     </tr>
                    </tr>
@@ -31,8 +37,6 @@
                     <tr><td colspan="2">&nbsp;</td> </tr>
                     <tr><td colspan="2">&nbsp;</td> </tr>
                     {{ endif }}
-                    <tr><td colspan="2">&nbsp;</td> </tr>
-                    <tr><td colspan="2">&nbsp;</td> </tr>
                 </table>
             </div>
             <div class="right-stat-div">
@@ -57,7 +61,7 @@
                         <td class="stat-value">&nbsp;<span class="r_just">{{ dividends }}</span></td>
                     </tr>
                    <tr>
-                        <td><div id="stat_buy_back">Stock Buy Back</div></td>
+                        <td><div id="stat_buy_back">Buy Back</div></td>
                        <td class="stat-value">&nbsp;<span class="r_just">{{ buy_back }}</span></td>
                     </tr>
                 </table>

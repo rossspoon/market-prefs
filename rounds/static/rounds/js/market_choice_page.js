@@ -17,7 +17,7 @@ $(window).on('load', function () {
 
     //Set content size to document size.
     let size_window = function() {
-        let wh = $(document).height();
+        let wh = $(window).height();
         $('.layout-box-grid').css('height', wh);
     };
     size_window();
@@ -25,7 +25,7 @@ $(window).on('load', function () {
 
     //if show_next then fit the next button into the vitals section
     if (js_vars.show_next) {
-        $('.vitals-grid li').css('width', '19%');
+        $('.vitals-grid li').css('width', '31%');
     }
 
     set_tool_tips();

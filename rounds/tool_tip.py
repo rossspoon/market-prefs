@@ -3,6 +3,16 @@ from otree.api import BaseGroup, BasePlayer, BaseSubsession
 import common.SessionConfigFunctions as scf
 
 TOOL_TIPS = {
+    'stat_stock_pos': dict(
+        text="""Numer of share of STOCK that you currently own.  Each share that you own pays out
+         a dividend at the end of each round.""",
+        pos_cls='tt-right'
+    ),
+    'stat_cash_pos': dict(
+        text="""The amount of CASH that you currently have.  Your CASH earns interest that is paid out at the 
+        end of each period.""",
+        pos_cls='tt-right'
+    ),
     'stat_buy_back': dict(
         text="""After the last market period each share of STOCK that you own will be bought
                    back at this price ({buy_back}). """,
