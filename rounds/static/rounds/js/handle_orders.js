@@ -17,6 +17,7 @@ function add_orders_to_list(live_data) {
     });
 }
 
+let num_orders = 0;
 function add_order_to_list(oid, o_info){
     //make the close button TD
     const close_btn_elem = document.createElement("span");

@@ -8,7 +8,6 @@ let PRICE_PER_LINE = PRICE_EXTREME / ((NUM_GRID_LINES + 1) * MINOR_TICK);
 let START_MSG = "Submit an order by clicking on the grid."
 let o_data = null;
 let submitted_odata = null;
-let num_orders = 0;
 let grid_enabled = true;
 let edgepad = 5;
 let textpad = 50;
