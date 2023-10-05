@@ -562,7 +562,6 @@ def vars_for_round_results_template(player: Player):
 
 def vars_for_risk_template(player: Player):
     ret = standard_vars_for_template(player)
-    ret['action_include'] = 'insert_risk.html'
 
     ret['s_hi'] = 10.00
     ret['s_lo'] = 8.00
