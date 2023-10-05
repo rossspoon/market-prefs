@@ -5,20 +5,18 @@ import common.SessionConfigFunctions as scf
 TOOL_TIPS = {
     'stat_buy_back': dict(
         text="""After the last market period each share of STOCK that you own will be bought
-                   back at this price ({buy_back}).  If you have shorted stock, you will
-                   pay out this amount for each share of STOCK that you have borrowed.""",
+                   back at this price ({buy_back}). """,
         pos_cls='tt-right'
     ),
     'stat_dividends': dict(
         text="""<p>The dividend paid out on STOCK.</p>
                    <p>Each share of stock that you own will earn either {dividends} points.
-                    Each amount is equally likely.  If you have shorted STOCK then you will pay out
-                    that amount.</p>""",
+                    Each amount is equally likely.</p>""",
         pos_cls='tt-right'
     ),
     'stat_int_rate': dict(
         text="""<p>Interest on CASH earned at the end of the market period.</p>
-                <p>If you have borrowed CASH, you will pay interest at this rate.</p>""",
+                """,
         pos_cls='tt-right'
     ),
     'stat_total_short': dict(
@@ -34,13 +32,11 @@ TOOL_TIPS = {
         pos_cls='tt-right'
     ),
     'stat_stock_value': dict(
-        text="""<p>The value of your STOCK at the current market value</p>
-                <p>If you have shorted STOCK, this will appear as negative and be subject to a shorting limit.</p>""",
+        text="""<p>The value of your STOCK at the current market value</p>""",
         pos_cls='tt-right'
     ),
     'stat_debt': dict(
-        text="""<p>The value of shorted STOCK or borrowed CASH.</p>
-                <p>If you short STOCK, we consider the value of that STOCK as debt.</p>""",
+        text="""<p>The value of shorted STOCK or borrowed CASH.</p>""",
         pos_cls='tt-right'
     ),
     'stat_limit_none': dict(
