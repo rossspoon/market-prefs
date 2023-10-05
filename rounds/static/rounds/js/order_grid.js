@@ -26,8 +26,11 @@ $(window).on('load', function () {
         let vspace = c.vspace / MINOR_TICK;
         let box = c.box;
 
-        let x = e.pageX - this.offsetLeft;
-        let y = e.pageY - this.offsetTop;
+        // the grid canvas lives in a <div> with position: absolute.
+        // I think that's why I can use e.offsetX directly because the coords are
+        // referenced from the <div>
+        let x = e.offsetX
+        let y = e.offsetY
 
         // early out if mouse pointer is outside the grid box
         if (x > edgepad+box || y > edgepad+box){
@@ -122,7 +125,7 @@ function draw_grid(market_price) {
     let ctx=c.getContext("2d");
 
     if (GRID_BOX_SIZE < 0) {
-        let parent = c.parentNode;
+        let parent = c.parentNode.parentNode;
         let par_h = parent.offsetHeight;
         let par_w = parent.offsetWidth;
 
