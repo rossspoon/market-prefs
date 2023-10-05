@@ -1,0 +1,44 @@
+{{ block title }}
+{{ endblock }}
+{{ block content }}
+<link rel="stylesheet" href="{{ static 'css/global.css' }}">
+<link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
+<link rel="stylesheet" href="{{ static 'rounds/css/risk_page.css' }}">
+
+<script src="{{ static 'rounds/js/risk_page.js' }}"></script>
+
+<input type="hidden" name="risk" id="risk" />
+
+<div class="layout-box">
+    <div id="safe_card" class="elic-card">
+        <div class="elic-choice">
+            <div class="elic-left">{{ s_hi }}</div>
+            <div class="elic-right">{{ hi_prob }}%</div>
+        </div>
+        <hr/>
+        <div class="elic-choice">
+            <div class="elic-left">{{ s_lo }}</div>
+            <div class="elic-right">{{ lo_prob }}%</div>
+        </div>
+    </div>
+
+    <div id="risky_card" class="elic-card">
+        <div class="elic-choice">
+            <div class="elic-left">{{ r_hi }}</div>
+            <div class="elic-right">{{ hi_prob }}%</div>
+        </div>
+        <hr/>
+        <div class="elic-choice">
+            <div class="elic-left">{{ r_hi }}</div>
+            <div class="elic-right">{{ lo_prob }}%</div>
+        </div>
+    </div>
+</div>
+{{ if show_next }}
+    <div class="page_width">
+        <div class="right-side">
+            {{ next_button }}
+        </div>
+    </div>
+{{ endif }}
+{{ endblock }}

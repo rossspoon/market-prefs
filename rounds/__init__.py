@@ -789,26 +789,35 @@ class RiskWaitPage(WaitPage):
     pass
 
 class RiskPage(Page):
-    template_name = 'rounds/MarketPageModular.html'
+    template_name = 'rounds/RiskPage.html'
     form_model = 'player'
+    form_fields = ['risk']
     timer_text = 'Time Left:'
 
-    js_vars = get_js_vars_round_results
     vars_for_template = vars_for_risk_template
     get_timeout_seconds = scf.get_risk_elic_time
     is_displayed = not_displayed_for_simulation
-    live_method = result_page_live_method
 
 
 class RiskPage1(RiskPage):
-    form_fields = ['risk_1']
-class RiskPage2(RiskPage):
-    form_fields = ['risk_2']
-class RiskPage3(RiskPage):
-    form_fields = ['risk_3']
-class RiskPage4(RiskPage):
-    form_fields = ['risk_4']
+    @staticmethod
+    def before_next_page(player: Player, timeout_happened):
+        player.risk_1 = player.risk
 
+class RiskPage2(RiskPage):
+    @staticmethod
+    def before_next_page(player: Player, timeout_happened):
+        player.risk_2 = player.risk
+
+class RiskPage3(RiskPage):
+    @staticmethod
+    def before_next_page(player: Player, timeout_happened):
+        player.risk_3 = player.risk
+
+class RiskPage4(RiskPage):
+    @staticmethod
+    def before_next_page(player: Player, timeout_happened):
+        player.risk_4 = player.risk
 
 
 class FinalResultsPage(Page):

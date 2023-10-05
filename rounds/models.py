@@ -156,10 +156,11 @@ class Player(BasePlayer):
     forecast_reward = models.CurrencyField(initial=0)
 
     # Risk Elicitation
-    risk_1 = models.StringField(blank=True)
-    risk_2 = models.StringField(blank=True)
-    risk_3 = models.StringField(blank=True)
-    risk_4 = models.StringField(blank=True)
+    risk = models.IntegerField(blank=True)
+    risk_1 = models.IntegerField(blank=True)
+    risk_2 = models.IntegerField(blank=True)
+    risk_3 = models.IntegerField(blank=True)
+    risk_4 = models.IntegerField(blank=True)
 
     # Per-round Survey
     # emotion = models.IntegerField(
