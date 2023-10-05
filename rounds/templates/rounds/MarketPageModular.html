@@ -10,63 +10,56 @@
 <script src="{{ static 'rounds/js/set_tool_tip.js' }}"></script>
 <script src="{{ static 'rounds/js/biotrigger.js' }}"></script>
 <script src="{{ static 'rounds/js/handle_orders.js' }}"></script>
+<script src="{{ static 'rounds/js/market_choice_page.js' }}"></script>
 
 <link rel="stylesheet" href="{{ static 'css/global.css' }}">
 <link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
 <link rel="stylesheet" href="{{ static 'rounds/css/market_choice_page.css' }}">
 
-<div class="layout-box">
-        <div class="vitals boxed_area">
+<div class="layout-box-grid">
+        <div class="vitals-grid boxed_area">
             <ul>
                 <li> <div id="timer_box"></div></li>
                 <li> Period: {{ player.round_number }}
                 <li> Number of Shares: <span class="{{ attn_cls }}">{{ shares}}</span>
                 <li> Current Cash: <span class="{{ attn_cls }}">{{ cash }}</span>
+                {{ if show_next }}
+                <li>
+                     {{ next_button }}
+                </li>
+                {{ endif }}
+
             </ul>
         </div>
 
-        <div class="chart-box boxed_area">
-            <p class="box-header lpad">Market History</p>
-            <div class="chart-history-area">
-                <canvas id="gr_price" />
-            </div>
-            <div class="chart-volume-area">
-                <canvas id="gr_volume" />
+        <div class="chart-box-grid boxed_area">
+            <div class="chart-layout">
+                <div class="chart-header-area-module"><p class="box-header lpad">Market History</p></div>
+                <div class="chart-history-area-module">
+                    <canvas id="gr_price"/>
+                </div>
+                <div class="chart-volume-area-module">
+                    <canvas id="gr_volume"/>
+                </div>
             </div>
         </div>
 
-        <div class="action-box boxed_area">
+        <div class="action-box-grid boxed_area">
             {{ include_sibling action_include }}
         </div>
 
-        <div class="orders-box boxed_area" >
+        <div class="orders-box-grid boxed_area" >
             <p class="box-header lpad">Submitted Orders</p>
             <div id="order_list_grid">
             </div>
         </div>
 
-        <div class="stats-box boxed_area">
+        <div class="stats-box-grid boxed_area">
             {{ include_sibling 'insert_stats.html' }}
         </div>
 </div>
-{{ if show_next }}
-    <div class="page_width">
-        <div class="right-side">
-            {{ next_button }}
-        </div>
-    </div>
-{{ endif }}
-<!--{{ if show_pop_up }}-->
-<!--<span id="round_num_alert" class="round-pop-up">-->
-<!--    <p>-->
-<!--        {{ if num_rounds_left == 1 }}-->
-<!--            This is the last round.-->
-<!--        {{ else }}-->
-<!--            Remaining Market Periods: {{ num_rounds_left }}-->
-<!--        {{ endif }}-->
-<!--    <span class="bottom-row">&nbsp;<div id="pop-up-btn" class="btn btn-primary r_just" tabindex="1">Ok</div></span></p>-->
-<!--</span>-->
-<!--<div id="gray-out"></div>-->
-<!--{{ endif }}-->
+
+
+
 
 {{ endblock }}

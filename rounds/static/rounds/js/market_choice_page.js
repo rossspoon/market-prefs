@@ -15,23 +15,17 @@ $(window).on('load', function () {
         $("#gray-out").detach();
     });
 
+    let size_window = function() {
+        let wh = $(document).height();
+        $('.layout-box-grid').css('height', wh);
+    };
+    size_window();
+    $(window).resize(size_window);
 
     set_tool_tips();
 
     ///////////////////////////
     // EVENT HANDLERS
-
-    // Submit the order form
-    $("#submit-btn").click(function(){
-        submit_order_form();
-    });
-
-    $("#submit-btn").keypress(function(event){
-        if ( event.which == 13 ) {
-            submit_order_form();
-        }
-    });
-
 
     $(".q-slide").on('input', function(){
         let id = $(this).attr('id');

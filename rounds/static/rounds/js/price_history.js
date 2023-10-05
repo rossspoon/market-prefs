@@ -32,6 +32,8 @@ window.onload = function() {
             }]
         },
         options: {
+            responsive: true,
+            maintainAspectRatio: false,
             legend: {display: false},
             scales: {
                 xAxes: [{display: false}],
@@ -73,6 +75,8 @@ window.onload = function() {
             }]
         },
         options: {
+            responsive: true,
+            maintainAspectRatio: false,
             aspectRatio: 5,
             legend: {display: false},
             scales: {

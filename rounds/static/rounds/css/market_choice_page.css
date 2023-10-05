@@ -1,37 +1,35 @@
-.otree-form{
-    margin-top: -30px;
-    margin-top: -30px;
-}
 
-/* Main Grid layout */
-.layout-box {
+/* START -  Main Grid layout */
+.layout-box-grid {
+    height: 95%;
     display: grid;
-    grid-template-columns: 3fr 1fr 3fr;
-    grid-template-rows: 50px 90px auto 300px;
+    grid-template-columns: 55fr 45fr;
+    grid-template-rows: 50px 65fr 35fr;
     gap: 10px;
-    margin-top: 40px;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
-.vitals{
-    grid-column: 1/4;
+.vitals-grid{
+    grid-column: 1/3;
     grid-row: 1;
     padding-top: 10px;
     font-weight: 500;
 }
 
-.chart-box{
+.chart-box-grid{
     grid-column: 1;
-    grid-row: 2/4;
+    grid-row: 2/3;
 }
 
-.action-box{
+.action-box-grid{
     padding: 10px;
-    grid-column: 2/4;
-    grid-row: 2/4;
+    grid-column: 2;
+    grid-row: 2;
 }
 
-.stats-box {
-    grid-column: 1/2;
-    grid-row: 4;
+.stats-box-grid {
+    grid-column: 1;
+    grid-row: 3;
 
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -39,12 +37,43 @@
     gap: 10px;
 }
 
-.orders-box {
-    grid-column: 2/4;
-    grid-row: 4;
+.orders-box-grid {
+    grid-column: 2;
+    grid-row: 3;
+}
+/* END -  Main Grid layout */
+
+/*START Chart Layout */
+.chart-layout {
+    height: 100%;
+    display: grid;
+    grid-template-rows: 50px 3fr 2fr;
+    grid-template-columns: 1fr;
 }
 
+.chart-header-area-module {
+    grid-row: 1;
+}
 
+.chart-history-area-module {
+    grid-row: 2;
+}
+.chart-volume-area-module{
+    grid-row: 3;
+}
+/* END - Chart Layout*/
+
+
+.vitals-grid ul {
+    display: inline;
+    list-style-type: none;
+}
+.vitals-grid li {
+    float: left;
+    width: 19%;
+    text-align: center;
+    font-size: 1.25em;
+}
 
 /* Secondary Layout */
 .order-form{
@@ -110,23 +139,23 @@
     border-radius: 20px;
 }
 
-.stats-box table {
+.stats-box-grid table {
     width: 85%;
     margin: auto;
     height: 98%;
 }
-.stats-box td {
+.stats-box-grid td {
     font-size: 1.1em;
     width: 50%;
     padding-top: 2px;
 }
-.stats-box th {
+.stats-box-grid th {
     text-align: center;
 }
 
 .close-button-grid {
     cursor: pointer;
-    font-size: 24px;
+    font-size: .8em;
     color: white;
     border: 2px solid #ccc;
     border-radius: 50%;
@@ -251,7 +280,7 @@
 }
 .submitted-order-grid {
     width: 47%;
-    font-size: 1.8em;
+    font-size: 1.3em;
     margin: 6px;
 }
 

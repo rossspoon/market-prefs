@@ -1,7 +1,7 @@
 /* Main Grid layout */
 #grid_order_layout {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 2fr;
     grid-template-rows: 4fr 1fr;
     gap: 10px;
     height: 100%;
