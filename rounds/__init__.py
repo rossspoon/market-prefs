@@ -802,22 +802,22 @@ class RiskPage(Page):
 class RiskPage1(RiskPage):
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
-        player.risk_1 = player.risk
+        player.risk_1 = player.field_maybe_none('risk')
 
 class RiskPage2(RiskPage):
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
-        player.risk_2 = player.risk
+        player.risk_2 = player.field_maybe_none('risk')
 
 class RiskPage3(RiskPage):
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
-        player.risk_3 = player.risk
+        player.risk_3 = player.field_maybe_none('risk')
 
 class RiskPage4(RiskPage):
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
-        player.risk_4 = player.risk
+        player.risk_4 = player.field_maybe_none('risk')
 
 
 class FinalResultsPage(Page):
