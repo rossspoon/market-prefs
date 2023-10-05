@@ -95,6 +95,7 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
     mp_str = f"{market_price:.2f}"
 
     page_name = player.participant._current_page_name
+    show_next = scf.show_next_button(player)
     return dict(
         labels=list(range(0, Constants.num_rounds + 1)),
         price_data=prices,
@@ -110,6 +111,7 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
         rnd=player.round_number,
         label=player.participant.label,
         part_code=player.participant.code,
+        show_next=show_next,
     )
 
 

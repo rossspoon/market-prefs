@@ -15,12 +15,18 @@ $(window).on('load', function () {
         $("#gray-out").detach();
     });
 
+    //Set content size to document size.
     let size_window = function() {
         let wh = $(document).height();
         $('.layout-box-grid').css('height', wh);
     };
     size_window();
     $(window).resize(size_window);
+
+    //if show_next then fit the next button into the vitals section
+    if (js_vars.show_next) {
+        $('.vitals-grid li').css('width', '19%');
+    }
 
     set_tool_tips();
 
