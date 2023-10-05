@@ -12,24 +12,24 @@
 <div class="layout-box">
     <div id="safe_card" class="elic-card">
         <div class="elic-choice">
-            <div class="elic-left">{{ s_hi }}</div>
+            <div class="elic-left">${{ s_hi | to2 }}</div>
             <div class="elic-right">{{ hi_prob }}%</div>
         </div>
         <hr/>
         <div class="elic-choice">
-            <div class="elic-left">{{ s_lo }}</div>
+            <div class="elic-left">${{ s_lo | to2 }}</div>
             <div class="elic-right">{{ lo_prob }}%</div>
         </div>
     </div>
 
     <div id="risky_card" class="elic-card">
         <div class="elic-choice">
-            <div class="elic-left">{{ r_hi }}</div>
+            <div class="elic-left">${{ r_hi | to2 }}</div>
             <div class="elic-right">{{ hi_prob }}%</div>
         </div>
         <hr/>
         <div class="elic-choice">
-            <div class="elic-left">{{ r_lo }}</div>
+            <div class="elic-left">${{ r_lo | to2 }}</div>
             <div class="elic-right">{{ lo_prob }}%</div>
         </div>
     </div>
