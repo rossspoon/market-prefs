@@ -17,6 +17,7 @@ function add_orders_to_list(live_data) {
     });
 }
 
+let grid_enabled = true;
 let num_orders = 0;
 function add_order_to_list(oid, o_info){
     //make the close button TD
@@ -88,10 +89,18 @@ function add_order_to_list(oid, o_info){
 
 function disable_grid() {
     grid_enabled = false;
+    let price_grid = document.getElementById('price-grid')
+    if (price_grid){
+        block_grid();
+    }
 }
 
 function enable_grid() {
     grid_enabled = true;
+    let price_grid = document.getElementById('price-grid')
+    if (price_grid){
+        reset_grid();
+    }
 }
 
 $(document).on('click', ".close-button-grid", function(){

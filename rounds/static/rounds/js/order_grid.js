@@ -8,7 +8,6 @@ let PRICE_PER_LINE = PRICE_EXTREME / ((NUM_GRID_LINES + 1) * MINOR_TICK);
 let START_MSG = "Submit an order by clicking on the grid."
 let o_data = null;
 let submitted_odata = null;
-let grid_enabled = true;
 let edgepad = 5;
 let textpad = 50;
 
@@ -17,6 +16,9 @@ $(window).on('load', function () {
     reset_grid();
 
     $("#price-grid").on("mousemove", function(e){
+         if (!grid_enabled) {
+             return
+         }
         $('#curr_ord_msg').text( "" );
 
         let mp = js_vars.market_price;
@@ -65,7 +67,9 @@ $(window).on('load', function () {
 
     //Clear Grid
     $("#price-grid").on("mouseleave", function(e){
-        reset_grid();
+        if (grid_enabled) {
+            reset_grid();
+        }
     });
 
     // Submit Order on Click
@@ -117,10 +121,17 @@ function reset_grid(){
     draw_grid(mp);
     $('#curr_ord_type_cell').text("");
     $('#curr_ord_quant_cell').text("");
-    $('#curr_ord_price_cell').text("");}
+    $('#curr_ord_price_cell').text("");
+    o_data = null;
+}
+
+function block_grid(){
+        let mp = js_vars.market_price;
+        draw_grid(mp, darken=true);
+}
 
 let GRID_BOX_SIZE = -1;
-function draw_grid(market_price) {
+function draw_grid(market_price, darken=false) {
     let c = document.getElementById("price-grid")
     let ctx=c.getContext("2d");
 
@@ -145,12 +156,18 @@ function draw_grid(market_price) {
     let num_vert_line = (2* NUM_GRID_LINES) + 1;
     let hspace = box/(num_vert_line + 1);
 
+
     /* Box */
+    ctx.save();
+    if (darken) {
+        ctx.fillStyle = "#efefef";
+        ctx.fillRect(edgepad,edgepad, box, box);
+    }
     ctx.lineWidth=1
     ctx.strokeStyle = `rgb(90, 90, 90)`;
     ctx.strokeRect(edgepad,edgepad, box, box);
+    ctx.restore();
 
-    ctx.save();
 
     /* Vertical lines*/
     ctx.strokeStyle = `rgb(200, 200, 200)`;
