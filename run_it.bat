@@ -9,7 +9,7 @@ set OTREE_AUTH_LEVEL=STUDY
 REM set OTREE_AUTH_LEVEL=DEMO
 
 
-set DATABASE_URL=postgres://vteconlab:econvt!@localhost/squeeze
+set DATABASE_URL=postgres://vteconlab:econvt!@localhost/marketprefs
 
 
 REM otree resetdb
