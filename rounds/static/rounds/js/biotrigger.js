@@ -1,7 +1,7 @@
 
 async function sendPageEvent(websocket) {
     const event = {
-        type: js_vars.event_type,
+        mtype: js_vars.event_type,
         page_name: js_vars.page_name,
         round_num: js_vars.rnd,
         p_label: js_vars.label,
