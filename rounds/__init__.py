@@ -687,18 +687,6 @@ class PreMarketWait(WaitPage):
     after_all_players_arrive = pre_round_tasks
 
 
-class Market(Page):
-    get_timeout_seconds = scf.get_market_time
-    form_model = 'player'
-    form_fields = ['type', 'price', 'quantity']
-    timer_text = 'Time Left:'
-
-    # method bindings
-    js_vars = get_js_vars
-    vars_for_template = vars_for_market_template
-    live_method = market_page_live_method
-
-
 class MarketGridChoice(Page):
     template_name = 'rounds/MarketPageModular.html'
     get_timeout_seconds = scf.get_market_time
