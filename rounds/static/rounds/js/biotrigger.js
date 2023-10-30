@@ -1,7 +1,7 @@
 
-async function sendPageName(websocket) {
+async function sendPageEvent(websocket) {
     const event = {
-        type: "page_start",
+        type: js_vars.event_type,
         page_name: js_vars.page_name,
         round: js_vars.rnd,
         p_label: js_vars.label,
@@ -13,5 +13,5 @@ async function sendPageName(websocket) {
 
 window.addEventListener("DOMContentLoaded", () => {
     const websocket = new WebSocket("ws://localhost:8345")
-    websocket.onopen = () => sendPageName(websocket)
+    websocket.onopen = () => sendPageEvent(websocket)
 });

@@ -62,14 +62,14 @@ def assign_endowments(subsession):
 
 
 def get_js_vars_forcast_page(player: Player):
-    return get_js_vars(player, show_cancel=False)
+    return get_js_vars(player, show_cancel=False, event_type='page_name')
 
 
 def get_js_vars_round_results(player: Player):
-    return get_js_vars(player, include_current=True, show_notes=True, show_cancel=False)
+    return get_js_vars(player, include_current=True, show_notes=True, show_cancel=False, event_type='rec_stop')
 
 
-def get_js_vars(player: Player, include_current=False, show_notes=False, show_cancel=True):
+def get_js_vars(player: Player, include_current=False, show_notes=False, show_cancel=True, event_type='rec_start'):
     # Price History
     group: Group = player.group
     if include_current:
@@ -108,6 +108,7 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
         market_price_str=mp_str,
         tt=tool_tip.get_tool_tip_data(player),
         page_name=page_name,
+        event_type=event_type,
         rnd=player.round_number,
         label=player.participant.label,
         part_code=player.participant.code,
