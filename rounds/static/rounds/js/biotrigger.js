@@ -14,8 +14,8 @@ async function sendPageEvent(websocket) {
 function send_events(websocket){
     $("#shutdown_button").on('click', function(){
         const event = {
-            type: 'stop_exp',
-            round: 'x',
+            mtype: 'stop_exp',
+            round_num: 'x',
         }
         websocket.send(JSON.stringify(event))
     });
