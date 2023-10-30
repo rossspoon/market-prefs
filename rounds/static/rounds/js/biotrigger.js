@@ -11,7 +11,18 @@ async function sendPageEvent(websocket) {
     websocket.send(JSON.stringify(event))
 }
 
+function send_events(websocket){
+    $("#shutdown_button").onclick(function(){
+        const event = {
+            type: 'stop_exp',
+            round: 'x',
+        }
+        websocket.send(JSON.stringify(event))
+    });
+}
+
 window.addEventListener("DOMContentLoaded", () => {
     const websocket = new WebSocket("ws://localhost:8345")
     websocket.onopen = () => sendPageEvent(websocket)
+    send_events(websocket);
 });
