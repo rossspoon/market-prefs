@@ -68,6 +68,18 @@ def get_js_vars_forcast_page(player: Player):
 def get_js_vars_round_results(player: Player):
     return get_js_vars(player, include_current=True, show_notes=True, show_cancel=False, event_type='rec_stop')
 
+def get_websockets_vars(player: Player, event_type):
+    page_name = player.participant._current_page_name
+    return dict(
+    page_name = page_name,
+    event_type = event_type,
+    rnd = player.round_number,
+    label = player.participant.label,
+    part_code = player.participant.code,
+    )
+
+def get_js_vars_fixate(player: Player):
+    return get_websockets_vars(player, 'fixate')
 
 def get_js_vars(player: Player, include_current=False, show_notes=False, show_cancel=True, event_type='rec_start'):
     # Price History
@@ -94,9 +106,10 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
     market_price = group.price if include_current else group.get_last_period_price()
     mp_str = f"{market_price:.2f}"
 
-    page_name = player.participant._current_page_name
     show_next = scf.show_next_button(player)
-    return dict(
+
+    ws_vars = get_websockets_vars(player, event_type)
+    ret = dict(
         labels=list(range(0, Constants.num_rounds + 1)),
         price_data=prices,
         volume_data=volumes,
@@ -107,13 +120,10 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
         market_price=market_price,
         market_price_str=mp_str,
         tt=tool_tip.get_tool_tip_data(player),
-        page_name=page_name,
-        event_type=event_type,
-        rnd=player.round_number,
-        label=player.participant.label,
-        part_code=player.participant.code,
         show_next=show_next,
     )
+    ret.update(ws_vars)
+    return ret
 
 
 #########################
@@ -687,6 +697,14 @@ class PreMarketWait(WaitPage):
     after_all_players_arrive = pre_round_tasks
 
 
+class Fixate(Page):
+    get_timeout_seconds = scf.get_fixate_time
+    form_model = 'player'
+
+    # method bindings
+    js_vars = get_js_vars_fixate
+
+
 class MarketGridChoice(Page):
     template_name = 'rounds/MarketPageModular.html'
     get_timeout_seconds = scf.get_market_time
@@ -833,6 +851,7 @@ class FinalResultsPage(Page):
 
 
 page_sequence = [PreMarketWait,
+                 Fixate,
                  MarketGridChoice,
                  ForecastPage,
                  MarketWaitPage,

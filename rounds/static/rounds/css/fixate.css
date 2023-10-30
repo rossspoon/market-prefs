@@ -1,0 +1,19 @@
+.layout-box {
+    position: relative;
+    width: 100%;
+}
+.inner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+
+    font-size: 10em;
+}
+
+.otree-timer {
+    display: none;
+}
+.otree-title {
+    display: none;
+}

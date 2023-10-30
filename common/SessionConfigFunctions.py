@@ -20,6 +20,7 @@ SK_FLOAT_RATIO_CAP = 'float_ratio_cap'
 SK_FORECAST_THOLD = 'forecast_thold'
 SK_FORECAST_REWARD = 'forecast_reward'
 SK_MARKET_TIME = 'market_time'
+SK_FIXATE_TIME = 'fixate_time'
 SK_RISK_ELIC_TIME = 'risk_elic_time'
 SK_FORECAST_TIME = 'forecast_time'
 SK_SUMMARY_TIME = 'summary_time'
@@ -196,6 +197,11 @@ def get_forecast_reward(obj):
 def get_market_time(obj):
     config = ensure_config(obj)
     return get_item_as_int(config, SK_MARKET_TIME, return_none=True)
+
+
+def get_fixate_time(obj):
+    config = ensure_config(obj)
+    return get_item_as_int(config, SK_FIXATE_TIME, return_none=True)
 
 
 def get_risk_elic_time(obj):
