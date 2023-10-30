@@ -176,11 +176,59 @@ class KLInfo:
 
 
 # Main loop
-print("Entering main loop")
-p = INIT_PRIOR
-choice = [1, 1, 1, 1]
-for i in range(4):
-    kli = KLInfo(ACTIONS, QUESTIONS, M_values, p, LIKELIHOODS)
+# print("Entering main loop")
+# p = INIT_PRIOR
+# choice = [1, 1, 1, 1]
+# for i in range(4):
+#     kli = KLInfo(ACTIONS, QUESTIONS, M_values, p, LIKELIHOODS)
+#     q, inf = kli.get_next_Q()
+#     print(f"Next Question: {q}")
+#     p = kli.update_priors(choice[i], q)
+
+
+class Node:
+    def __init__(self, data: dict):
+        self.left = None
+        self.right = None
+        self.data = data
+
+
+    def print_tree(self, show_attr=None):
+        if show_attr:
+            print(self.data.get(show_attr))
+        else:
+            print(self.data)
+
+        if  self.right:
+            self.right.print_tree(show_attr=show_attr)
+        if  self.left:
+            self.left.print_tree(show_attr=show_attr)
+
+
+
+def run_kli(prior):
+    kli = KLInfo(ACTIONS, QUESTIONS, M_values, prior, LIKELIHOODS)
     q, inf = kli.get_next_Q()
-    print(f"Next Question: {q}")
-    p = kli.update_priors(choice[i], q)
+    p1 = kli.update_priors(1, q)
+    p0 = kli.update_priors(0, q)
+
+    return q, p1, p0
+
+d = dict(prior=INIT_PRIOR)
+bin_tree = Node(d)
+node_q = [bin_tree]
+for i in range(15):
+    node = node_q.pop(0)
+    q, p1, p0 = run_kli(node.data.get('prior'))
+    node.data['q'] = q
+
+    if i < 7:
+        r_node = Node(dict(prior=p1))
+        node_q.append(r_node)
+        node.right = r_node
+
+        l_node = Node(dict(prior=p0))
+        node_q.append(l_node)
+        node.left = l_node
+
+bin_tree.print_tree(show_attr='q')
