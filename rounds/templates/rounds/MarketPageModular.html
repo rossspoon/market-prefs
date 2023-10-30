@@ -23,7 +23,8 @@
                 <li> Period: {{ player.round_number }}
                 {{ if show_next }}
                 <li>
-                     {{ next_button }}
+                    <span>{{ next_button }}</span>
+                    <span class="btn-look-alike" id="shutdown_button" style="font-size: .8em;">s</span>
                 </li>
                 {{ endif }}
 
@@ -47,8 +48,13 @@
         </div>
 
         <div class="orders-box-grid boxed_area" >
-            <p class="box-header lpad">Submitted Orders</p>
-            <div id="order_list_grid">
+            <div class="order_col" id="sell_box">
+                <p class="box-header lpad">Your Sells</p>
+                <ul id="sell_orders"></ul>
+            </div>
+            <div class="order_col" id="buy_box">
+                <p class="box-header lpad">Your Buys</p>
+                <ul id="buy_orders"></ul>
             </div>
         </div>
 

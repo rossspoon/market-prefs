@@ -12,7 +12,7 @@ async function sendPageEvent(websocket) {
 }
 
 function send_events(websocket){
-    $("#shutdown_button").onclick(function(){
+    $("#shutdown_button").on('click', function(){
         const event = {
             type: 'stop_exp',
             round: 'x',
