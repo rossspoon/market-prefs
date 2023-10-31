@@ -251,7 +251,7 @@ function draw_grid(market_price, darken=false) {
     let start_q = -1 * (NUM_GRID_LINES+1)
     let num_itr = 2*(NUM_GRID_LINES+1) +1
     for (let i = 0; i<num_itr; i++){
-        n = start_q + i
+        let n = Math.abs(start_q + i)
         ctx.fillText(n.toString(), edgepad + i*hspace, edgepad+box+15)
     }
     ctx.restore();
