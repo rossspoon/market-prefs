@@ -149,7 +149,7 @@ function draw_grid(market_price, darken=false) {
     let box = GRID_BOX_SIZE - (edgepad + textpad);
 
     let num_top = NUM_GRID_LINES;
-    let num_bottom = Math.min(NUM_GRID_LINES, Math.floor(20/market_price))
+    let num_bottom = Math.min(NUM_GRID_LINES, Math.ceil(market_price / PRICE_PER_LINE))
     let num_hor_lines = num_top + 1 + num_bottom
     let vspace = box / (num_hor_lines);
 
