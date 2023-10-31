@@ -37,4 +37,18 @@ $(window).on('load', function () {
         let id = $(this).attr('id');
        $('#'+id+'_val').html($(this).val());
     });
+
+
+    document.addEventListener("keypress", function(e) {
+        if (e.ctrlKey && e.which === 49) {
+            let sd =  $("#shutdown_button")
+            let v =  sd.css('visibility');
+            if (v == 'hidden'){
+                sd.css('visibility', 'visible');
+            } else {
+                sd.css('visibility', 'hidden');
+            }
+
+        }
+    });
 });

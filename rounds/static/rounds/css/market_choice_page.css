@@ -301,3 +301,13 @@
 .price-col-grid {
     width: 100px;
 }
+
+
+.ilb {
+    display:inline-block;
+}
+#shutdown_button {
+    font-size: .8em;
+    visibility: hidden;
+    cursor: pointer;
+}

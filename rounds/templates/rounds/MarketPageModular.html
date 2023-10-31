@@ -21,10 +21,11 @@
             <ul>
                 <li> <div id="timer_box"></div></li>
                 <li> Period: {{ player.round_number }}
+                     <span class="btn-look-alike" id="shutdown_button">s</span>
+                </li>
                 {{ if show_next }}
-                <li>
-                    <span class="btn-look-alike" id="shutdown_button" style="font-size: .8em;">s</span>
-                    <span>{{ next_button }}</span>
+               <li>
+                    <span class="ilb">{{ next_button }}</span>
                 </li>
                 {{ endif }}
 
