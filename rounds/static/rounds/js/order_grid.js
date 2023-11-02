@@ -6,27 +6,36 @@ let PRICE_EXTREME = 100;
 let MINOR_TICK = 4
 let PRICE_PER_LINE = PRICE_EXTREME / ((NUM_GRID_LINES + 1) * MINOR_TICK);
 let START_MSG = "Submit an order by clicking on the grid."
-let o_data = null;
-let submitted_odata = null;
 let edgepad = 5;
 let textpad = 50;
+
+//  These are calculated when the grid is redrawn
+let GRID_BOX_SIZE = -1;
+
+let o_data = null;
+let submitted_odata = null;
+let enable_left = true;
+let enable_right = true;
+let m_pos_valid = true;
+
+function is_on_left(x, box){
+  return x < edgepad+box/2;
+};
+
+function is_on_right(x, box){
+  return x > edgepad+box/2;
+};
+
+function is_outside_grid(x,y){
+    return x<edgepad || x>edgepad+box || y<edgepad || y>edgepad+box;
+};
+
 
 $(window).on('load', function () {
     $('#curr_ord_msg').text( START_MSG );
     reset_grid();
 
     $("#price-grid").on("mousemove", function(e){
-         if (!grid_enabled) {
-             return
-         }
-        $('#curr_ord_msg').text( "" );
-
-        let mp = js_vars.market_price;
-        let c = draw_grid(mp);
-        let ctx = c.ctx;
-        let hspace = c.hspace;
-        let vspace = c.vspace / MINOR_TICK;
-        let box = c.box;
 
         // the grid canvas lives in a <div> with position: absolute.
         // I think that's why I can use e.offsetX directly because the coords are
@@ -35,11 +44,21 @@ $(window).on('load', function () {
         let y = e.offsetY
 
         // early out if mouse pointer is outside the grid box
-        if (x > edgepad+box || y > edgepad+box){
-            $('#curr_ord_type_cell').text("");
-            $('#curr_ord_quant_cell').text("");
-            $('#curr_ord_price_cell').text("");
-            o_data = null;
+        if (is_outside_grid(x,y)) {
+            reset_grid();
+            return;
+        }
+
+        $('#curr_ord_msg').text( "" );
+
+        let c = draw_grid(dark_left=!enable_left, dark_right=!enable_right);
+        let ctx = c.ctx;
+        let hspace = c.hspace;
+        let vspace = c.vspace / MINOR_TICK;
+        let box = c.box;
+
+        if ((is_on_left(x,box) && !enable_left) || (is_on_right(x, box) && !enable_right)){
+            reset_grid();
             return;
         }
 
@@ -51,7 +70,7 @@ $(window).on('load', function () {
 
         // Draw Circle
         ctx.beginPath();
-        ctx.arc(loc_x, loc_y, rad, 0, 2*Math.PI, false);
+        ctx.arc(loc_x, loc_y-(rad), rad, 0, 2*Math.PI, false);
         ctx.fillStyle = 'red';
         ctx.fill();
         ctx.lineWidth = 3;
@@ -60,6 +79,7 @@ $(window).on('load', function () {
 
         // Current Order
         let quantity = -5 + h_num_space;
+        mp = js_vars.market_price;
         let price = (mp + PRICE_EXTREME) - (v_num_space * PRICE_PER_LINE);
 
         o_data = update_current_order(price, quantity);
@@ -67,14 +87,12 @@ $(window).on('load', function () {
 
     //Clear Grid
     $("#price-grid").on("mouseleave", function(e){
-        if (grid_enabled) {
-            reset_grid();
-        }
+        reset_grid();
     });
 
     // Submit Order on Click
     $("#price-grid").on("click", function(e){
-        if (o_data && grid_enabled) {
+        if (o_data) {
             submitted_odata = o_data;
             liveSend({'func': 'submit-order', 'data': submitted_odata});
             reset_grid();
@@ -87,6 +105,13 @@ $(window).on('load', function () {
         reset_grid();
     });
 });
+
+function reset_order_form(){
+    $('#curr_ord_type_cell').text("");
+    $('#curr_ord_quant_cell').text("");
+    $('#curr_ord_price_cell').text("");
+    o_data = null;
+}
 
 function update_current_order(price, quantity){
     $('#curr_ord_quant_cell').removeClass('curr_ord_alert');
@@ -117,21 +142,15 @@ function update_current_order(price, quantity){
 }
 
 function reset_grid(){
-    let mp = js_vars.market_price;
-    draw_grid(mp);
-    $('#curr_ord_type_cell').text("");
-    $('#curr_ord_quant_cell').text("");
-    $('#curr_ord_price_cell').text("");
-    o_data = null;
+    draw_grid(dark_left=!enable_left, dark_right=!enable_right);
+    reset_order_form();
 }
 
-function block_grid(){
-        let mp = js_vars.market_price;
-        draw_grid(mp, darken=true);
-}
+function draw_grid(dark_left=false, dark_right=false) {
+    enable_left = !dark_left;
+    enable_right = ! dark_right;
 
-let GRID_BOX_SIZE = -1;
-function draw_grid(market_price, darken=false) {
+    let market_price = js_vars.market_price;
     let c = document.getElementById("price-grid")
     let ctx=c.getContext("2d");
 
@@ -146,7 +165,7 @@ function draw_grid(market_price, darken=false) {
     c.height = GRID_BOX_SIZE;
     c.width = GRID_BOX_SIZE;
 
-    let box = GRID_BOX_SIZE - (edgepad + textpad);
+    box = GRID_BOX_SIZE - (edgepad + textpad);
 
     let num_top = NUM_GRID_LINES;
     let num_bottom = Math.min(NUM_GRID_LINES, Math.ceil(market_price / PRICE_PER_LINE))
@@ -157,11 +176,15 @@ function draw_grid(market_price, darken=false) {
     let hspace = box/(num_vert_line + 1);
 
 
-    /* Box */
+    /* box */
     ctx.save();
-    if (darken) {
+    if (dark_left) {
         ctx.fillStyle = "#efefef";
-        ctx.fillRect(edgepad,edgepad, box, box);
+        ctx.fillRect(edgepad,edgepad, box/2, box);
+    }
+    if (dark_right) {
+        ctx.fillStyle = "#efefef";
+        ctx.fillRect(edgepad+ box/2,edgepad, box/2, box);
     }
     ctx.lineWidth=1
     ctx.strokeStyle = `rgb(90, 90, 90)`;
@@ -260,7 +283,7 @@ function draw_grid(market_price, darken=false) {
         'ctx': ctx,
         'vspace': vspace,
         'hspace': hspace,
-        'box': box,
+        'box': box
     };
 };
 
