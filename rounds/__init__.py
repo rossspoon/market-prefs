@@ -851,7 +851,7 @@ class FinalResultsPage(Page):
 
 
 page_sequence = [PreMarketWait,
-                 Fixate,
+                 # Fixate,
                  MarketGridChoice,
                  ForecastPage,
                  MarketWaitPage,
