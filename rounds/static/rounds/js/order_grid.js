@@ -3,8 +3,9 @@ let rad = 5;
 
 let NUM_GRID_LINES = 4;
 let PRICE_EXTREME = 100;
-let MINOR_TICK = 4
-let PRICE_PER_LINE = PRICE_EXTREME / ((NUM_GRID_LINES + 1) * MINOR_TICK);
+let MINOR_TICK = 20
+let PRICE_PER_TICK = PRICE_EXTREME / ((NUM_GRID_LINES + 1) * MINOR_TICK);
+let PRICE_PER_LINE = PRICE_EXTREME / ((NUM_GRID_LINES + 1));
 let START_MSG = "Submit an order by clicking on the grid."
 let edgepad = 5;
 let textpad = 50;
@@ -80,7 +81,7 @@ $(window).on('load', function () {
         // Current Order
         let quantity = -5 + h_num_space;
         mp = js_vars.market_price;
-        let price = (mp + PRICE_EXTREME) - (v_num_space * PRICE_PER_LINE);
+        let price = (mp + PRICE_EXTREME) - (v_num_space * PRICE_PER_TICK);
 
         o_data = update_current_order(price, quantity);
     });
@@ -168,9 +169,9 @@ function draw_grid(dark_left=false, dark_right=false) {
     box = GRID_BOX_SIZE - (edgepad + textpad);
 
     let num_top = NUM_GRID_LINES;
-    let num_bottom = Math.min(NUM_GRID_LINES, Math.ceil(market_price / PRICE_PER_LINE))
+    let num_bottom = Math.min(NUM_GRID_LINES, Math.floor(market_price / PRICE_PER_LINE))
     let num_hor_lines = num_top + 1 + num_bottom
-    let vspace = box / (num_hor_lines);
+    let vspace = box / (num_hor_lines + 1);
 
     let num_vert_line = (2* NUM_GRID_LINES) + 1;
     let hspace = box/(num_vert_line + 1);
