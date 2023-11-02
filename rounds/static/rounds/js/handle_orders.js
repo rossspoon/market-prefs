@@ -17,8 +17,8 @@ function add_orders_to_list(live_data) {
     });
 }
 
-let grid_enabled = true;
-let num_orders = 0;
+let num_buys = 0;
+let num_sells = 0;
 function add_order_to_list(oid, o_info){
     //make the close button TD
     const close_btn_elem = document.createElement("span");
@@ -38,31 +38,21 @@ function add_order_to_list(oid, o_info){
     // Order Details TD
     const o_deats_td = document.createElement("span")
 
-    // Type Span
+    // Type
     const type_span = document.createElement("span");
-    type_span.classList.add('order-details-grid', 'type-col-grid')
     if (isNaN(o_info.type)) {
-        type_span.innerHTML = o_info.type;
+        o_type = o_info.type;
     } else {
-        type_span.innerHTML = (parseInt(o_info.type) === -1) ? 'Buy' : 'Sell';
+        o_type = (parseInt(o_info.type) === -1) ? 'Buy' : 'Sell';
     }
 
     // Quant Span
-    const quant_span = document.createElement("div");
+    const quant_span = document.createElement("span");
     quant_span.classList.add('order-details-grid', 'quant-col-grid');
-    quant_span.innerHTML="&nbsp;"
-    const q_span = document.createElement("span");
-    q_span.classList.add('r_just')
-    q_span.innerHTML = o_info.quantity;
-    quant_span.append(q_span)
-
-    // Shares @ TD
-    const shares_at_span = document.createElement("span");
-    shares_at_span.classList.add('order-details-grid', 'shares-at-col-grid')
-    shares_at_span.innerHTML = "shares @"
+    quant_span.innerHTML = "&nbsp;" + o_info.quantity + " @ ";
 
     // Price TD
-    const price_span = document.createElement("div");
+    const price_span = document.createElement("span");
     price_span.classList.add('order-details-grid', 'price-col-grid')
     price_span.innerHTML="&nbsp;"
     const p_span = document.createElement("span");
@@ -70,38 +60,37 @@ function add_order_to_list(oid, o_info){
     p_span.innerHTML = parseFloat(o_info.price).toFixed(2);
     price_span.append(p_span)
 
-    o_deats_td.append(type_span, quant_span, shares_at_span, price_span)
+    o_deats_td.append(quant_span, price_span)
+
+    // Fulfilled TD
+    if (js_vars.show_notes && o_info.quantity_final>0) {
+        const filled_span = document.createElement("span");
+        filled_span.classList.add("filled-grid")
+        filled_span.innerHTML = "&nbsp; Filled " + o_info.quantity_final;
+        o_deats_td.append(filled_span)
+    }
 
     //assemble order line and append to list
-    let order_elem = document.createElement("div");
+    let order_elem = document.createElement("li");
     order_elem.id = "order_" + oid;
     order_elem.classList.add( 'submitted-order-grid');
     order_elem.append(cancel_span, o_deats_td)//, notes_td, fulfilled_td)
-    $('#order_list_grid').append(order_elem);
 
-    // Disable the form is this is the sixth order
-    num_orders += 1;
-    if (num_orders >= 6){  //show_cancel is true only on the market page.
-        disable_grid();
+    if (o_type.toUpperCase() == 'BUY'){
+        num_buys += 1;
+        $('#buy_orders').append(order_elem);
+    } else {
+        num_sells += 1;
+        $('#sell_orders').append(order_elem);
+    }
+
+    let dark_right = num_buys >= 3;
+    let dark_left = num_sells >= 3;
+    if (dark_left || dark_right) {
+        draw_grid(dark_left=dark_left, dark_right=dark_right);
     }
 }
 
-
-function disable_grid() {
-    grid_enabled = false;
-    let price_grid = document.getElementById('price-grid')
-    if (price_grid){
-        block_grid();
-    }
-}
-
-function enable_grid() {
-    grid_enabled = true;
-    let price_grid = document.getElementById('price-grid')
-    if (price_grid){
-        reset_grid();
-    }
-}
 
 $(document).on('click', ".close-button-grid", function(){
     cancel_order($(this));
@@ -114,17 +103,26 @@ $(document).on('keydown', ".close-button-grid", function(event){
 });
 
 function cancel_order(elem){
-    var raw_id = elem.attr('id');
-    oid = raw_id.substr(raw_id.indexOf('_') +1);
+    const raw_id = elem.attr('id');
+    let oid = raw_id.substr(raw_id.indexOf('_') + 1);
+
+    //determine if this is a buy or sell
+    let parent_id = $('#order_' + oid).parents('.order_col')[0].id
+
     //remove_all_error_messages();
     liveSend({'func': 'delete_order', 'oid': oid});
 
     $("#order_" + oid).detach();
 
-    num_orders -= 1;
-    if (num_orders < 6){
-        enable_grid();
+    //determine which side of the ordergrid to enable
+    if (parent_id == 'buy_box'){
+        num_buys -= 1;
+    } else {
+        num_sells -= 1;
     }
+    let dark_right = num_buys >=3;
+    let dark_left = num_sells >= 3;
+    draw_grid(dark_left=dark_left, dark_right=dark_right);
 }
 
 function process_order_rejection(data) {
