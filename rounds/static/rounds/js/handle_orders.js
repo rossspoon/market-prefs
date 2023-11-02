@@ -1,18 +1,46 @@
+let ALL_ORDERS = new Map();
+
 $(window).on('load', function () {
     // This requests all the orders
     // If the page is reloaded then we need to see any existing orders
     liveSend({'func': 'get_orders_for_player'});
 });
 
+function clear_orders_grid(){
+    //Remove all orders so we can re-add them
+    $('.orders-box-grid li').detach();
+    num_sells = 0;
+    num_buys = 0;
+}
+
+
 function add_form_order_to_list(live_data){
     var oid = live_data.order_id;
-    add_order_to_list(oid, submitted_odata);
+    submitted_odata.oid = oid;
+    ALL_ORDERS.set(""+oid, submitted_odata)
+    fill_order_section();
 }
 
 function add_orders_to_list(live_data) {
     var orders = live_data.orders;
+    ALL_ORDERS.clear();
+
     orders.forEach((o) => {
-        var oid = o.oid
+        oid = o.oid;
+        ALL_ORDERS.set(""+oid, o);
+    });
+
+    fill_order_section();
+}
+
+function fill_order_section(){
+    clear_orders_grid();
+
+    let o_list = Array.from(ALL_ORDERS.values());
+    let o_sort = o_list.sort((a,b) => b.price - a.price)
+
+    o_sort.forEach((o) => {
+        let oid = o.oid
         add_order_to_list(oid, o);
     });
 }
@@ -74,7 +102,7 @@ function add_order_to_list(oid, o_info){
     let order_elem = document.createElement("li");
     order_elem.id = "order_" + oid;
     order_elem.classList.add( 'submitted-order-grid');
-    order_elem.append(cancel_span, o_deats_td)//, notes_td, fulfilled_td)
+    order_elem.append(cancel_span, o_deats_td)
 
     if (o_type.toUpperCase() == 'BUY'){
         num_buys += 1;
@@ -113,6 +141,9 @@ function cancel_order(elem){
     liveSend({'func': 'delete_order', 'oid': oid});
 
     $("#order_" + oid).detach();
+    //Remove the order from the ALL_ORDERS collection
+    ALL_ORDERS.delete(oid);
+
 
     //determine which side of the ordergrid to enable
     if (parent_id == 'buy_box'){
