@@ -521,6 +521,7 @@ def vars_for_market_template(player: Player):
 def vars_for_forecast_template(player: Player):
     ret = standard_vars_for_template(player)
     ret['action_include'] = 'insert_forecast.html'
+    ret['ticks'] = [-100, -80, -60, -40, -20, 0, 20, 40, 60, 80, 100]
     return ret
 
 
@@ -720,7 +721,7 @@ class MarketGridChoice(Page):
 class ForecastPage(Page):
     template_name = 'rounds/MarketPageModular.html'
     form_model = 'player'
-    form_fields = ['f0']
+    form_fields = ['f0', 'f1']
     timer_text = 'Time Left:'
 
     js_vars = get_js_vars_forcast_page

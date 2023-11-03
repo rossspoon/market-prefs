@@ -1,4 +1,40 @@
+<script src="{{ static 'rounds/js/forecast.js' }}"></script>
+<link rel="stylesheet" href="{{ static 'rounds/css/forecast.css' }}">
+
 <div id="forcast-form" class="attention">
-    What do you think the market price will be this period?
-    <div class="ilb lpad">{{ formfield 'f0' label='' }}</div>
+
+    <div class="box-header">Market Price Change Forecast</div>
+
+    <div class="all-fcast">
+    <div class="fcast-box">Change this period:
+        <input type="hidden" name="f0" id="f0">
+        <span class="slidecontainer">
+            <input type="range" min="-100" max="100" value="0" class="slider"  id="sld_curr" target="fore_curr">
+            <div class="dl_ticks">
+                {{ for t in ticks }} <div>-</div> {{ endfor }}
+            </div>
+            <div class="dl_labs">
+                {{ for t in ticks }} <div>{{ t }}</div> {{ endfor }}
+            </div>
+        </span>
+        <span class="forecast-tgt" id="fore_curr"></span>
+    </div>
+
+    {{ if player.round_number != Constants.num_rounds }}
+    <div class="fcast-box">Change next period:
+        <input type="hidden" name="f1" id="f1">
+        <span class="slidecontainer">
+            <input type="range" min="-100" max="100" value="0" class="slider"  id="sld_next" target="fore_next">
+            <div class="dl_ticks">
+                {{ for t in ticks }} <div>-</div> {{ endfor }}
+            </div>
+            <div class="dl_labs">
+                {{ for t in ticks }} <div>{{ t }}</div> {{ endfor }}
+            </div>
+        </span>
+        <span class="forecast-tgt" id="fore_next"></span>
+    </div>
+    {{ endif }}
+    </div>
+
 </div>

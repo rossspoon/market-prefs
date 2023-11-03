@@ -115,19 +115,6 @@
 
 /* Element styles */
 
-/* BEGIN - Forecast Form*/
-#forcast-form{
-    font-size: 1.0em;
-    margin: auto;
-}
-#forcast-form input{
-    width: 100px;
-}
-
-.ilb{
-    display: inline-block;
-}
-/* END - Forecast Form*/
 
 .center {
     margin: auto;
