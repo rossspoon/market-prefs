@@ -2,6 +2,13 @@ import numpy as np
 from itertools import product
 import decimal
 
+import sys
+sys.path.append('..')
+for p in sys.path:
+    print(p)
+
+from common.BinTree import Node
+
 ctx = decimal.getcontext()
 ctx.rounding = decimal.ROUND_HALF_UP
 
@@ -186,25 +193,13 @@ class KLInfo:
 #     p = kli.update_priors(choice[i], q)
 
 
-class Node:
-    def __init__(self, data: dict):
-        self.left = None
-        self.right = None
-        self.data = data
 
-
-    def print_tree(self, show_attr=None):
-        if show_attr:
-            print(self.data.get(show_attr))
-        else:
-            print(self.data)
-
-        if  self.right:
-            self.right.print_tree(show_attr=show_attr)
-        if  self.left:
-            self.left.print_tree(show_attr=show_attr)
-
-
+###  Create the Decision tree
+## starting with a uniform prior
+import os
+print(os.getcwd())
+import json
+import jsonpickle
 
 def run_kli(prior):
     kli = KLInfo(ACTIONS, QUESTIONS, M_values, prior, LIKELIHOODS)
@@ -214,21 +209,44 @@ def run_kli(prior):
 
     return q, p1, p0
 
-d = dict(prior=INIT_PRIOR)
-bin_tree = Node(d)
-node_q = [bin_tree]
-for i in range(15):
+# Build Decision Tree
+node_q = []
+priors_q = []
+
+# initial node
+q, p1, p0 = run_kli(INIT_PRIOR)
+bin_tree = Node(q)
+node_q.append(bin_tree)
+priors_q.append(p1)
+priors_q.append(p0)
+
+for i in range(7):
+    print(i)
+    p1 = priors_q.pop(0)
+    p0 = priors_q.pop(0)
+    q1, pr1, pr0 = run_kli(p1)
+    q0, pl1, pl0 = run_kli(p0)
+
     node = node_q.pop(0)
-    q, p1, p0 = run_kli(node.data.get('prior'))
-    node.data['q'] = q
+    nr = Node(q1)
+    nl = Node(q0)
+    node_q.append(nr)
+    node_q.append(nl)
+    node.right = nr
+    node.left = nl
 
-    if i < 7:
-        r_node = Node(dict(prior=p1))
-        node_q.append(r_node)
-        node.right = r_node
+    priors_q.append(pr1)
+    priors_q.append(pr0)
+    priors_q.append(pl1)
+    priors_q.append(pl0)
 
-        l_node = Node(dict(prior=p0))
-        node_q.append(l_node)
-        node.left = l_node
 
-bin_tree.print_tree(show_attr='q')
+bin_tree.print_tree()
+
+# pickle then to JSON
+json_str = jsonpickle.encode(bin_tree)
+print(json_str)
+
+with open("../common/decision_tree.json", "w") as out:
+    out.write(json_str)
+

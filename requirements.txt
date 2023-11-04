@@ -11,3 +11,4 @@ Jinja2~=2.11.3
 requests
 git+https://github.com/rossspoon/call_market_price
 websockets
+jsonpickle

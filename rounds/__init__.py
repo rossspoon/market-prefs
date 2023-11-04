@@ -9,6 +9,13 @@ import common.SessionConfigFunctions as scf
 from common.ParticipantFuctions import generate_participant_ids, is_button_click
 from otree import database
 import os
+import jsonpickle
+
+#read in and pickle the decision tree for the risk elicitation task
+with open("common/decision_tree.json", "r") as dec_tree:
+    js = dec_tree.read()
+DECISION_TREE = jsonpickle.decode(js)
+DECISION_TREE.print_tree()
 
 NUM_ROUNDS = os.getenv('SSE_NUM_ROUNDS')
 
