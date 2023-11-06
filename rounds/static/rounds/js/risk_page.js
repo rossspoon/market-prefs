@@ -11,7 +11,6 @@ $(window).on('load', function () {
         } else {
             rfield.val(0)
         }
-
     });
 
 });

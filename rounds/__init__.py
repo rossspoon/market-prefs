@@ -1,7 +1,7 @@
 import decimal
 import random
 from collections import defaultdict
-from math import ceil
+from math import ceil, floor
 from rounds.call_market import CallMarket
 from . import tool_tip
 from .models import *
@@ -587,7 +587,7 @@ def vars_for_risk_template(player: Player):
     ret['r_hi'] = 19.25
     ret['r_lo'] = 0.50
 
-    hi_p = random.randint(1,100)
+    hi_p = traverse_dec_tree(player)
     lo_p = 100 - hi_p
 
     ret['hi_prob'] = hi_p
@@ -595,6 +595,24 @@ def vars_for_risk_template(player: Player):
 
     return ret
 
+
+def traverse_dec_tree(player: Player):
+    moves = []
+
+    # On the fourth risk page the player will have made up to 3
+    # choices.  So we are only going to loop through those first three.
+    for i in [1,2,3]:
+        rc = player.field_maybe_none(f"risk_{i}")
+        if rc:
+            moves.append(rc)
+
+    node = DECISION_TREE
+    for move in moves:
+        if move == 1:
+            node = node.right
+        else:
+            node = node.left
+    return floor(float(node.val) * 100)
 
 def get_round_result_messages(player: Player, d: dict):
     messages = []
