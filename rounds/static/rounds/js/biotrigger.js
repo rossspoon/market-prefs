@@ -15,7 +15,7 @@ function send_events(websocket){
     $("#shutdown_button").on('click', function(){
         const event = {
             mtype: 'stop_exp',
-            round_num: 'x',
+            round_num: '-99',
         }
         websocket.send(JSON.stringify(event))
     });
