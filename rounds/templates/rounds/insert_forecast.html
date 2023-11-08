@@ -1,13 +1,14 @@
 <script src="{{ static 'rounds/js/forecast.js' }}"></script>
 <link rel="stylesheet" href="{{ static 'rounds/css/forecast.css' }}">
 
-<div id="forcast-form" class="attention">
+<div id="forcast-form">
 
     <div class="box-header">Market Price Change Forecast</div>
 
     <div class="all-fcast">
     <div class="fcast-box">Change this period:
         <input type="hidden" name="f0" id="f0">
+        {{ formfield_errors 'f0' }}
         <span class="slidecontainer">
             <input type="range" min="-100" max="100" value="0" class="slider"  id="sld_curr" target="fore_curr">
             <div class="dl_ticks">
