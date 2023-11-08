@@ -40,7 +40,7 @@ $(window).on('load', function () {
 
 
     document.addEventListener("keypress", function(e) {
-        if (e.ctrlKey && e.which === 49) {
+        if (e.ctrlKey && e.key === 'j') {
             let sd =  $("#shutdown_button")
             let v =  sd.css('visibility');
             if (v == 'hidden'){
