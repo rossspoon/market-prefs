@@ -613,7 +613,6 @@ def traverse_dec_tree(player: Player):
             node = node.right
         else:
             node = node.left
-            print(f"Going Left:  {node.val}")
     return floor(float(node.val) * 100)
 
 def get_round_result_messages(player: Player, d: dict):
