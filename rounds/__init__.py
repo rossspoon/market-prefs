@@ -87,6 +87,7 @@ def get_js_vars_for_risk(player: Player):
 
     return ret
 
+
 def get_websockets_vars(player: Player, event_type):
     page_name = player.participant._current_page_name
     return dict(
@@ -593,18 +594,6 @@ def vars_for_round_results_template(player: Player):
 
 def vars_for_risk_template(player: Player):
     ret = standard_vars_for_template(player)
-
-    ret['s_hi'] = 10.00
-    ret['s_lo'] = 8.00
-    ret['r_hi'] = 19.25
-    ret['r_lo'] = 0.50
-
-    hi_p = traverse_dec_tree(player)
-    lo_p = 100 - hi_p
-
-    ret['hi_prob'] = hi_p
-    ret['lo_prob'] = lo_p
-
     return ret
 
 
