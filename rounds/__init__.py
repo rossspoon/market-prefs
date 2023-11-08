@@ -75,6 +75,18 @@ def get_js_vars_forcast_page(player: Player):
 def get_js_vars_round_results(player: Player):
     return get_js_vars(player, include_current=True, show_notes=True, show_cancel=False, event_type='rec_stop')
 
+def get_js_vars_for_risk(player: Player):
+    ret =  get_js_vars(player)
+
+    ret['safe_pay'] = ['$10.00', '$8.00']
+    ret['risk_pay'] = ['$19.25', '$0.50']
+
+    hi = traverse_dec_tree(player)
+    lo = 100 - hi
+    ret['pct'] = [hi, lo]
+
+    return ret
+
 def get_websockets_vars(player: Player, event_type):
     page_name = player.participant._current_page_name
     return dict(
@@ -828,6 +840,7 @@ class RiskPage(Page):
     form_fields = ['risk']
     timer_text = 'Time Left:'
 
+    js_vars = get_js_vars_for_risk
     vars_for_template = vars_for_risk_template
     get_timeout_seconds = scf.get_risk_elic_time
     is_displayed = not_displayed_for_simulation

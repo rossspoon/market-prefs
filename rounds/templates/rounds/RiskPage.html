@@ -5,33 +5,19 @@
 <link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
 <link rel="stylesheet" href="{{ static 'rounds/css/risk_page.css' }}">
 
+<script src="{{ static 'js/Chart_4.js' }}"></script>
+<script src="{{ static 'js/chartjs-plugin-datalabels.min.js' }}"></script>
 <script src="{{ static 'rounds/js/risk_page.js' }}"></script>
 
 <input type="hidden" name="risk" id="risk" />
 
 <div class="layout-box">
-    <div id="safe_card" class="elic-card">
-        <div class="elic-choice">
-            <div class="elic-left">${{ s_hi | to2 }}</div>
-            <div class="elic-right">{{ hi_prob }}%</div>
-        </div>
-        <hr/>
-        <div class="elic-choice">
-            <div class="elic-left">${{ s_lo | to2 }}</div>
-            <div class="elic-right">{{ lo_prob }}%</div>
-        </div>
+    <div class="elic-card">
+        <canvas id="safe_card" class="o70"></canvas>
     </div>
 
-    <div id="risky_card" class="elic-card">
-        <div class="elic-choice">
-            <div class="elic-left">${{ r_hi | to2 }}</div>
-            <div class="elic-right">{{ hi_prob }}%</div>
-        </div>
-        <hr/>
-        <div class="elic-choice">
-            <div class="elic-left">${{ r_lo | to2 }}</div>
-            <div class="elic-right">{{ lo_prob }}%</div>
-        </div>
+    <div class="elic-card">
+        <canvas id="risk_card" class="o70"></canvas>
     </div>
 </div>
 {{ if show_next }}

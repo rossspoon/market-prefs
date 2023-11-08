@@ -1,57 +1,38 @@
 /* Main Grid layout */
 .layout-box {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 
-    gap: 250px;
-    width: 75%;
-    margin: auto;
+    width: 100%;
 }
 
 #safe_card {
-    grid-column: 1;
-    grid-row: 1;
     padding-top: 10px;
 }
 
 #risky_card{
-    grid-column: 2;
-    grid-row: 1;
     padding-top: 10px;
 }
 
 
-
 .elic-card {
-    border: 10px solid #0d6efd;
-    border-radius: 15px;
-    padding: 5px;
-    background-color: #f5f5f5;
-    color: #555;
 
     text-align: center;
     font-size: 3em;
 }
 
-.elic-card:hover {
-    border-color: #0051e0;
-    background-color: white;
-    color: black;
+.o70 {
+    opacity: 70%;
+}
+.o100{
+    opacity: 100%;
     cursor: pointer;
 }
-
-.elic-clicked {
-    border-color: forestgreen;
-    background-color: white;
-    color: black;
+.clicked{
+    opacity: 100%;
 }
 
-.elic-clicked:hover {
-    border-color: darkgreen;
-    background-color: white;
-    color: black;
-    cursor: pointer;
-}
 
 .elic-choice div {
     margin-top: 40px;
