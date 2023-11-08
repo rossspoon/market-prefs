@@ -40,15 +40,13 @@
             <p class="very_big"> Please wait for all participants to arrive.  We will begin shortly.</p>
         </div>
     </div>
-    <div class="bottom-row">
-        {{ if show_next }}
-            <div class="bottom-row">
-                <div class="next-button-div">
-                    {{ next_button }}
-                </div>
+    {{ if show_next }}
+        <div class="bottom-row">
+            <div class="next-button-div">
+                {{ next_button }}
             </div>
-        {{ endif}}
-    </div>
+        </div>
+    {{ endif}}
     </div>
 {% endblock %}
 
