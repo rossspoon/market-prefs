@@ -69,10 +69,12 @@ def assign_endowments(subsession):
 
 
 def get_js_vars_forcast_page(player: Player):
-    return get_js_vars(player, show_cancel=False, event_type='page_name')
-
+    return get_js_vars(player, show_cancel=False)
 
 def get_js_vars_round_results(player: Player):
+    return get_js_vars(player, include_current=True, show_notes=True, show_cancel=False)
+
+def get_js_vars_final_results(player: Player):
     return get_js_vars(player, include_current=True, show_notes=True, show_cancel=False, event_type='rec_stop')
 
 def get_js_vars_for_risk(player: Player):
@@ -85,10 +87,12 @@ def get_js_vars_for_risk(player: Player):
     lo = 100 - hi
     ret['pct'] = [hi, lo]
 
+    ws_vars = get_websockets_vars(player)
+    ret.update(ws_vars)
     return ret
 
 
-def get_websockets_vars(player: Player, event_type):
+def get_websockets_vars(player: Player, event_type='page_name'):
     page_name = player.participant._current_page_name
     return dict(
     page_name = page_name,
@@ -97,11 +101,11 @@ def get_websockets_vars(player: Player, event_type):
     label = player.participant.label,
     part_code = player.participant.code,
     )
+#
+# def get_js_vars_fixate(player: Player):
+#     return get_websockets_vars(player, 'fixate')
 
-def get_js_vars_fixate(player: Player):
-    return get_websockets_vars(player, 'fixate')
-
-def get_js_vars(player: Player, include_current=False, show_notes=False, show_cancel=True, event_type='rec_start'):
+def get_js_vars(player: Player, include_current=False, show_notes=False, show_cancel=True, event_type='page_name'):
     # Price History
     group: Group = player.group
     if include_current:
@@ -128,7 +132,13 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
 
     show_next = scf.show_next_button(player)
 
+
+    # get websocket variables
     ws_vars = get_websockets_vars(player, event_type)
+    # Special case.  The first time we get the market page, trigger a record start.
+    if player.round_number == 1 and ws_vars['page_name']=="MarketGridChoice":
+        ws_vars['event_type'] = 'rec_start'
+
     ret = dict(
         labels=list(range(0, Constants.num_rounds + 1)),
         price_data=prices,
@@ -149,7 +159,6 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
 #########################
 # LIVE PAGES FUNCTIONS
 # noinspection DuplicatedCode
-
 
 
 def is_order_valid(player, data, orders_by_type):
@@ -724,12 +733,12 @@ class PreMarketWait(WaitPage):
     after_all_players_arrive = pre_round_tasks
 
 
-class Fixate(Page):
-    get_timeout_seconds = scf.get_fixate_time
-    form_model = 'player'
-
-    # method bindings
-    js_vars = get_js_vars_fixate
+# class Fixate(Page):
+#     get_timeout_seconds = scf.get_fixate_time
+#     form_model = 'player'
+#
+#     # method bindings
+#     js_vars = get_js_vars_fixate
 
 
 class MarketGridChoice(Page):
@@ -857,7 +866,7 @@ class RiskPage4(RiskPage):
 
 
 class FinalResultsPage(Page):
-    js_vars = get_js_vars_round_results
+    js_vars = get_js_vars_final_results
     form_model = 'player'
     timeout_seconds = 120
     timer_text = "Survey starts in:"
@@ -875,7 +884,8 @@ class FinalResultsPage(Page):
         return {'market_bonus': market_bonus,
                 'forecast_bonus': forecast_bonus,
                 'total_pay': participant.payoff_plus_participation_fee(),
-                'is_online': scf.is_online(player)}
+                'is_online': scf.is_online(player),
+                }
 
 
 page_sequence = [PreMarketWait,

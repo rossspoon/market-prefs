@@ -1,0 +1,72 @@
+{{ block title }}
+    Market Summary
+{{ endblock }}
+
+{{ block content }}
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+<script src="{{ static 'rounds/js/price_history.js' }}"></script>
+<script src="{{ static 'rounds/js/biotrigger.js' }}"></script>
+
+<link rel="stylesheet" href="{{ static 'css/global.css' }}">
+<link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
+<link rel="stylesheet" href="{{ static 'rounds/css/final_results_page.css' }}">
+
+<div class="layout-box">
+        <div class="boxed_area vitals">
+            <div class="larger-font">You have completed the market portion of this experiment.</div>
+        </div>
+
+        <div class="chart-box boxed_area">
+            <p class="box-header"> Market History</p>
+            <div class="chart-history-area">
+                <canvas id="gr_price" />
+            </div>
+            <div class="chart-volume-area">
+                <canvas id="gr_volume" />
+            </div>
+        </div>
+
+        <div class="round-result-box boxed_area">
+        <div class="results-layout-box">
+            <div>&nbsp;</div>
+            <div class="results-div larger-font">
+                <p> Your final payment will be:</p>
+
+             <table>
+                <tr>
+                    <td>Participant Code</td>
+                    <td> {{ player.participant.label }}</td>
+                </tr>
+                 <tr>
+                     <td>Participation Fee</td>
+                     <td> {{ session.participation_fee }}</td>
+                 </tr>
+                <tr>
+                    <td>Market Payment</td>
+                    <td> {{ market_bonus }}</td>
+                </tr>
+                 <tr>
+                    <td>Forecast Payment</td>
+                    <td> {{ forecast_bonus }}</td>
+                </tr>
+                <tr>
+                    {{ if is_online }}
+                        <td class="bold-text">Total Payment</td>
+                    {{ else }}
+                        <td class="bold-text">Total Payment (rounded)</td>
+                    {{ endif }}
+                    <td class="bold-text">{{ total_pay }}</td>
+                </tr>
+            </table>
+            </div>
+            <div class="next-button-div">
+                <p class="larger-font">Click Next to take a brief survey:</p>
+                <div class="bottom-right">
+                    {{ next_button }}
+                </div>
+            </div>
+        </div>
+        </div>
+</div>
+{{ endblock }}
