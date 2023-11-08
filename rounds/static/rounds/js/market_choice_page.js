@@ -40,7 +40,8 @@ $(window).on('load', function () {
 
 
     document.addEventListener("keypress", function(e) {
-        if (e.ctrlKey && e.key === 'k') {
+        console.log(e.shiftKey, e.key)
+        if (e.shiftKey && e.key.toLowerCase() === 'k') {
             let sd =  $("#shutdown_button")
             let v =  sd.css('visibility');
             if (v == 'hidden'){
