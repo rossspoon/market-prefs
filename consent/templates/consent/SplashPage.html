@@ -6,31 +6,50 @@
 
 {% block content %}
     <link rel="stylesheet" href="{{ static 'css/global.css' }}">
+    <link rel="stylesheet" href="{{ static 'consent/css/consent_common.css' }}">
+    <script>
+        $(window).on('load', function () {
+            //Set content size to document size.
+            let size_window = function () {
+                let wh = $(window).height();
+                $('.layout-box').css('height', wh);
+            };
+            size_window();
+            $(window).resize(size_window);
 
-    <div class="page_width" style="height: 200px;">
-        <span class="left-side">
-                <img  src="{{ static 'img/vtel.png' }}"/>
-        </span>
-        <span class="right-side">
-                <img  src="{{ static 'consent/img/image001.jpg' }}"/>
-        </span>
-    </div>
-
-
-    <div style="margin: auto; text-align: center">
-        <p class="really_big">Welcome to the market experiment!</p>
-    </div>
-    <div style="margin: auto; text-align: center">
-        <p class="very_big"> Please wait for all participants to arrive.  We will begin shortly.</p>
-    </div>
-
-    {{ if show_next }}
-        <div class="bottom-row">
-            <div class="next-button-div">
-                {{ next_button }}
-            </div>
+            $('.otree-title').detach();
+        });
+    </script>
+    <div class="layout-box">
+    <div class="top-row">
+        <div class="page_width">
+            &nbsp;
+            <span class="left-side">
+                    <img class="top-row-img" src="{{ static 'img/vtel.png' }}"/>
+            </span>
+            <span class="right-side">
+                    <img class="top-row-img" src="{{ static 'consent/img/image001.jpg' }}"/>
+            </span>
         </div>
-    {{ endif}}
+    </div>
+    <div class="main-block">
+        <div style="text-align: center">
+            <p class="really_big">Welcome to the market experiment!</p>
+        </div>
+        <div style="text-align: center">
+            <p class="very_big"> Please wait for all participants to arrive.  We will begin shortly.</p>
+        </div>
+    </div>
+    <div class="bottom-row">
+        {{ if show_next }}
+            <div class="bottom-row">
+                <div class="next-button-div">
+                    {{ next_button }}
+                </div>
+            </div>
+        {{ endif}}
+    </div>
+    </div>
 {% endblock %}
 
 
