@@ -4,9 +4,9 @@
 <div id="forcast-form">
 
     <div class="box-header">Market Price Change Forecast</div>
-
+    <div class="fcast-text">Indicate your prediction for the percentage change in market price...</div>
     <div class="all-fcast">
-    <div class="fcast-box">Change this period:
+    <div class="fcast-box">... this period:
         <input type="hidden" name="f0" id="f0">
         {{ formfield_errors 'f0' }}
         <span class="slidecontainer">
@@ -19,10 +19,12 @@
             </div>
         </span>
         <span class="forecast-tgt" id="fore_curr"></span>
+        <span class="slidecontainer"><span class="r_just" id="fore_curr_plab">&nbsp;</span></span>
+        <span class="forecast-tgt" id="fore_curr_price">&nbsp;</span>
     </div>
 
     {{ if player.round_number != Constants.num_rounds }}
-    <div class="fcast-box">Change next period:
+    <div class="fcast-box">... next period:
         <input type="hidden" name="f1" id="f1">
         <span class="slidecontainer">
             <input type="range" min="-100" max="100" value="0" class="slider"  id="sld_next" target="fore_next">
@@ -34,6 +36,8 @@
             </div>
         </span>
         <span class="forecast-tgt" id="fore_next"></span>
+        <span class="slidecontainer"><span class="r_just" id="fore_next_plab">&nbsp</span></span>
+        <span class="forecast-tgt" id="fore_next_price">&nbsp;</span>
     </div>
     {{ endif }}
     </div>
