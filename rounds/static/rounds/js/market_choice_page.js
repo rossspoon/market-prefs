@@ -4,6 +4,7 @@ $(window).on('load', function () {
     $('.debug-info').detach();
     $('#_otree-title').detach();
     $('.input-group-text').detach();
+    $('.container ~ br').detach();
 
     if (js_vars.show_notes){
         $('#notes-col').removeClass('hidden')
