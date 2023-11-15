@@ -650,7 +650,7 @@ def traverse_dec_tree(player: Player):
 
     node = DECISION_TREE
     for move in moves:
-        if move == 1:
+        if move == 0:
             node = node.right
         else:
             node = node.left
