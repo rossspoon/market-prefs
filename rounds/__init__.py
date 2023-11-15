@@ -10,6 +10,7 @@ from common.ParticipantFuctions import generate_participant_ids, is_button_click
 from otree import database
 import os
 import jsonpickle
+import numpy as np
 
 #read in and pickle the decision tree for the risk elicitation task
 with open("common/decision_tree.json", "r") as dec_tree:
@@ -18,7 +19,6 @@ DECISION_TREE = jsonpickle.decode(js)
 DECISION_TREE.print_tree()
 
 NUM_ROUNDS = os.getenv('SSE_NUM_ROUNDS')
-
 
 class Constants(BaseConstants):
     name_in_url = 'rounds'
@@ -537,6 +537,14 @@ def get_short_message(limit, close, debt, delay, round_number):
     return class_attr, msg
 
 
+def to_mult_10(x, up=True):
+    d = 10 - x%10
+    if up:
+        return x+ d
+    else:
+        return x - x%10
+
+
 def vars_for_market_template(player: Player):
     ret = standard_vars_for_template(player)
     ret['messages'] = get_messages(player, ret)
@@ -549,8 +557,32 @@ def vars_for_market_template(player: Player):
 
 def vars_for_forecast_template(player: Player):
     ret = standard_vars_for_template(player)
+    
+    mp = int(ret['market_price'])
+    upper_lim = mp + 100
+    lower_lim = max(1, mp-100)
+    tick_lower = to_mult_10(lower_lim, up=False)
+    tick_upper = to_mult_10(upper_lim, up=True)
+    
     ret['action_include'] = 'insert_forecast.html'
-    ret['ticks'] = [-100, -80, -60, -40, -20, 0, 20, 40, 60, 80, 100]
+    ret['ticks'] = list(np.arange(tick_lower, tick_upper +1, 10))
+    ret['lo'] = tick_lower
+    ret['hi'] = tick_upper
+    ret['mp'] = mp
+    
+    
+    labels = ['This period', 'Next period', f'Period {player.round_number + 2}', f'Period {player.round_number +3}']
+    
+    #determine the number of labels
+    rn = player.round_number
+    all_rounds = Constants.num_rounds
+    num_sliders = min(4, all_rounds-rn + 1)
+    
+    # set up the dict that controls sliders
+    sections = [dict(label=lab, f=f'f{i}', tgt=f'tgt_{i}') for i, lab in enumerate(labels[:num_sliders])]
+    ret['inputs'] = sections
+    
+    
     return ret
 
 
@@ -756,7 +788,7 @@ class MarketGridChoice(Page):
 class ForecastPage(Page):
     template_name = 'rounds/MarketPageModular.html'
     form_model = 'player'
-    form_fields = ['f0', 'f1']
+    form_fields = ['f0', 'f1', 'f2', 'f3']
     timer_text = 'Time Left:'
 
     js_vars = get_js_vars_forcast_page

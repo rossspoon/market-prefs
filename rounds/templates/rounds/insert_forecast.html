@@ -4,42 +4,24 @@
 <div id="forcast-form">
 
     <div class="box-header">Market Price Change Forecast</div>
-    <div class="fcast-text">Indicate your prediction for the percentage change in market price...</div>
+    <div class="fcast-text">Indicate your prediction for market price...</div>
+    
     <div class="all-fcast">
-    <div class="fcast-box">... this period:
-        <input type="hidden" name="f0" id="f0">
-        {{ formfield_errors 'f0' }}
-        <span class="slidecontainer">
-            <input type="range" min="-100" max="100" value="0" class="slider"  id="sld_curr" target="fore_curr">
-            <div class="dl_ticks">
-                {{ for t in ticks }} <div>-</div> {{ endfor }}
-            </div>
-            <div class="dl_labs">
-                {{ for t in ticks }} <div>{{ t }}</div> {{ endfor }}
-            </div>
-        </span>
-        <span class="forecast-tgt" id="fore_curr"></span>
-        <span class="slidecontainer"><span class="r_just" id="fore_curr_plab">&nbsp;</span></span>
-        <span class="forecast-tgt" id="fore_curr_price">&nbsp;</span>
+        {{ for d in inputs }}
+        <div class="fcast-box"> {{ d.label }}:
+            <input type="hidden" name="{{ d.f }}" id="{{ d.f }}">
+            {{ formfield_errors d.f }}
+            <span class="slidecontainer">
+                <input type="range" min="{{ lo }}" max="{{ hi }}" value="{{ mp }}" class="slider"  id="sld_curr" target="{{ d.tgt }}">
+                <div class="dl_ticks">
+                    {{ for t in ticks }} <div>-</div> {{ endfor }}
+                </div>
+                <div class="dl_labs">
+                    {{ for t in ticks }} <div>{{ t }}</div> {{ endfor }}
+                </div>
+            </span>
+            <span class="forecast-tgt" id="{{ d.tgt }}"></span>
+        </div>
+        {{ endfor }}
     </div>
-
-    {{ if player.round_number != Constants.num_rounds }}
-    <div class="fcast-box">... next period:
-        <input type="hidden" name="f1" id="f1">
-        <span class="slidecontainer">
-            <input type="range" min="-100" max="100" value="0" class="slider"  id="sld_next" target="fore_next">
-            <div class="dl_ticks">
-                {{ for t in ticks }} <div>-</div> {{ endfor }}
-            </div>
-            <div class="dl_labs">
-                {{ for t in ticks }} <div>{{ t }}</div> {{ endfor }}
-            </div>
-        </span>
-        <span class="forecast-tgt" id="fore_next"></span>
-        <span class="slidecontainer"><span class="r_just" id="fore_next_plab">&nbsp</span></span>
-        <span class="forecast-tgt" id="fore_next_price">&nbsp;</span>
-    </div>
-    {{ endif }}
-    </div>
-
 </div>

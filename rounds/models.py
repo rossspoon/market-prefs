@@ -151,8 +151,11 @@ class Player(BasePlayer):
     shares_result = models.IntegerField()
 
     # Forecasting Item
-    f0 = models.IntegerField(blank=True, min=-100, max=100)
-    f1 = models.IntegerField(blank=True, min=-100, max=100)
+    f0 = models.IntegerField(blank=True)
+    f1 = models.IntegerField(blank=True)
+    f2 = models.IntegerField(blank=True)
+    f3 = models.IntegerField(blank=True)
+    
     forecast_error = models.CurrencyField()
     forecast_reward = models.CurrencyField(initial=0)
 
