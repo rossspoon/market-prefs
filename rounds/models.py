@@ -77,6 +77,8 @@ class Group(BaseGroup):
 
     float = models.IntegerField()
     short = models.IntegerField()
+    
+    is_practice = models.BooleanField(initial=False)
 
     def in_round_or_none(self, round_number):
         try:

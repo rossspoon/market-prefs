@@ -22,6 +22,15 @@ $(window).on('load', function () {
     let ctx_risk = document.getElementById('risk_card').getContext('2d');
     let risk_pie = make_chart(ctx_risk, js_vars.pct, js_vars.risk_pay);
     CHARTS.push(risk_pie);
+    
+    
+        
+    //Add practice page background
+    if (js_vars.is_practice) {
+        console.log("PRACTICE")
+        $('.otree-body').addClass('practice-bg');
+        $('._otree-content, .otree-title').css('background-color', '#fafaff')
+    }
 
 });
 

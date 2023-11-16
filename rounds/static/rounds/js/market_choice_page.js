@@ -30,6 +30,11 @@ $(window).on('load', function () {
     }
 
     set_tool_tips();
+    
+    //Add practice page background
+    if (js_vars.is_practice) {
+        $('body').addClass('practice-bg');
+    }
 
     ///////////////////////////
     // EVENT HANDLERS

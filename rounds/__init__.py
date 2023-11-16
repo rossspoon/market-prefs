@@ -19,14 +19,29 @@ DECISION_TREE = jsonpickle.decode(js)
 DECISION_TREE.print_tree()
 
 NUM_ROUNDS = os.getenv('SSE_NUM_ROUNDS')
+NUM_PRACTICE_ROUNDS = os.getenv('SSE_NUM_PRACTICE_ROUNDS')
+
 
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
-    if NUM_ROUNDS:
-        num_rounds = int(NUM_ROUNDS)
+    
+    if NUM_PRACTICE_ROUNDS:
+        num_practice = int(NUM_PRACTICE_ROUNDS)
     else:
-        num_rounds = 50
+        num_practice = 3
+    
+    if NUM_ROUNDS:
+        num_rounds = int(NUM_ROUNDS) + num_practice
+    else:
+        num_rounds = 50 + num_practice
+
+
+# determine which rounds are practice by the setting is_practice on the group objects
+def creating_session(subsession: Subsession):
+    if subsession.round_number <= Constants.num_practice:
+        for g in subsession.get_groups():
+            g.is_practice = True
 
 
 # assign treatments
@@ -108,6 +123,11 @@ def get_js_vars_fixate(player: Player):
 
 
 def get_js_vars(player: Player, include_current=False, show_notes=False, show_cancel=True, event_type='page_name'):
+
+    # determine if these are practice sessions
+    is_practice = player.group.is_practice
+    
+    
     # Price History
     group: Group = player.group
     if include_current:
@@ -125,6 +145,18 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
     else:
         prices = [init_price] + [g.price for g in groups]
         volumes = [0] + [g.volume for g in groups]
+       
+    # show practice rounds?
+    npract = Constants.num_practice
+    if is_practice:
+        labels = list(range(0, npract + 1))
+        prices = prices[:npract+1]
+        volumes = volumes[:npract+1]
+    else:
+        labels = list(range(0, Constants.num_rounds - npract + 1))
+        prices = prices[npract+1:]
+        volumes = volumes[npract+1:]
+        
 
     # Error Codes
     error_codes = {e.value: e.to_dict() for e in OrderErrorCode}
@@ -141,8 +173,9 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
     if player.round_number == 1 and ws_vars['page_name']=="MarketGridChoice":
         ws_vars['event_type'] = 'rec_start'
 
+
     ret = dict(
-        labels=list(range(0, Constants.num_rounds + 1)),
+        labels=labels,
         price_data=prices,
         volume_data=volumes,
         num_periods=Constants.num_rounds,
@@ -153,6 +186,7 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
         market_price_str=mp_str,
         tt=tool_tip.get_tool_tip_data(player),
         show_next=show_next,
+        is_practice = is_practice,
     )
     ret.update(ws_vars)
     return ret
@@ -436,6 +470,12 @@ def standard_vars_for_template(player: Player):
     ret['attn_cls'] = ''
     ret['show_pop_up'] = False
     ret['num_rounds_left'] = 99
+    
+    # determine if these are practice sessions
+    is_practice = player.group.is_practice
+    ret['real_rn'] = player.round_number if is_practice else player.round_number - Constants.num_practice
+
+    ret['is_practice'] = is_practice
 
     return ret
 

@@ -20,7 +20,7 @@
         <div class="vitals-grid boxed_area">
             <ul>
                 <li> <div id="timer_box"></div></li>
-                <li> Period: {{ player.round_number }}
+                <li> Period: {{ real_rn }}
                      <span class="btn-look-alike" id="shutdown_button">s</span>
                 </li>
                 {{ if show_next }}
@@ -34,7 +34,7 @@
 
         <div class="chart-box-grid boxed_area">
             <div class="chart-layout">
-                <div class="chart-header-area-module"><p class="box-header lpad">Market History</p></div>
+                <div class="chart-header-area-module"><p class="box-header lpad">Market History {{if is_practice}} (Practice Round) {{endif}}</p></div>
                 <div class="chart-history-area-module">
                     <canvas id="gr_price"/>
                 </div>
