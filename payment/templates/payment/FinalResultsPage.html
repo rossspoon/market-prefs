@@ -28,6 +28,9 @@
                     <td class="bold-text">{{ total_pay }}</td>
                 </tr>
             </table>
+            
+            <div class="centered pay-note">If you came to the experiment from <em>prolific.co</em>, <br>please click <a href="{{ prolific_completion_url }}">here</a> to complete the study.</div>
+
             {{ if is_online }}
                 {{ if total_bonus > 0 }}
                     <p>A bonus payment of {{ total_bonus }} will be made through
@@ -64,6 +67,7 @@
             <span class="really_big"> {{ player.participant.label }}</span>
         {{ endif }}
     </div>
+    
 
     </div>
 {% endblock %}

@@ -72,7 +72,10 @@ class Subsession(BaseSubsession):
             show_pdf = False
             pdf = ""
 
-        return {'players': player_data, 'total': total, 'average': average, 'show_pdf': show_pdf, 'pdf': pdf}
+        # prolific completion URL:
+        url = subsession.session.vars.get('prolific_completion_url')
+
+        return {'players': player_data, 'total': total, 'average': average, 'show_pdf': show_pdf, 'pdf': pdf, 'comp_url': url}
 
 
 def to_variable_dict(player: BasePlayer):
