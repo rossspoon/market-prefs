@@ -101,9 +101,11 @@ def get_websockets_vars(player: Player, event_type='page_name'):
     label = player.participant.label,
     part_code = player.participant.code,
     )
-#
-# def get_js_vars_fixate(player: Player):
-#     return get_websockets_vars(player, 'fixate')
+
+
+def get_js_vars_fixate(player: Player):
+    return get_websockets_vars(player, 'fixate')
+
 
 def get_js_vars(player: Player, include_current=False, show_notes=False, show_cancel=True, event_type='page_name'):
     # Price History
@@ -765,12 +767,12 @@ class PreMarketWait(WaitPage):
     after_all_players_arrive = pre_round_tasks
 
 
-# class Fixate(Page):
-#     get_timeout_seconds = scf.get_fixate_time
-#     form_model = 'player'
-#
-#     # method bindings
-#     js_vars = get_js_vars_fixate
+class Fixate(Page):
+    get_timeout_seconds = scf.get_fixate_time
+    form_model = 'player'
+
+    # method bindings
+    js_vars = get_js_vars_fixate
 
 
 class MarketGridChoice(Page):
@@ -921,11 +923,14 @@ class FinalResultsPage(Page):
 
 
 page_sequence = [PreMarketWait,
-                 # Fixate,
+                 Fixate,
                  MarketGridChoice,
+                 Fixate,
                  ForecastPage,
+                 Fixate,
                  MarketWaitPage,
                  RoundResultsPage,
+                 Fixate,
                  RiskWaitPage,
                  RiskPage1,
                  RiskPage2,
