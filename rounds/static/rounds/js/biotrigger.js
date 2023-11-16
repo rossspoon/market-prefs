@@ -6,6 +6,7 @@ async function sendPageEvent(websocket) {
         round_num: js_vars.rnd,
         p_label: js_vars.label,
         participant: js_vars.part_code,
+        is_practice: js_vars.is_practice,
     }
 
     websocket.send(JSON.stringify(event))
