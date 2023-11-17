@@ -14,6 +14,10 @@
     grid-row: 1;
     padding-top: 10px;
     font-weight: 500;
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
 .chart-box-grid{
@@ -72,16 +76,9 @@
 }
 /* END - Chart Layout*/
 
-
-.vitals-grid ul {
-    display: inline;
-    list-style-type: none;
-}
-.vitals-grid li {
-    float: left;
-    width: 48%;
+.vitals-grid span {
     text-align: center;
-    font-size: 1.25em;
+    font-size: 1.1em;
 }
 
 /* Secondary Layout */

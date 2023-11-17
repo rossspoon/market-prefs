@@ -18,18 +18,17 @@
 
 <div class="layout-box-grid">
         <div class="vitals-grid boxed_area">
-            <ul>
-                <li> <div id="timer_box"></div></li>
-                <li> Period: {{ real_rn }}
+                <span> <div id="timer_box"></div></span>
+                <span style="font-size: 1.4em"> Period: {{ real_rn }}
                      <span class="btn-look-alike" id="shutdown_button">s</span>
-                </li>
+                </span>
                 {{ if show_next }}
-               <li>
-                    <span class="ilb">{{ next_button }}</span>
-                </li>
+               <span style="margin-top: -5px;">
+                    {{ next_button }}
+                </span>
                 {{ endif }}
 
-            </ul>
+            
         </div>
 
         <div class="chart-box-grid boxed_area">
