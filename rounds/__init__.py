@@ -110,13 +110,17 @@ def get_js_vars_for_risk(player: Player):
 
 
 def get_websockets_vars(player: Player, event_type='page_name'):
+    # determine if these are practice sessions
+    is_practice = player.group.is_practice
     page_name = player.participant._current_page_name
+    
     return dict(
     page_name = page_name,
     event_type = event_type,
     rnd = player.round_number,
     label = player.participant.label,
     part_code = player.participant.code,
+    is_practice = is_practice,
     )
 
 
