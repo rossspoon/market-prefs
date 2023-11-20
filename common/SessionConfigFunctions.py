@@ -22,6 +22,7 @@ SK_FORECAST_REWARD = 'forecast_reward'
 SK_MARKET_TIME = 'market_time'
 SK_FIXATE_TIME = 'fixate_time'
 SK_RISK_ELIC_TIME = 'risk_elic_time'
+SK_PRACTICE_TIME = 'practice_time'
 SK_FORECAST_TIME = 'forecast_time'
 SK_SUMMARY_TIME = 'summary_time'
 SK_ENDOW_STOCK = 'endow_stock'
@@ -217,6 +218,11 @@ def get_forecast_time(obj):
 def get_summary_time(obj):
     config = ensure_config(obj)
     return get_item_as_int(config, SK_SUMMARY_TIME, return_none=True)
+
+
+def get_practice_time(obj):
+    config = ensure_config(obj)
+    return get_item_as_int(config, SK_PRACTICE_TIME, return_none=True)
 
 
 def get_endow_stock(obj):

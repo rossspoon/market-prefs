@@ -25,6 +25,7 @@ NUM_PRACTICE_ROUNDS = os.getenv('SSE_NUM_PRACTICE_ROUNDS')
 class Constants(BaseConstants):
     name_in_url = 'rounds'
     players_per_group = None
+    num_market_rounds = 30
     
     if NUM_PRACTICE_ROUNDS:
         num_practice = int(NUM_PRACTICE_ROUNDS)
@@ -32,9 +33,10 @@ class Constants(BaseConstants):
         num_practice = 3
     
     if NUM_ROUNDS:
+        num_market_rounds = int(NUM_ROUNDS)
         num_rounds = int(NUM_ROUNDS) + num_practice
     else:
-        num_rounds = 50 + num_practice
+        num_rounds = 30 + num_practice
 
 
 # determine which rounds are practice by the setting is_practice on the group objects
@@ -476,6 +478,7 @@ def standard_vars_for_template(player: Player):
     ret['real_rn'] = player.round_number if is_practice else player.round_number - Constants.num_practice
 
     ret['is_practice'] = is_practice
+    ret['num_practice'] = Constants.num_practice
 
     return ret
 
@@ -962,7 +965,29 @@ class FinalResultsPage(Page):
                 }
 
 
+class PracticeStartPage(Page):
+    get_timeout_seconds = scf.get_practice_time
+    vars_for_template = standard_vars_for_template
+    js_vars = get_js_vars
+
+    @staticmethod
+    def is_displayed(player: Player):
+        return player.round_number == 1
+
+
+class PracticeEndPage(Page):
+    get_timeout_seconds = scf.get_practice_time
+    vars_for_template = standard_vars_for_template
+    js_vars = get_js_vars
+
+    @staticmethod
+    def is_displayed(player: Player):
+        return player.round_number == Constants.num_practice + 1
+
+
 page_sequence = [PreMarketWait,
+                 PracticeStartPage,
+                 PracticeEndPage,
                  Fixate,
                  MarketGridChoice,
                  Fixate,

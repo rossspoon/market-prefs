@@ -114,6 +114,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     fixate_time=2,
     forecast_time=20,
     summary_time=10,
+    practice_time=15,
     risk_elic_time=5,
     show_next=False,
     is_prolific=False,
