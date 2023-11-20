@@ -3,6 +3,7 @@ from enum import Enum
 from otree.api import *
 from otree.common import InvalidRoundError
 
+
 import common.SessionConfigFunctions as scf
 
 
@@ -90,6 +91,12 @@ class Group(BaseGroup):
         # Get the market Price of the last period
         round_number = self.round_number
         last_group = self.in_round_or_none(round_number - 1)
+        
+        # if is first non-practice round, treat this as the first round
+        # Importing Constants here to avoid circular references.
+        from . import Constants
+        if round_number == Constants.num_practice + 1:
+            last_group = None
 
         if last_group:
             return last_group.price

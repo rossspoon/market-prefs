@@ -4,7 +4,7 @@ from collections import defaultdict
 from math import ceil, floor
 from rounds.call_market import CallMarket
 from . import tool_tip
-from .models import *
+from .models import Player, Group, Order, OrderErrorCode, OrderType, cu, Page, WaitPage, BaseSubsession, BaseConstants, Subsession
 import common.SessionConfigFunctions as scf
 from common.ParticipantFuctions import generate_participant_ids, is_button_click
 from otree import database
@@ -49,7 +49,7 @@ def creating_session(subsession: Subsession):
 # assign treatments
 def assign_endowments(subsession):
     # only set up endowments in the first round
-    if subsession.round_number != 1:
+    if subsession.round_number != 1 and subsession.round_number != Constants.num_practice + 1:
         return
 
     generate_participant_ids(subsession)
@@ -124,6 +124,7 @@ def get_js_vars_fixate(player: Player):
     return get_websockets_vars(player, 'fixate')
 
 
+
 def get_js_vars(player: Player, include_current=False, show_notes=False, show_cancel=True, event_type='page_name'):
 
     # determine if these are practice sessions
@@ -156,8 +157,8 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
         volumes = volumes[:npract+1]
     else:
         labels = list(range(0, Constants.num_rounds - npract + 1))
-        prices = prices[npract+1:]
-        volumes = volumes[npract+1:]
+        prices = [init_price] + prices[npract+1:]
+        volumes = [0] + volumes[npract+1:]
         
 
     # Error Codes
@@ -264,7 +265,7 @@ def is_order_form_valid(data):
     raw_quant = data['quantity']
 
     error_code = 0
-    more_price_quant_checks = True
+    #more_price_quant_checks = True
 
     # # Checks for raw length
     # if len(raw_price) > 10:
@@ -534,7 +535,7 @@ def get_debt_message(limit, close, debt, delay, round_number):
 
     if limit < debt <= close:
         class_attr = "alert-warning"
-        msg = f"""<p>Warning:  The the amount of CASH that you have is getting close to your borrowing limit.
+        msg = """<p>Warning:  The the amount of CASH that you have is getting close to your borrowing limit.
                 This might have happened because the value of you STOCK holdings has decreased.  You are advised
                 to sell STOCK to decrease your debt, to avoid an automatic sell.</p>
                 """
@@ -562,7 +563,7 @@ def get_short_message(limit, close, debt, delay, round_number):
     # Normal condition
     if limit < debt <= close:
         class_attr = "alert-warning"
-        msg = f"""<p>Warning:  The the value of you shorted STOCK is getting close to your limit.
+        msg = """<p>Warning:  The the value of you shorted STOCK is getting close to your limit.
                 This might have happened because the value of you STOCK price has increased.  You are advised
                 to buy STOCK to decrease your debt, to avoid an automatic buy.</p>
                 """
@@ -683,6 +684,11 @@ def vars_for_risk_template(player: Player):
     return ret
 
 
+def vars_for_practice(player: Player):
+    return scf.ensure_config(player)
+    
+
+
 def traverse_dec_tree(player: Player):
     moves = []
 
@@ -714,22 +720,22 @@ def get_round_result_messages(player: Player, d: dict):
     messages.append(dict(class_attr='result-msg', msg=msg))
 
     # Determine the "you bought/sold" message
-    which = "bought" if player.trans_cost < 0 else "sold"
+    #which = "bought" if player.trans_cost < 0 else "sold"
     quant = player.shares_transacted
-    s = "s" if quant > 1 else ""
+    #s = "s" if quant > 1 else ""
 
     if quant == 0:
-        msg = f"You did not trade any shares this period."
+        msg = "You did not trade any shares this period."
     else:
-        msg = f"You {which} {abs(quant)} share{s} at {d.get('market_price')}"
+        msg = "You {which} {abs(quant)} share{s} at {d.get('market_price')}"
     messages.append(dict(class_attr='result-msg', msg=msg))
 
 
     # Bankrupt
     if d.get('bankrupt'):
-        msg = f"You are now bankrupt and will be unable to participate the in market.  You will be directed to the" \
-              f" survey portion of the experiment.  Afterward you will be able to collect your $10.00 participation" \
-              f" fee plus any forecast bonus that you earned during the experiment."
+        msg = "You are now bankrupt and will be unable to participate the in market.  You will be directed to the" \
+              " survey portion of the experiment.  Afterward you will be able to collect your $10.00 participation" \
+              " fee plus any forecast bonus that you earned during the experiment."
         messages.append(dict(class_attr='alert-danger', msg=msg))
 
     return messages
@@ -744,7 +750,9 @@ def pre_round_tasks(group: Group):
     # And copy previous round results to the current player object
     for p in group.get_players():
         # Copy results from the previous player
-        p.copy_results_from_previous_round()
+        # Don't copy previous results for the first real market round.
+        if p.round_number != Constants.num_practice + 1:
+            p.copy_results_from_previous_round()
 
         # update margin violations
         p.determine_auto_trans_status()
@@ -967,8 +975,8 @@ class FinalResultsPage(Page):
 
 class PracticeStartPage(Page):
     get_timeout_seconds = scf.get_practice_time
-    vars_for_template = standard_vars_for_template
-    js_vars = get_js_vars
+    vars_for_template = vars_for_practice
+    js_vars = get_websockets_vars
 
     @staticmethod
     def is_displayed(player: Player):
@@ -977,17 +985,17 @@ class PracticeStartPage(Page):
 
 class PracticeEndPage(Page):
     get_timeout_seconds = scf.get_practice_time
-    vars_for_template = standard_vars_for_template
-    js_vars = get_js_vars
+    vars_for_template = vars_for_practice
+    js_vars = get_websockets_vars
 
     @staticmethod
     def is_displayed(player: Player):
         return player.round_number == Constants.num_practice + 1
 
 
-page_sequence = [PreMarketWait,
-                 PracticeStartPage,
+page_sequence = [PracticeStartPage,
                  PracticeEndPage,
+                 PreMarketWait,
                  Fixate,
                  MarketGridChoice,
                  Fixate,
