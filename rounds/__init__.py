@@ -92,7 +92,7 @@ def get_js_vars_round_results(player: Player):
     return get_js_vars(player, include_current=True, show_notes=True, show_cancel=False)
 
 def get_js_vars_final_results(player: Player):
-    return get_js_vars(player, include_current=True, show_notes=True, show_cancel=False, event_type='rec_stop')
+    return get_js_vars(player, include_current=True, show_notes=True, show_cancel=False, event_type='stop_exp')
 
 def get_js_vars_for_risk(player: Player):
     ret =  get_js_vars(player)
