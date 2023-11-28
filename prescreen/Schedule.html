@@ -16,7 +16,7 @@
     <em>Mturk</em>
     {{ endif }}.
         Click "Next" to confirm your choices.</p>
-    <p> All time are in Eastern Daylight Time please plan accordingly.</p>
+    <p> All times are in Pacific Standard Time please plan accordingly.</p>
     <ul>
     {{ for f in form }}
         <li>
@@ -26,7 +26,7 @@
             {{ else }}
                 {{ f | te2 }}
             {{ endif }}
-            EDT</span></span>
+            PST</span></span>
         </li>
     {{ endfor }}
     </ul>
