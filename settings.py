@@ -64,6 +64,16 @@ SESSION_CONFIGS = [
         app_sequence=['prescreen'],
         num_demo_participants=1,
 
+        slot_01='',
+        slot_02='',
+        slot_03='',
+        slot_04='',
+        slot_05='',
+        slot_06='',
+        slot_07='',
+        slot_08='',
+        slot_09='',
+        slot_10='',
     )
     , dict(
         name='landing',
