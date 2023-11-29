@@ -13,10 +13,10 @@
             {{ formfield_errors d.f }}
             <span class="slidecontainer">
                 <input type="range" min="{{ lo }}" max="{{ hi }}" value="{{ mp }}" class="slider"  id="sld_curr" target="{{ d.tgt }}">
-                <div class="dl_ticks">
+                <div class="dl_ticks unselectable">
                     {{ for t in ticks }} <div>-</div> {{ endfor }}
                 </div>
-                <div class="dl_labs">
+                <div class="dl_labs unselectable">
                     {{ for t in ticks }} <div>{{ t }}</div> {{ endfor }}
                 </div>
             </span>
