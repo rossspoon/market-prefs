@@ -612,8 +612,11 @@ def vars_for_forecast_template(player: Player):
     ret = standard_vars_for_template(player)
     
     mp = int(ret['market_price'])
-    upper_lim = mp + 100
-    lower_lim = max(1, mp-100)
+    
+    #forecast range
+    fcast_range = ret['forecast_range']
+    upper_lim = mp + fcast_range
+    lower_lim = max(1, mp-fcast_range)
     tick_lower = to_mult_10(lower_lim, up=False)
     tick_upper = to_mult_10(upper_lim, up=True)
     
@@ -623,8 +626,8 @@ def vars_for_forecast_template(player: Player):
     ret['hi'] = tick_upper
     ret['mp'] = mp
     
-    
-    labels = ['This period', 'Next period', f'Period {player.round_number + 2}', f'Period {player.round_number +3}']
+    rn = player.round_number
+    labels = [f'This period ({rn})', f'Next period ({rn +1})', f'Period {rn + 2}', f'Period {rn +3}']
     
     #determine the number of labels
     rn = player.round_number

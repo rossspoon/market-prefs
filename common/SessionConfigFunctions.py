@@ -19,6 +19,7 @@ SK_AUTO_TRANS_DELAY = 'auto_trans_delay'
 SK_FLOAT_RATIO_CAP = 'float_ratio_cap'
 SK_FORECAST_THOLD = 'forecast_thold'
 SK_FORECAST_REWARD = 'forecast_reward'
+SK_FORECAST_RANGE = 'forecast_range'
 SK_MARKET_TIME = 'market_time'
 SK_FIXATE_TIME = 'fixate_time'
 SK_RISK_ELIC_TIME = 'risk_elic_time'
@@ -193,6 +194,11 @@ def get_forecast_thold(obj):
 def get_forecast_reward(obj):
     config = ensure_config(obj)
     return get_item_as_int(config, SK_FORECAST_REWARD)
+
+
+def get_forecast_range(obj):
+    config = ensure_config(obj)
+    return get_item_as_int(config, SK_FORECAST_RANGE)
 
 
 def get_market_time(obj):
