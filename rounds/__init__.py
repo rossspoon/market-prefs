@@ -38,6 +38,9 @@ class Constants(BaseConstants):
     else:
         num_rounds = 30 + num_practice
 
+print(f"Number of Rounds: {Constants.num_rounds}")
+print(f"Number of Practice Rounds: {Constants.num_practice}")
+print(f"Number of Market Rounds: {Constants.num_rounds - Constants.num_practice}")
 
 # determine which rounds are practice by the setting is_practice on the group objects
 def creating_session(subsession: Subsession):
@@ -724,14 +727,14 @@ def get_round_result_messages(player: Player, d: dict):
     messages.append(dict(class_attr='result-msg', msg=msg))
 
     # Determine the "you bought/sold" message
-    #which = "bought" if player.trans_cost < 0 else "sold"
+    which = "bought" if player.trans_cost < 0 else "sold"
     quant = player.shares_transacted
-    #s = "s" if quant > 1 else ""
+    s = "s" if quant > 1 else ""
 
     if quant == 0:
         msg = "You did not trade any shares this period."
     else:
-        msg = "You {which} {abs(quant)} share{s} at {d.get('market_price')}"
+        msg = f"You {which} {abs(quant)} share{s} at {d.get('market_price')}"
     messages.append(dict(class_attr='result-msg', msg=msg))
 
 
