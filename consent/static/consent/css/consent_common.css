@@ -3,7 +3,7 @@
 .layout-box {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr 4fr 1fr;
+    grid-template-rows: 120px auto 50px;
     gap: 10px;
 }
 .top-row{
@@ -18,7 +18,14 @@
     grid-row: 2;
     margin: auto;
     font-size: 1.5em;
+    line-height: 0.8;
+    height: 100%;
+    
+    display: flex;
+    justify-content: space-around;
+    flex-direction: column;
 }
+
 
 li {
     font-style: italic;
