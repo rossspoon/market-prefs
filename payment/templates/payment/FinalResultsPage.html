@@ -9,6 +9,7 @@
     <div class="layout-box">
     <div class="top-row">
         <div class="centered">
+            
             <p>Your earnings for this session are as follows:</p>
             <table>
                 <tr>
@@ -29,9 +30,15 @@
                 </tr>
             </table>
             
-            <div class="centered pay-note">Please fill out a breif post-experiment survey,  <a href="https://forms.gle/9zvG89XF1sAqAE869">here</a> to complete the study.</div>
+            <p> Your three-digit identifier is:  <b>{{ player.participant.label }}</b></p>
+            <p> You will be asked to provide it in the following survey.  It should be prefilled, but in case of a problem, please make note of this. </p>
+            <p> The follow-up survey will open in a new browser tab, so you can easily return to this page if needed.
+            
+            
+            <div class="centered pay-note">Please fill out a breif post-experiment survey,
+ <a href="https://docs.google.com/forms/d/e/1FAIpQLSe8Oc-8U4N7YGdSzcdrFqx-_-A_LI9aIKQgHp2dgEHnG8nq6g/viewform?usp=pp_url&entry.2132124132={{ player.participant.label }}" target="_blank">here</a>
+ to complete the study.</div>
 
- 
         </div>
     </div>
 
