@@ -18,12 +18,15 @@
     grid-row: 2;
     margin: auto;
     font-size: 1.5em;
-    line-height: 0.8;
     height: 100%;
     
     display: flex;
     justify-content: space-around;
     flex-direction: column;
+}
+
+.squeeze-text{
+    line-height: 0.8;
 }
 
 
