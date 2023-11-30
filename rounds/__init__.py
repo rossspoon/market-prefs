@@ -7,16 +7,17 @@ from . import tool_tip
 from .models import Player, Group, Order, OrderErrorCode, OrderType, cu, Page, WaitPage, BaseSubsession, BaseConstants, Subsession
 import common.SessionConfigFunctions as scf
 from common.ParticipantFuctions import generate_participant_ids, is_button_click
+from common import BinTree
 from otree import database
 import os
 import jsonpickle
 import numpy as np
 
 #read in and pickle the decision tree for the risk elicitation task
-with open("common/decision_tree.json", "r") as dec_tree:
+with open("common/decision_trees_and_gambles.json", "r") as dec_tree:
     js = dec_tree.read()
-DECISION_TREE = jsonpickle.decode(js)
-DECISION_TREE.print_tree()
+DECISION_TREES = jsonpickle.decode(js)
+
 
 NUM_ROUNDS = os.getenv('SSE_NUM_ROUNDS')
 NUM_PRACTICE_ROUNDS = os.getenv('SSE_NUM_PRACTICE_ROUNDS')
@@ -97,13 +98,23 @@ def get_js_vars_round_results(player: Player):
 def get_js_vars_final_results(player: Player):
     return get_js_vars(player, include_current=True, show_notes=True, show_cancel=False, event_type='stop_exp')
 
+
 def get_js_vars_for_risk(player: Player):
     ret =  get_js_vars(player)
+    idx = player.round_number-1
+    
+    risk_task = DECISION_TREES[idx]
+    
+    sh = f"${risk_task['sh'] : .2f}"
+    sl = f"${risk_task['sl'] : .2f}"
+    rh = f"${risk_task['rh'] : .2f}"
+    rl = f"${risk_task['rl'] : .2f}"
+    
 
-    ret['safe_pay'] = ['$10.00', '$8.00']
-    ret['risk_pay'] = ['$19.25', '$0.50']
+    ret['safe_pay'] = [sh, sl]
+    ret['risk_pay'] = [rh, rl]
 
-    hi = traverse_dec_tree(player)
+    hi = traverse_dec_tree(player, risk_task['dec_tree'])
     lo = 100 - hi
     ret['pct'] = [hi, lo]
 
@@ -699,7 +710,7 @@ def vars_for_practice(player: Player):
     
 
 
-def traverse_dec_tree(player: Player):
+def traverse_dec_tree(player: Player, dec_tree: BinTree):
     moves = []
 
     # On the fourth risk page the player will have made up to 3
@@ -709,13 +720,14 @@ def traverse_dec_tree(player: Player):
         if rc is not None:
             moves.append(rc)
 
-    node = DECISION_TREE
+    node = dec_tree
     for move in moves:
         if move == 0:
             node = node.right
         else:
             node = node.left
     return floor(float(node.val) * 100)
+
 
 def get_round_result_messages(player: Player, d: dict):
     messages = []
