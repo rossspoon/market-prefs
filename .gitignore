@@ -19,3 +19,5 @@ export_tests/
 run_it.bat
 /simulation_results/
 ~$Cost_and_Time.xlsx
+Risk_Elicitation_Task/*.txt
+Risk_Elicitation_Task/*.json
