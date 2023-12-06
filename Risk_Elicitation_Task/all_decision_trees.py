@@ -6,7 +6,7 @@ if '..' not in sys.path:
 for p in sys.path:
     print(p)
 from common.BinTree import Node
-
+import multiprocessing as mp
 
 def utility(payout: float, r: float):
     """
@@ -38,7 +38,7 @@ def get_info(likelihood, prior, denom):
 
 class BaseParamSpace():
     R = np.arange(-1, 1.05, 0.05)
-    MU = np.arange(0, 6.1, 0.1)
+    MU = np.arange(0, 4.1, 0.1)
     QUESTIONS = np.arange(0, 1.01, .01)
     ACTIONS = [0, 1]
     
@@ -140,8 +140,6 @@ def get_dec_tree(ps:BaseParamSpace, payouts:dict):
     
     # initial node
     q, p1, p0, new_q = run_KL(ps, ps.UNI_PRIOR, ps.QUESTIONS, sh_u, sl_u, rh_u, rl_u)
-    print('.', end='')
-    #print(f"Q: {q}")
     bin_tree = Node(q)
     node_q.append(bin_tree)
     priors_q.append(p1)
@@ -152,14 +150,10 @@ def get_dec_tree(ps:BaseParamSpace, payouts:dict):
         p1 = priors_q.pop(0)
         p0 = priors_q.pop(0)
         new_q = questions.pop(0)
-        #print(f"len new_q: {len(new_q)}")
         
         q1, pr1, pr0, newq_1 = run_KL(ps, p1, new_q, sh_u, sl_u, rh_u, rl_u)
-        print('.', end='')
         q0, pl1, pl0, newq_0 = run_KL(ps, p0, new_q, sh_u, sl_u, rh_u, rl_u)
-        print('.', end='')
         
-        #print(f"Q1: {q1}, Q0: {q0}")
     
         node = node_q.pop(0)
         nr = Node(q1)
@@ -175,42 +169,63 @@ def get_dec_tree(ps:BaseParamSpace, payouts:dict):
         priors_q.append(pl0)
         questions.append(newq_1)
         questions.append(newq_0)
-    print("\n")
     
     return bin_tree
 
+
+def task(inq:mp.Queue, outq:mp.Queue, ps:BaseParamSpace):
+    for payouts in iter(inq.get, 'STOP'):
+        a = current_milli_time()
+        bin_tree = get_dec_tree(ps, payouts)
+        payouts['dec_tree'] = bin_tree
+        b = current_milli_time()
+        print(f"Time: {b-a}")
+        outq.put(payouts)
 
 
 if __name__ == '__main__':
     
     import time
     import pandas as pd
-    import jsonpickle  
+    import jsonpickle
+    
+    start = current_milli_time()
     
     gambles = pd.read_csv('gambles.csv')
     num_pay_structs = gambles.shape[0]   
     bps = BaseParamSpace()
        
     
-
-    # Run it
+    # Set up processes
+    ctx = mp.get_context('fork')
+    iq = ctx.Queue()
+    oq = ctx.Queue()
+    procs = [ctx.Process(target=task, args=(iq, oq, bps, ), daemon=True) for _ in range(mp.cpu_count())]
+    for p in procs: p.start()
+    
+    # Add tasks to the input queue
     dec_trees = []
     for i in range(num_pay_structs):
-        print(f"===================  ({i}) ===================")
-        
         payouts = gambles.iloc[i, :].to_dict()
-        print(payouts)
+        payouts['round_number'] = i + 1
         
+        iq.put(payouts)
         
-        a = current_milli_time()
-        bin_tree = get_dec_tree(bps, payouts)
-        b = current_milli_time()
-        print(f"Time (ms): {b-a}")
+    # Send Termination sigal to Processes
+    for _ in range(num_pay_structs):
+        iq.put('STOP')
         
-        payouts['dec_tree'] = bin_tree
-        dec_trees.append(payouts)
+    # collect results
+    for _ in range(num_pay_structs):
+        dec_trees.append(oq.get())
+        
+    # Wait for processes to terminate
+    for p in procs:
+        p.join()
+        
 
-
+    #sort the decision trees by the round number
+    dec_trees = sorted(dec_trees, key=lambda x: x['round_number'])
         
     # pickle then to JSON
     json_str = jsonpickle.encode(dec_trees)     
@@ -225,5 +240,8 @@ if __name__ == '__main__':
         outfile.write(str(bps))
         outfile.write("\n========================\n")
         for d in dec_trees:
-            outfile.write(f"====================================================\nRisk Lo: {d['rl']} \nRisk Hi: {d['rh']} \nSafe Lo: {d['sl']} \nSafe Hi: {d['sh']} \n\n-- (Down is the SAFE pick) ---\n")                
+            outfile.write(f"====================================================\nRound: {d['round_number']}\nRisk Lo: {d['rl']} \nRisk Hi: {d['rh']} \nSafe Lo: {d['sl']} \nSafe Hi: {d['sh']} \n\n-- (Down is the SAFE pick) ---\n")                
             outfile.write(str(d['dec_tree']))
+
+    end = current_milli_time()
+    print(f"Total Time: {end - start}")
