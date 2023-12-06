@@ -663,7 +663,7 @@ def vars_for_forecast_template(player: Player):
     ret['hi'] = tick_upper
     ret['mp'] = mp
     
-    rn = player.round_number - Constants.num_practice
+    rn = player.round_number if ret['is_practice'] else player.round_number - Constants.num_practice
     labels = [f'This period ({rn})', f'Next period ({rn +1})', f'Period {rn + 2}', f'Period {rn +3}']
     
     #determine the number of labels
