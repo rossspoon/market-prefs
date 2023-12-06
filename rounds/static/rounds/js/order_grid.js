@@ -66,12 +66,12 @@ $(window).on('load', function () {
         // Snap
         let h_num_space = Math.round(x / hspace);
         let loc_x = edgepad + (h_num_space * hspace);
-        let v_num_space = Math.round(y / vspace);
+        let v_num_space = Math.round((y-edgepad) / vspace);
         let loc_y = edgepad + (v_num_space * vspace);
 
         // Draw Circle
         ctx.beginPath();
-        ctx.arc(loc_x, loc_y-(rad), rad, 0, 2*Math.PI, false);
+        ctx.arc(loc_x, loc_y, rad, 0, 2*Math.PI, false);
         ctx.fillStyle = 'red';
         ctx.fill();
         ctx.lineWidth = 3;

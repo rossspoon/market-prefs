@@ -1,10 +1,10 @@
 import decimal
-import random
 from collections import defaultdict
 from math import ceil, floor
 from rounds.call_market import CallMarket
 from . import tool_tip
 from .models import Player, Group, Order, OrderErrorCode, OrderType, cu, Page, WaitPage, BaseSubsession, BaseConstants, Subsession
+from .sample_hist import SAMPLE_HIST
 import common.SessionConfigFunctions as scf
 from common.ParticipantFuctions import generate_participant_ids, is_button_click
 from common import BinTree
@@ -158,11 +158,13 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
         groups = group.in_previous_rounds()
 
     init_price = scf.get_init_price(player)
+    
 
     if scf.is_random_hist(player):
-        show_rounds = 2 * Constants.num_rounds // 3
-        prices = random.choices(range(25, 32), k=show_rounds) + [init_price]
-        volumes = random.choices(range(0, 11), k=show_rounds) + [4]
+        end_idx = player.round_number + (0 if include_current else -1)
+        prices = [init_price] + SAMPLE_HIST["price"][0:end_idx]
+        volumes = SAMPLE_HIST["volume"][0:end_idx]
+        
     else:
         prices = [init_price] + [g.price for g in groups]
         volumes = [0] + [g.volume for g in groups]
@@ -177,12 +179,14 @@ def get_js_vars(player: Player, include_current=False, show_notes=False, show_ca
         labels = list(range(0, Constants.num_rounds - npract + 1))
         prices = [init_price] + prices[npract+1:]
         volumes = [0] + volumes[npract+1:]
-        
 
     # Error Codes
     error_codes = {e.value: e.to_dict() for e in OrderErrorCode}
 
-    market_price = group.price if include_current else group.get_last_period_price()
+    if scf.is_random_hist(player):
+        market_price = prices[-1]
+    else:
+        market_price = group.price if include_current else group.get_last_period_price()
     mp_str = f"{market_price:.2f}"
 
     show_next = scf.show_next_button(player)
@@ -460,8 +464,35 @@ def get_orders_for_player(player, o_cls=Order):
     return o_cls.filter(player=player)
 
 
+def get_mp_to_show(player: Player, d: dict, include_current=False):
+    rn = player.round_number
+    is_first_round = rn == 1 or rn == Constants.num_practice + 1
+    if scf.is_random_hist(player):
+        if is_first_round and not include_current:
+            price =  scf.get_init_price(player)
+            volume = 0
+        
+        idx = rn-1 if include_current else rn-2
+        price = SAMPLE_HIST['price'][idx]
+        volume = SAMPLE_HIST['volume'][idx]
+    else:    
+        price = player.group.price if include_current else player.group.get_last_period_price()
+        volume = player.group.field_maybe_none('volume') # going on the assumption of that volume is only sound on the round results page.
+    return price, volume
+    
+
+
 def standard_vars_for_template(player: Player):
     ret = scf.ensure_config(player)
+    
+    # determine if these are practice sessions
+    is_practice = player.group.is_practice
+    ret['real_rn'] = player.round_number if is_practice else player.round_number - Constants.num_practice
+
+    ret['is_practice'] = is_practice
+    ret['num_practice'] = Constants.num_practice
+
+    
     marg_req = ret.get(scf.SK_MARGIN_RATIO)
     ret['marg_req_pct'] = f"{marg_req :.0%}"
     ret['margin_buffer_pct'] = f"{1 + marg_req:.0%}"
@@ -469,7 +500,8 @@ def standard_vars_for_template(player: Player):
     ret['cash'] = player.cash
     ret['shares'] = player.shares
 
-    price = player.group.get_last_period_price()
+
+    price, _ = get_mp_to_show(player, ret)
     value_of_stock, equity, debt, limit, close = player.get_holding_details(price)
     ret['stock_val'] = value_of_stock
     ret['vos_neg_cls'] = 'neg-val' if value_of_stock < 0 else ''
@@ -492,12 +524,6 @@ def standard_vars_for_template(player: Player):
     ret['show_pop_up'] = False
     ret['num_rounds_left'] = 99
     
-    # determine if these are practice sessions
-    is_practice = player.group.is_practice
-    ret['real_rn'] = player.round_number if is_practice else player.round_number - Constants.num_practice
-
-    ret['is_practice'] = is_practice
-    ret['num_practice'] = Constants.num_practice
 
     return ret
 
@@ -637,7 +663,7 @@ def vars_for_forecast_template(player: Player):
     ret['hi'] = tick_upper
     ret['mp'] = mp
     
-    rn = player.round_number
+    rn = player.round_number - Constants.num_practice
     labels = [f'This period ({rn})', f'Next period ({rn +1})', f'Period {rn + 2}', f'Period {rn +3}']
     
     #determine the number of labels
@@ -659,7 +685,8 @@ def vars_for_round_results_template(player: Player):
     ret['cash'] = player.cash_result
     ret['shares'] = player.shares_result
 
-    price = player.group.price
+    price, _ = get_mp_to_show(player, ret, include_current=True)
+    
     value_of_stock, equity, debt, limit, close = player.get_holding_details(price, results=True)
     ret['stock_val'] = value_of_stock
     ret['vos_neg_cls'] = 'neg-val' if value_of_stock < 0 else ''
@@ -732,13 +759,14 @@ def traverse_dec_tree(player: Player, dec_tree: BinTree):
 def get_round_result_messages(player: Player, d: dict):
     messages = []
 
+    price, volume = get_mp_to_show(player, d, include_current=True)
 
     # Price message
-    msg = f"Market price this period: {player.group.price}"
+    msg = f"Market price this period: {price}"
     messages.append(dict(class_attr='result-msg', msg=msg))
 
     # Volume message
-    msg = f"Market volume this period: {player.group.volume} shares"
+    msg = f"Market volume this period: {volume} shares"
     messages.append(dict(class_attr='result-msg', msg=msg))
 
     # Determine the "you bought/sold" message
