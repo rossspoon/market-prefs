@@ -185,11 +185,6 @@ if __name__ == '__main__':
     
     import time
     import pandas as pd
-    ##  Create the Decision tree
-    # starting with a uniform prior
-    import os
-    print(os.getcwd())
-    # import json
     import jsonpickle  
     
     gambles = pd.read_csv('gambles.csv')
