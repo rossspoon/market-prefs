@@ -3,40 +3,18 @@ import sys
 
 if '..' not in sys.path:
     sys.path.append('..')
-for p in sys.path:
-    print(p)
+
 from common.BinTree import Node
-import multiprocessing as mp
 
-def utility(payout: float, r: float):
-    """
-    utility function
-    payout: payoff
-    r: risk aversion
-    """
-    return (payout ** (1 - r)) / (1 - r)
-
-
-def compute_likelihood(u_s_hi, u_s_lo, u_r_hi, u_r_lo, q: float, mu:float):
-    """
-    Likelihood function, probability of answering a (risky = 0, safe = 1)
-    q: question, probability of high payoff
-    r: risk aversion prior
-    mu: responsiveness to choice
-    """
-    
-    likelihood = 1 / (1 + np.exp(mu * (u_s_hi * q + u_s_lo * (1 - q) - u_r_hi * q - u_r_lo * (1 - q))))
-    
-    return likelihood
-
-
-def get_info(likelihood, prior, denom):
-    return  np.log( ((1-prior) * likelihood ) / (denom-(prior * likelihood)) ) * likelihood
-        
-            
-
+# This is an implementation of the DOSE method of risk preference elicitation, as described in:
+#         Wang, S.W., Filiba, M. and Camerer, C.F., 2010. Dynamically optimized sequential experimentation (DOSE) 
+#         for estimating economic preference parameters. Manuscript submitted for publication.
 
 class BaseParamSpace():
+    """
+    Collection of parameter values.  These are common to all decision trees, 
+    and represent the paramerter space used in the the DOSE calculations.
+    """
     R = np.arange(-1, 1.05, 0.05)
     MU = np.arange(0, 4.1, 0.1)
     QUESTIONS = np.arange(0, 1.01, .01)
@@ -59,100 +37,286 @@ class BaseParamSpace():
         str += f"Questions: {min(self.QUESTIONS): .2f} - {max(self.QUESTIONS): .2f} \n"
         str += f"Actions: {self.ACTIONS}"
         return str
+
+
+def utility(payout: float, r: float):
+    """
+    utility function
+    payout: payoff
+    r: risk aversion
+    """
+    return (payout ** (1 - r)) / (1 - r)
+
+
+def compute_likelihood(u_s_hi, u_s_lo, u_r_hi, u_r_lo, q: float, mu:float):
+    """
+    Likelihood function, probability of answering a (risky = 0, safe = 1)
+    
+    u_s_hi, u_s_lo, u_r_hi, u_r_lo: the payoffs involved in any H-L payment structure.
+    q: question, probability of high payoff
+    r: risk aversion prior
+    mu: responsiveness to choice
+    """
+    
+    likelihood = 1 / (1 + np.exp(mu * (u_s_hi * q + u_s_lo * (1 - q) - u_r_hi * q - u_r_lo * (1 - q))))
+    
+    return likelihood
+
+
+def get_info(likelihood, prior, denom):
+    """
+    This is the part of equation (3) of the DOSE paper that appear inside the summation.
+    Denom is the weighted average of all likelihoods of all R X Mu models, but we
+    subtract off the weighted likelihood of each individual model.  This is much
+    faster and easier than adding up all but one.
+
+    Parameters
+    ----------
+    likelihood : np.array
+        R X Mu array of likelihoods.
+    prior : np.array
+        R X Mu array of prior.
+    denom : np.array
+        The denominator for this calculation.  This should be the weighted sum of the
+        likelihoods of all R X MU models.
+    Returns
+    -------
+    TYPE np.array
+        R X Mu array of KL info.
+
+    """
+    x = ((1-prior) * likelihood ) / (denom-(prior * likelihood))
+    # Avoid sending zeros to the log function, replace with nan whiich doesn't seem to trigger a warning from np.log
+    x = np.where(x==0, np.nan, x) 
+    
+    return  fillna((np.log(x) * likelihood))
+        
             
 
-            
 
-def update_prior(likeli, priors, denom):
+def update_prior(likeli, priors, denom:float):
+    """
+    This is equestion (5) of the DOSE paper.  Updatee the priors based on the action
+    that a participant might chose.  The action of the participant is encoded in the
+    given likelihoods.
+
+    Parameters
+    ----------
+    likeli : np.array
+        R X MU array of likelihoods.
+    priors : np.array
+        R X MU array of priors.
+    denom : float
+        The denominator for this calculation.  This should be the weighted sum of the
+        likelihoods of all R X MU models.
+
+    Returns
+    -------
+    TYPE np.array
+        R X Mu of updated priors.
+
+    """
     return likeli * priors / denom
         
             
 
 def current_milli_time():
+    """
+    Helper to get the current time in milliseconds since the ephoc
+
+    Returns
+    -------
+    TYPE
+        The curren time in milliseconds.
+
+    """
     return round(time.time() * 1000)
 
+
 def fillna(a:np.array, fill:float=0):
+    """
+    Helper function to fill the empty elements of an array with the given value (default: 0)
+
+    Parameters
+    ----------
+    a : np.array
+        Array to be filled.
+    fill : float, optional
+        The fill value. The default is 0.
+
+    Returns
+    -------
+    a : np.array
+        the filled array.
+
+    """
     idx = np.isnan(a)
     a[idx] = fill
+    return a
     
     
     
-def run_KL(ps:BaseParamSpace, priors, questions, sh_u, sl_u, rh_u, rl_u):
+def run_KL(ps:BaseParamSpace, priors, questions, likelihoods):
+    """
+    Determines the question (probability of the high payout) that maximizes the KL information of the
+    given priors and likelihoods.  This an implementation of:
+        Wang, S.W., Filiba, M. and Camerer, C.F., 2010. Dynamically optimized sequential experimentation (DOSE) 
+        for estimating economic preference parameters. Manuscript submitted for publication.
+
+    Parameters
+    ----------
+    ps : BaseParamSpace
+        Parameters common to all decision trees.  Of main interest are R and MU
+    priors : np.array
+        R X MU array of priors.
+    questions : np.array
+        All the questions to consider.  Usually an array from 0 to 1 by .01, or some subset.
+
+    likelihoods : np.array
+        A list of lielihoods for each question.  Each element of this array will be a R X MU array.
+
+    Returns
+    -------
+    max_q : float
+        The question (prob of high payout) that associated with the highest KL information.
+    p0 : TYPE
+        The updated priors if the safe option where to be picked.
+        Array will by R X MU in shape.
+
+    p1 : np.array
+        The update priors if the risky option where to be picked.
+        Array will by R X MU in shape.
+    new_q : np.array
+        List of possible questions with max_q removed.
+    new_likes : np.array
+        list of possible sets of likelihoods with the one associated with max_q removed.
+
+    """
     max_kl = -99
     max_q = -99
     max_ls = None
     max_lr = None
     kls = []
 
+    # Determine the KL info for each question
+    # Compare that the running maximum
     for q_idx, q in enumerate(questions):
     
-        likeli_s  = np.zeros( (len(ps.R), len(ps.MU),) )
-        for i in range(len(ps.R)):
-            for j, mu in enumerate(ps.MU):
-                likeli_s[i, j] = compute_likelihood(sh_u[i], sl_u[i], rh_u[i], rl_u[i], q, mu)
-                
-        
+        #Get likelihoods (going to be an R X MU array)
+        # there are two sets one for the safe choice and one for the risky
+        likeli_s = likelihoods[q_idx]
         likeli_r = 1-likeli_s
                 
+        # Average of likelihoods weighted by the priors
+        # (element-wise multiplication of 2 R X MU arrays)
         weighted_s = likeli_s * priors
         weighted_r = likeli_r * priors
-
-        denom_s = sum(sum(weighted_s))
+        # The sum over all of these likelihoods is in the denominator for the KL-Info number
+        denom_s = sum(sum(weighted_s))  # reducing R X MU arrays to floats
         denom_r = sum(sum(weighted_r))
                 
-        
+        # Get the KL info 
+        # this is the section inside the summation of equation (3) of the DOSE paper
+        # likeli_x and priors are R X MU
+        # denom is a float
         info_s = get_info(likeli_s, priors, denom_s)
         info_r = get_info(likeli_r, priors, denom_r)
-        fillna(info_s)
-        fillna(info_r)
         
+        # Sum safe and risky action info together completes the KL info
+        # equation (3)
         info = info_s + info_r
+        
+        # This is equation (4).  An average of all the info from (3)
+        # weighted by the priors
+        # info and priors are both R X MU arrays
         kl = sum(sum(priors * info))
         kls.append(kl)
     
+        # Save return values associated the the maximum KL info
         if kl > max_kl:
             max_kl = kl
             max_q = q
-            new_q = np.concatenate((questions[0:q_idx],  questions[q_idx+1:]))
             max_ls = likeli_s
             max_lr = likeli_r
+            max_q_idx = q_idx
             
+    # Remove the max question so that is does not get asked again. 
+    #(remove the likelihoods that go with it as well)
+    new_q = np.concatenate((questions[0:max_q_idx],  questions[max_q_idx+1:]))
+    new_likes = [l for i, l in enumerate(likelihoods) if i != max_q_idx]
+
+    # Update priors.
+    # This is equation (5) of the DOSE paper
+    # If the question max_q is posed to a participant, that person will
+    # choose risky or safe.  Update the priors in both cases
     p0 = update_prior(max_ls, priors, denom_s)
     p1 = update_prior(max_lr, priors, denom_r)
-        
     
-    return max_q, p0, p1, new_q
+    
+    return max_q, p0, p1, new_q, new_likes
 
 
 
 def get_dec_tree(ps:BaseParamSpace, payouts:dict):
+    """
+    Generate a decicion tree for the given parameter space and payouts
+
+    Parameters
+    ----------
+    ps : BaseParamSpace
+        Parameters common to all decision trees.
+    payouts : dict
+        Expecting a dict with keys 'sl', 'sh', 'rl', 'rh'. each one of these is
+        a payout expressed as a float.
+
+    Returns
+    -------
+    bin_tree : common.BinTree
+        The decision tree.  A binary tree storing at each node the probability of the high payout.
+
+    """
   
     sh_u = [utility(payouts['sh'], r) for r in bps.R]
     sl_u = [utility(payouts['sl'], r) for r in bps.R]
     rh_u = [utility(payouts['rh'], r) for r in bps.R]
     rl_u = [utility(payouts['rl'], r) for r in bps.R]
- 
+
+    #These likelihoods don't change for the entireity of the decision tree
+    # Front load them.
+    # For each question, generate a R X MU array of likelihoods
+    likelis_for_questions = []
+    for q in ps.QUESTIONS:
+        likeli_s  = np.zeros( (len(ps.R), len(ps.MU),) )
+        for i in range(len(ps.R)):
+            for j, mu in enumerate(ps.MU):
+                likeli_s[i, j] = compute_likelihood(sh_u[i], sl_u[i], rh_u[i], rl_u[i], q, mu)
+                
+        likelis_for_questions.append(likeli_s)
+
     
     # Build Decision Tree
     node_q = []
     priors_q = []
     questions = []
+    likelihoods = []
     
     # initial node
-    q, p1, p0, new_q = run_KL(ps, ps.UNI_PRIOR, ps.QUESTIONS, sh_u, sl_u, rh_u, rl_u)
+    q, p1, p0, new_q, new_l = run_KL(ps, ps.UNI_PRIOR, ps.QUESTIONS, likelis_for_questions)
     bin_tree = Node(q)
     node_q.append(bin_tree)
     priors_q.append(p1)
     priors_q.append(p0)
     questions.append(new_q)
+    likelihoods.append(new_l)
     
     for i in range(7):
         p1 = priors_q.pop(0)
         p0 = priors_q.pop(0)
         new_q = questions.pop(0)
+        new_l = likelihoods.pop(0)
         
-        q1, pr1, pr0, newq_1 = run_KL(ps, p1, new_q, sh_u, sl_u, rh_u, rl_u)
-        q0, pl1, pl0, newq_0 = run_KL(ps, p0, new_q, sh_u, sl_u, rh_u, rl_u)
+        q1, pr1, pr0, newq_1, newl_1 = run_KL(ps, p1, new_q, new_l)
+        q0, pl1, pl0, newq_0, newl_0 = run_KL(ps, p0, new_q, new_l)
         
     
         node = node_q.pop(0)
@@ -169,18 +333,10 @@ def get_dec_tree(ps:BaseParamSpace, payouts:dict):
         priors_q.append(pl0)
         questions.append(newq_1)
         questions.append(newq_0)
+        likelihoods.append(newl_1)
+        likelihoods.append(newl_0)
     
     return bin_tree
-
-
-def task(inq:mp.Queue, outq:mp.Queue, ps:BaseParamSpace):
-    for payouts in iter(inq.get, 'STOP'):
-        a = current_milli_time()
-        bin_tree = get_dec_tree(ps, payouts)
-        payouts['dec_tree'] = bin_tree
-        b = current_milli_time()
-        print(f"Time: {b-a}")
-        outq.put(payouts)
 
 
 if __name__ == '__main__':
@@ -188,13 +344,31 @@ if __name__ == '__main__':
     import time
     import pandas as pd
     import jsonpickle
+    import multiprocessing as mp
+    
+    
+    # Main Process taskk
+    def task(inq:mp.Queue, outq:mp.Queue, ps:BaseParamSpace):
+        # List on the input queue for tasks
+        for payouts in iter(inq.get, 'STOP'):
+            #process generate decision tree
+            bin_tree = get_dec_tree(ps, payouts)
+            payouts['dec_tree'] = bin_tree
+            
+            #put on the output queue
+            outq.put(payouts)
+
+
     
     start = current_milli_time()
     
+    #Load the gambles from a file
     gambles = pd.read_csv('gambles.csv')
-    num_pay_structs = gambles.shape[0]   
+    num_pay_structs = gambles.shape[0]
+    
+    # Parameters like R and MU and the uniform prior are all stored here
     bps = BaseParamSpace()
-       
+    
     
     # Set up processes
     ctx = mp.get_context('fork')
@@ -204,7 +378,6 @@ if __name__ == '__main__':
     for p in procs: p.start()
     
     # Add tasks to the input queue
-    dec_trees = []
     for i in range(num_pay_structs):
         payouts = gambles.iloc[i, :].to_dict()
         payouts['round_number'] = i + 1
@@ -212,22 +385,24 @@ if __name__ == '__main__':
         iq.put(payouts)
         
     # Send Termination sigal to Processes
-    for _ in range(num_pay_structs):
+    for _ in procs:
         iq.put('STOP')
         
     # collect results
+    print('.' * num_pay_structs)
+    dec_trees = []
     for _ in range(num_pay_structs):
         dec_trees.append(oq.get())
+        print('.', end='')
+    print("\n")
         
     # Wait for processes to terminate
-    for p in procs:
-        p.join()
+    for p in procs: p.join()
         
-
     #sort the decision trees by the round number
     dec_trees = sorted(dec_trees, key=lambda x: x['round_number'])
         
-    # pickle then to JSON
+    # pickle them to JSON
     json_str = jsonpickle.encode(dec_trees)     
     with open("decision_trees_and_gambles.json", "w") as out:
           out.write(json_str)
