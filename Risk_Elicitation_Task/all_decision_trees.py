@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import time
 
 if '..' not in sys.path:
     sys.path.append('..')
@@ -16,7 +17,7 @@ class BaseParamSpace():
     and represent the paramerter space used in the the DOSE calculations.
     """
     R = np.arange(-1, 1.05, 0.05)
-    MU = np.arange(0, 4.1, 0.1)
+    MU = np.arange(.1, 6.1, 0.1)
     QUESTIONS = np.arange(0, 1.01, .01)
     ACTIONS = [0, 1]
     
@@ -192,8 +193,8 @@ def run_KL(ps:BaseParamSpace, priors, questions, likelihoods):
         list of possible sets of likelihoods with the one associated with max_q removed.
 
     """
-    max_kl = -99
-    max_q = -99
+    max_kl = None
+    max_q = None
     max_ls = None
     max_lr = None
     kls = []
@@ -233,7 +234,7 @@ def run_KL(ps:BaseParamSpace, priors, questions, likelihoods):
         kls.append(kl)
     
         # Save return values associated the the maximum KL info
-        if kl > max_kl:
+        if max_kl is None or kl > max_kl:
             max_kl = kl
             max_q = q
             max_ls = likeli_s
@@ -290,7 +291,7 @@ def get_dec_tree(ps:BaseParamSpace, payouts:dict):
         for i in range(len(ps.R)):
             for j, mu in enumerate(ps.MU):
                 likeli_s[i, j] = compute_likelihood(sh_u[i], sl_u[i], rh_u[i], rl_u[i], q, mu)
-                
+
         likelis_for_questions.append(likeli_s)
 
     
@@ -339,9 +340,11 @@ def get_dec_tree(ps:BaseParamSpace, payouts:dict):
     return bin_tree
 
 
+#################################
+##       Main Procedure        ##
+#################################
 if __name__ == '__main__':
     
-    import time
     import pandas as pd
     import jsonpickle
     import multiprocessing as mp
@@ -354,7 +357,7 @@ if __name__ == '__main__':
             #process generate decision tree
             bin_tree = get_dec_tree(ps, payouts)
             payouts['dec_tree'] = bin_tree
-            
+
             #put on the output queue
             outq.put(payouts)
 
@@ -420,3 +423,48 @@ if __name__ == '__main__':
 
     end = current_milli_time()
     print(f"Total Time: {end - start}")
+    
+
+## Test Harness.  Use this to test the calculation without the multiprocessing 
+## getting in the way.
+if __name__ == '__main__2':
+
+    bps = BaseParamSpace()
+    bps.MU = np.arange(0, 10.1, 0.1)
+
+    start = current_milli_time()
+    sh_u = [utility(19.25, r) for r in bps.R]
+    sl_u = [utility(.5, r) for r in bps.R]
+    rh_u = [utility(10, r) for r in bps.R]
+    rl_u = [utility(8, r) for r in bps.R]
+    likelis_for_questions = []
+    for q in bps.QUESTIONS:
+        likeli_s  = np.zeros( (len(bps.R), len(bps.MU),) )
+        for i in range(len(bps.R)):
+            for j, mu in enumerate(bps.MU):
+                likeli_s[i, j] = compute_likelihood(sh_u[i], sl_u[i], rh_u[i], rl_u[i], q, mu)
+
+        likelis_for_questions.append(likeli_s)
+    t1 = current_milli_time()
+    print(f"Likelihoods: {t1-start}")
+
+   
+    p = np.random.rand(len(bps.R), len(bps.MU))
+    s = sum(sum(p))
+    prior = p/s
+    
+    print(len(likelis_for_questions))
+    q, p1, p0, new_q, new_l = run_KL(bps, prior, bps.QUESTIONS, likelis_for_questions)
+
+    t2 = current_milli_time()
+    print(f"KL: {t2-start}")
+    print(f"KL: {t2-t1}")
+    print(f"Q: {q: .2f}")
+    
+    a = get_dec_tree(bps, {'sh':10, 'sl': 8, 'rh':19.25, 'rl':0.50})
+    print(a)
+    
+    
+    
+
+    
