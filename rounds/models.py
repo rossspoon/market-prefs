@@ -174,6 +174,16 @@ class Player(BasePlayer):
     risk_2 = models.IntegerField(blank=True)
     risk_3 = models.IntegerField(blank=True)
     risk_4 = models.IntegerField(blank=True)
+    #Payouts
+    risk_rh = models.FloatField(blank=True)
+    risk_rl = models.FloatField(blank=True)
+    risk_sh = models.FloatField(blank=True)
+    risk_sl = models.FloatField(blank=True)
+    #Hi Probabilities
+    risk_phi_1 = models.FloatField(blank=True)
+    risk_phi_2 = models.FloatField(blank=True)
+    risk_phi_3 = models.FloatField(blank=True)
+    risk_phi_4 = models.FloatField(blank=True)
 
     # Per-round Survey
     # emotion = models.IntegerField(

@@ -99,7 +99,7 @@ def get_js_vars_final_results(player: Player):
     return get_js_vars(player, include_current=True, show_notes=True, show_cancel=False, event_type='stop_exp')
 
 
-def get_js_vars_for_risk(player: Player):
+def get_js_vars_for_risk(player: Player, choice_num: int):
     ret =  get_js_vars(player)
     idx = player.round_number-1
     
@@ -117,6 +117,14 @@ def get_js_vars_for_risk(player: Player):
     hi = traverse_dec_tree(player, risk_task['dec_tree'])
     lo = 100 - hi
     ret['pct'] = [hi, lo]
+    
+    #update player object (best place to do it)
+    if player.field_maybe_none('risk_rh') is None:
+        player.risk_rh = risk_task['rh']
+        player.risk_rl = risk_task['rl']
+        player.risk_sh = risk_task['sh']
+        player.risk_sl = risk_task['sl']
+    setattr(player, f'risk_phi_{choice_num}', hi)
 
     ws_vars = get_websockets_vars(player)
     ret.update(ws_vars)
@@ -973,7 +981,6 @@ class RiskPage(Page):
     form_fields = ['risk']
     timer_text = 'Time Left:'
 
-    js_vars = get_js_vars_for_risk
     vars_for_template = vars_for_risk_template
     get_timeout_seconds = scf.get_risk_elic_time
     is_displayed = not_displayed_for_simulation
@@ -983,21 +990,47 @@ class RiskPage1(RiskPage):
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
         player.risk_1 = player.field_maybe_none('risk')
-
+        player.risk = None
+        
+    @staticmethod
+    def js_vars(player:Player):
+        return get_js_vars_for_risk(player, 1)
+        
+        
 class RiskPage2(RiskPage):
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
         player.risk_2 = player.field_maybe_none('risk')
+        player.risk = None
+       
+    @staticmethod
+    def js_vars(player:Player):
+        return get_js_vars_for_risk(player, 2)
+
 
 class RiskPage3(RiskPage):
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
         player.risk_3 = player.field_maybe_none('risk')
+        player.risk = None
+       
+    @staticmethod
+    def js_vars(player:Player):
+        return get_js_vars_for_risk(player, 3)
+
+
 
 class RiskPage4(RiskPage):
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
         player.risk_4 = player.field_maybe_none('risk')
+        player.risk = None
+       
+    @staticmethod
+    def js_vars(player:Player):
+        return get_js_vars_for_risk(player, 4)
+
+
 
 
 class FinalResultsPage(Page):
