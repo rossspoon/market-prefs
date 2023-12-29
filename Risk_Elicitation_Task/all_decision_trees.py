@@ -2,9 +2,13 @@ import numpy as np
 import sys
 import time
 
-if '..' not in sys.path:
-    sys.path.append('..')
+import os
+print(os.getcwd())
 
+if '../' not in sys.path:
+    sys.path.append('../')
+
+print ("\n".join(sys.path))
 from common.BinTree import Node
 
 # This is an implementation of the DOSE method of risk preference elicitation, as described in:
@@ -16,7 +20,7 @@ class BaseParamSpace():
     Collection of parameter values.  These are common to all decision trees, 
     and represent the paramerter space used in the the DOSE calculations.
     """
-    R = np.arange(-1, 1.05, 0.05)
+    R = np.arange(-1.5, 1.55, 0.05)
     MU = np.arange(.1, 6.1, 0.1)
     QUESTIONS = np.arange(0, 1.01, .01)
     ACTIONS = [0, 1]
@@ -449,11 +453,11 @@ if __name__ == '__main__2':
     print(f"Likelihoods: {t1-start}")
 
    
-    p = np.random.rand(len(bps.R), len(bps.MU))
+    p = np.ones((len(bps.R), len(bps.MU)))
     s = sum(sum(p))
     prior = p/s
+    bps.UNI_PRIOR = prior
     
-    print(len(likelis_for_questions))
     q, p1, p0, new_q, new_l = run_KL(bps, prior, bps.QUESTIONS, likelis_for_questions)
 
     t2 = current_milli_time()
