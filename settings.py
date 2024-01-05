@@ -184,7 +184,7 @@ elif environ.get('MTURK_HIT_TYPE') == 'EXP':
         qualification_requirements=[]
         # grant_qualification_id='YOUR_QUALIFICATION_ID_HERE', # to prevent retakes
     )
-PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT', 'finished']
+PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT', 'RISK_PAYMENT', 'finished']
 SESSION_FIELDS = ['prolific_completion_url']
 
 # ISO-639 code

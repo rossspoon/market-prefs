@@ -33,4 +33,13 @@
             <td>{{ o.quantity }}</td>
         </tr>
     {{ endfor }}
+    
+    <ul>
+    {{ for p in plys }}
+    <li>{{ p.id_in_group }}  - {{ p.participant.code }}</li>
+        <ul>
+            <li>Risk Data: {{ p.field_maybe_none('risk_reward') }}</li>
+        </ul>
+    {{ endfor}}
+    </ul>
 </table>

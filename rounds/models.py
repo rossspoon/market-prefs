@@ -165,8 +165,10 @@ class Player(BasePlayer):
     f2 = models.IntegerField(blank=True)
     f3 = models.IntegerField(blank=True)
     
+    # TODO: Remove these three
     forecast_error = models.CurrencyField()
     forecast_reward = models.CurrencyField(initial=0)
+    forecast_bonus_data = models.StringField(initial='')
 
     # Risk Elicitation
     risk = models.IntegerField(blank=True)
@@ -184,6 +186,8 @@ class Player(BasePlayer):
     risk_phi_2 = models.FloatField(blank=True)
     risk_phi_3 = models.FloatField(blank=True)
     risk_phi_4 = models.FloatField(blank=True)
+    
+    risk_reward = models.StringField(initial='')
 
     # Per-round Survey
     # emotion = models.IntegerField(
@@ -288,6 +292,7 @@ class Player(BasePlayer):
             self.cash = past_player.cash_result
             self.shares = past_player.shares_result
 
+    # TODO: Remove
     def determine_forecast_reward(self, price):
         f0 = self.field_maybe_none('f0')
         if f0 is not None:
@@ -348,6 +353,38 @@ class Player(BasePlayer):
         part = self.participant
         consent = part.vars.get('CONSENT')
         return consent
+    
+    
+    def get_risk_task_data(self):
+        #payouts - common to all choices this round
+        rh = self.risk_rh
+        rl = self.risk_rl
+        sh = self.risk_sh
+        sl = self.risk_sl
+        
+        ret = []
+        for i in [1,2,3,4]:
+            # choice 1==risky
+            choice = self.field_maybe_none(f'risk_{i}')
+            
+            if choice is None:
+                continue
+            
+            p_hi = self.field_maybe_none(f'risk_phi_{i}')
+            
+            r_data = dict(
+                    rnd = self.round_number,
+                    c_num = i,
+                    choice = choice,
+                    rh=rh,
+                    rl=rl,
+                    sh=sh,
+                    sl=sl,
+                    p_hi=p_hi
+                )
+            ret.append(r_data)
+        return ret
+    
 
     def __str__(self):
         c = self.field_maybe_none('cash')

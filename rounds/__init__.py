@@ -11,7 +11,9 @@ from common import BinTree
 from otree import database
 import os
 import jsonpickle
+import json
 import numpy as np
+import random
 
 #read in and pickle the decision tree for the risk elicitation task
 with open("common/decision_trees_and_gambles.json", "r") as dec_tree:
@@ -757,7 +759,7 @@ def traverse_dec_tree(player: Player, dec_tree: BinTree):
 
     node = dec_tree
     for move in moves:
-        if move == 0:
+        if move == 1:
             node = node.right
         else:
             node = node.left
@@ -833,6 +835,7 @@ def calculate_market(group: Group):
     cm = CallMarket(group)
     cm.calculate_market()
 
+    # TODO: Remove f0 forecast reward
     for p in group.get_players():
         # Process current round forecasts
         p.determine_forecast_reward(group.price)
@@ -865,7 +868,115 @@ def custom_export(players):
 
 def vars_for_admin_report(subsession: BaseSubsession):
     group = subsession.get_groups()[0]
-    return {"orders": Order.filter(group=group)}
+    players = group.get_players()
+    return {"orders": Order.filter(group=group),
+            "plys": players}
+
+
+def determine_bonus(player: Player):
+
+    if player.round_number != Constants.num_rounds:
+        return
+
+    bankrupt = player.is_bankrupt()
+    participant = player.participant
+    conversion = scf.get_conversion_rate(player)
+
+    ##
+    ##
+    ##
+    # Market Bonus - Final equity with STOCK at Fundamental Value
+    market_bonus = 0
+    if not bankrupt:
+        stock_value = player.shares_result * scf.get_fundamental_value(player)
+        total_equity = stock_value + player.cash_result
+        bonus_cap = scf.get_bonus_cap(player)
+        market_bonus = min(total_equity, bonus_cap)
+
+    participant.MARKET_PAYMENT = cu(market_bonus)
+
+    ##
+    ##
+    ## Loop through history and gather data
+    risk_choices = []
+    groups = {}
+    players = {}
+    for p in player.in_all_rounds():
+        # Ignore practice rounds
+        if p.round_number > Constants.num_practice:
+            risk_choices.extend(player.get_risk_task_data())
+            groups[p.round_number] = p.group
+            players[p.round_number] = p
+
+
+    ##
+    ##
+    ## Forcast Bonus
+    forecast_bonus = 0
+    for i in range(Constants.num_practice, Constants.num_rounds):
+        # sort out forecast data
+        source_rnd = i + 1
+        for look_ahead in range(4):
+            target_rnd = source_rnd + look_ahead
+            if target_rnd > Constants.num_rounds:
+                continue
+            
+            g = groups[target_rnd]
+            p = players[source_rnd]
+            price = g.price
+            forecast = p.field_maybe_none(f'f{look_ahead}')
+            if not forecast:
+                continue  # skip out if no forecast was made
+            error = abs(price - forecast)
+            freward = scf.get_forecast_reward(player) if error <= scf.get_forecast_thold(player) else 0
+            forecast_bonus += freward
+            
+    participant.FORECAST_PAYMENT = cu(forecast_bonus)
+    
+    ##
+    ##
+    ## Risk Bonus, 
+    # first pick a random choice
+    risk_bonus = 0
+    if len(risk_choices) > 0:
+        choice_data = random.choice(risk_choices)        
+        # next, run the chosen gamble
+        draw = random.random()  # uniformly random betwee 0 and 1
+        success = draw <= choice_data['p_hi']  # should have a p_hi percent chance of being lower than p_hi.
+        
+        # Which payout did they win?
+        if choice_data['choice'] == 1:  #participant made risky choice
+            if success:
+                risk_bonus = choice_data['rh']
+            else:
+                risk_bonus = choice_data['rl']
+        else: # participant made the safe choice
+            if success:
+                risk_bonus = choice_data['sh']
+            else:
+                risk_bonus = choice_data['sl']
+                
+        #Modify the choice data with the artifacts of picking and running the gamble
+        choice_data['draw'] = draw
+        choice_data['success'] = success
+        choice_data['bonus'] = risk_bonus
+        #fix round number
+        choice_data['rnd'] = choice_data['rnd'] - Constants.num_practice
+        
+        #save choice artifacts on the player object
+        player.risk_reward = json.dumps(choice_data)
+    participant.RISK_PAYMENT = cu(risk_bonus/conversion)
+    
+    ##
+    ##
+    ##
+    # Determine total bonus and round up to whole dollar amount.
+    bonus = market_bonus + forecast_bonus + risk_bonus/conversion
+    # is_online = scf.is_online(player)
+    # if not is_online:  # only round up for in-person sessions
+    #     bonus = ceil(bonus * conversion) / conversion
+    participant.payoff = cu(max(bonus, 0))
+
 
 
 ############
@@ -940,37 +1051,8 @@ class RoundResultsPage(Page):
 
             return upcoming_apps[0]
 
-    @staticmethod
-    def before_next_page(player: Player, timeout_happened):
-        if player.round_number != Constants.num_rounds:
-            return
-
-        bankrupt = player.is_bankrupt()
-        participant = player.participant
-
-        # Market Bonus - Final equity with STOCK at Fundamental Value
-        market_bonus = 0
-        if not bankrupt:
-            stock_value = player.shares_result * scf.get_fundamental_value(player)
-            total_equity = stock_value + player.cash_result
-            bonus_cap = scf.get_bonus_cap(player)
-            market_bonus = min(total_equity, bonus_cap)
-
-        participant.MARKET_PAYMENT = cu(market_bonus)
-
-        # Forecast Bonus
-        forecast_bonus = 0
-        for p in player.in_all_rounds():
-            forecast_bonus += p.forecast_reward
-        participant.FORECAST_PAYMENT = cu(forecast_bonus)
-
-        # Determine total bonus and round up to whole dollar amount.
-        bonus = market_bonus + forecast_bonus
-        is_online = scf.is_online(player)
-        if not is_online:  # only round up for in-person sessions
-            conversion = 1 / scf.get_conversion_rate(player)
-            bonus = ceil(bonus / conversion) * conversion
-        participant.payoff = max(bonus, 0)
+        
+        
 
 class RiskWaitPage(WaitPage):
     pass
@@ -1045,12 +1127,15 @@ class FinalResultsPage(Page):
 
     @staticmethod
     def vars_for_template(player: Player):
+        determine_bonus(player)
         participant = player.participant
         session = player.session
         market_bonus = participant.vars.get('MARKET_PAYMENT').to_real_world_currency(session)
         forecast_bonus = participant.vars.get('FORECAST_PAYMENT').to_real_world_currency(session)
+        risk_bonus = participant.vars.get('RISK_PAYMENT').to_real_world_currency(session)
         return {'market_bonus': market_bonus,
                 'forecast_bonus': forecast_bonus,
+                'risk_bonus': risk_bonus,
                 'total_pay': participant.payoff_plus_participation_fee(),
                 'is_online': scf.is_online(player),
                 }

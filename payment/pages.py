@@ -34,6 +34,7 @@ class FinalResultsPage(Page):
         session = self.player.session
         market_bonus = participant.vars.get('MARKET_PAYMENT').to_real_world_currency(session)
         forecast_bonus = participant.vars.get('FORECAST_PAYMENT').to_real_world_currency(session)
+        risk_bonus = participant.vars.get('RISK_PAYMENT').to_real_world_currency(session)
         is_online = scf.is_online(self.player)
         is_prolific = scf.is_prolific(self.player)
         is_mturk = scf.is_mturk(self.player)
@@ -44,6 +45,7 @@ class FinalResultsPage(Page):
 
         return {'market_bonus': market_bonus,
                 'forecast_bonus': forecast_bonus,
+                'risk_bonus': risk_bonus,
                 'total_bonus': market_bonus + forecast_bonus,
                 'total_pay': participant.payoff_plus_participation_fee(),
                 'is_prolific': is_prolific,
