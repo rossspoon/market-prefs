@@ -2,7 +2,7 @@ import random
 from collections import defaultdict
 
 from rounds.models import *
-from call_market_price import MarketPrice, OrderFill
+from call_market_price2 import MarketPrice2, OrderFill2
 from rounds.data_structs import DataForPlayer
 
 
@@ -57,15 +57,20 @@ class CallMarket:
 
         b = concat_or_null([self.bids, algo_bids])
         o = concat_or_null([self.offers, algo_offers])
-        last_price = self.group.get_last_period_price()
 
-        mp = MarketPrice(b, o)
-        market_price, market_volume = mp.get_market_price(last_price=last_price)
+        mp = MarketPrice2(b, o)
+        market_price, market_volume = mp.get_market_price()
+        # This can happen is there are no orders made
+        # Set price to last price
+        if market_price is None:
+            market_price =  self.group.get_last_period_price()
+            market_volume = 0
+
         return cu(market_price), market_volume
 
 
     def fill_orders(self, market_price):
-        of = OrderFill(concat_or_null([self.bids, self.offers]))
+        of = OrderFill2(concat_or_null([self.bids, self.offers]))
         of.fill_orders(market_price)
 
 
