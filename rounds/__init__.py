@@ -904,7 +904,7 @@ def determine_bonus(player: Player):
     for p in player.in_all_rounds():
         # Ignore practice rounds
         if p.round_number > Constants.num_practice:
-            risk_choices.extend(player.get_risk_task_data())
+            risk_choices.extend(p.get_risk_task_data())
             groups[p.round_number] = p.group
             players[p.round_number] = p
 
@@ -913,6 +913,8 @@ def determine_bonus(player: Player):
     ##
     ## Forcast Bonus
     forecast_bonus = 0
+    forecast_data = []
+
     for i in range(Constants.num_practice, Constants.num_rounds):
         # sort out forecast data
         source_rnd = i + 1
@@ -931,6 +933,16 @@ def determine_bonus(player: Player):
             freward = scf.get_forecast_reward(player) if error <= scf.get_forecast_thold(player) else 0
             forecast_bonus += freward
             
+            forecast_data.append(dict(
+                    source_rnd = source_rnd - Constants.num_practice,
+                    target_rnd = target_rnd - Constants.num_practice,
+                    look_ahead = look_ahead,
+                    forecast = int(forecast),
+                    price = int(price),
+                    error = int(error),
+                    reward = int(freward)
+                ))
+    #player.forecast_bonus_data = json.dumps(forecast_data)  #Keep for debugging purposes
     participant.FORECAST_PAYMENT = cu(forecast_bonus)
     
     ##
@@ -941,8 +953,8 @@ def determine_bonus(player: Player):
     if len(risk_choices) > 0:
         choice_data = random.choice(risk_choices)        
         # next, run the chosen gamble
-        draw = random.random()  # uniformly random betwee 0 and 1
-        success = draw <= choice_data['p_hi']  # should have a p_hi percent chance of being lower than p_hi.
+        draw = random.random()  # uniformly random between 0 and 1
+        success = (draw <= choice_data['p_hi']/100)  # should have a p_hi percent chance of being lower than p_hi.
         
         # Which payout did they win?
         if choice_data['choice'] == 1:  #participant made risky choice
@@ -964,14 +976,15 @@ def determine_bonus(player: Player):
         choice_data['rnd'] = choice_data['rnd'] - Constants.num_practice
         
         #save choice artifacts on the player object
-        player.risk_reward = json.dumps(choice_data)
-    participant.RISK_PAYMENT = cu((risk_bonus/conversion)/10) 
+        #player.risk_reward = json.dumps(choice_data) # keep for debugging
+    risk_payment = (risk_bonus/conversion)/10
+    participant.RISK_PAYMENT = cu(risk_payment) 
     
     ##
     ##
     ##
     # Determine total bonus and round up to whole dollar amount.
-    bonus = market_bonus + forecast_bonus + risk_bonus/conversion
+    bonus = market_bonus + forecast_bonus + risk_payment
     # is_online = scf.is_online(player)
     # if not is_online:  # only round up for in-person sessions
     #     bonus = ceil(bonus * conversion) / conversion

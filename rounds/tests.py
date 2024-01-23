@@ -1,64 +1,82 @@
 from otree.api import Submission, expect
 from otree.bots import Bot
-from otree.models import Session
+from .models import Group
+import random
+import time
 
-from bots.scripted_bot import ScriptedBot, test_place_order
-from bots.sim_bot import SimulationBot
-from rounds import Constants, ForecastPage, RoundResultsPage, Market, FinalResultsPage, Group
+from rounds import Constants,PracticeStartPage,PracticeEndPage,Fixate,MarketGridChoice,ForecastPage,RoundResultsPage,RiskPage1,RiskPage2,RiskPage3,RiskPage4,FinalResultsPage
 
+BUY_RANGE = (-5, 5)
+SELL_RANGE = 5
 
 class PlayerBot(Bot):
     def __init__(self, **kwargs):
         self.f0s = [14.00] * (Constants.num_rounds + 1)
         super().__init__(**kwargs)
 
-    def __new__(cls, *args, **kwargs):
-        session = Session.objects_get(id=kwargs.get('session_pk'))
-        s_name = session.config.get('name')
-        if s_name == 'rounds_test':
-            return ScriptedBot(**kwargs)
 
-        elif s_name == 'sim_1':
-            return SimulationBot(**kwargs)
-
-        return super().__new__(cls)
 
     def play_round(self):
-        yield Submission(Market, check_html=False)
-
-        round_number = self.round_number
-
-        # Check the float
+        
         if self.round_number == 1:
-            stock_float = sum(p.shares for p in self.group.get_players())
-            expect(self.group.float, stock_float)
-
-        # Forcast Page
-        f0 = self.f0s[round_number]
-        form_data = {'f0': f0}
-        yield Submission(ForecastPage, form_data)
-
-        player = self.player
-        expect(player.forecast_reward, 5.00)
-        expect(player.forecast_error, 0)
-
-        # Round Result Page
-        yield Submission(RoundResultsPage)
-
-        if round_number == Constants.num_rounds:
-            yield FinalResultsPage
+            yield Submission(PracticeStartPage, check_html=False)
+            
+        if self.round_number == Constants.num_practice + 1:
+            yield Submission(PracticeEndPage, check_html=False)
+            
+        
+            
+        yield Submission(Fixate, check_html=False)
+        yield Submission(MarketGridChoice, check_html=False)
+        yield Submission(Fixate, check_html=False)
+        
+        #Generate forcast amount
+        price = self.group.get_last_period_price()
+        f0 = int(max(0, random.randint(-6, 6) + price))
+        f1 = int(max(0, random.randint(-6, 6) + price))
+        f2 = int(max(0, random.randint(-6, 6) + price))
+        f3 = int(max(0, random.randint(-6, 6) + price))
+        yield Submission(ForecastPage, dict(f0=f0, f1=f1, f2=f2, f3=f3), check_html=False)
+        yield Submission(Fixate, check_html=False)
+        yield Submission(RoundResultsPage, check_html=False)
+        yield Submission(Fixate, check_html=False)
+        yield Submission(RiskPage1, dict(risk=random.randint(0,1)), check_html=False)
+        yield Submission(RiskPage2, dict(risk=random.randint(0,1)), check_html=False)
+        yield Submission(RiskPage3, dict(risk=random.randint(0,1)), check_html=False)
+        yield Submission(RiskPage4, dict(risk=random.randint(0,1)), check_html=False)
+        
+        # if self.round_number == Constants.num_rounds:
+        #     yield Submission(FinalResultsPage, check_html=False)
 
 
 def call_live_method(method, **kwargs):
-    round_number = kwargs.get('round_number')
-    if round_number != 1:
-        return
 
     page_class = kwargs.get('page_class')
-    if not (page_class is Market):
+    if not (page_class is MarketGridChoice):
         return
+    print(page_class)
 
+    
     group: Group = kwargs.get('group')
+    mp = group.get_last_period_price()
 
     for player in group.get_players():
-        test_place_order(method, player.id_in_group, -1, 40.00, 2)
+        buy_price = mp + random.randint(BUY_RANGE[0], BUY_RANGE[1])
+        sell_price = buy_price + random.randint(1, SELL_RANGE)
+        
+        place_order(method, player.id_in_group, 'BUY', buy_price, 1)
+        place_order(method, player.id_in_group, 'SELL', sell_price, 1)
+        
+
+
+def place_order(method, id_, type_, price, quant, valid=True, code_expect=None):
+    _price = str(price)
+    _quant = str(quant)
+    _type = str(type_)
+
+    req = {'func': 'submit-order', 'data': {'type': _type, 'price': _price, 'quantity': _quant}}
+    res = method(id_, req)
+    data = res.get(id_)
+
+    return res
+

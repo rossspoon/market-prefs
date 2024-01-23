@@ -39,6 +39,7 @@
     <li>{{ p.id_in_group }}  - {{ p.participant.code }}</li>
         <ul>
             <li>Risk Data: {{ p.field_maybe_none('risk_reward') }}</li>
+            <li>Forecast Data: {{ p.field_maybe_none('forecast_bonus_data') }}</li>
         </ul>
     {{ endfor}}
     </ul>

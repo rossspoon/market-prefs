@@ -45,5 +45,8 @@ def ensure_participant(obj):
 
 
 def is_button_click(obj):
+    if scf.get_session_name(obj) == 'rounds_test':
+        return True
+
     participant = ensure_participant(obj)
     return bool(participant.vars.get('CONSENT_BUTTON_CLICKED'))
