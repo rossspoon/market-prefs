@@ -14,6 +14,8 @@ import jsonpickle
 import json
 import numpy as np
 import random
+import time
+
 
 #read in and pickle the decision tree for the risk elicitation task
 with open("common/decision_trees_and_gambles.json", "r") as dec_tree:
@@ -379,11 +381,13 @@ def get_orders_by_type(existing_orders):
 
 def create_order_from_live_submit(player, o_type: OrderType, price, quant, o_cls=Order):
     # TODO:  Does this need to go in a transaction?
+    ts = int(time.time()*1000)
     o = o_cls.create(player=player,
                      group=player.group,
                      order_type=o_type.value,
                      price=price,
                      quantity=quant,
+                     timestamp=ts
                      )
 
     # Commit the order so that we can get an id.
@@ -851,7 +855,7 @@ def not_displayed_for_simulation_except_last_round(player: Player):
 
 def custom_export(players):
     yield ['session', 'participant', 'part_label', 'round_number', 'type', 'quantity', 'price',
-           'quantity_final', 'original_quantity', 'automatic', 'market_price', 'volume']
+           'quantity_final', 'original_quantity', 'automatic', 'timestamp', 'market_price', 'volume']
 
     for p in players:
         session = p.session
@@ -861,8 +865,9 @@ def custom_export(players):
 
         for o in orders:
             o_type = 'SELL' if o.order_type == 1 else 'BUY'
+            ts = o.timestamp
             yield [session.code, part.code, part.label, p.round_number, o_type, o.quantity, o.price,
-                   o.quantity_final, o.original_quantity, o.is_buy_in,
+                   o.quantity_final, o.original_quantity, o.is_buy_in, ts,
                    group.field_maybe_none('price'), group.field_maybe_none('volume')]
 
 

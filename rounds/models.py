@@ -405,7 +405,8 @@ class Order(ExtraModel):
     quantity_final = models.IntegerField(initial=0)
     original_quantity = models.IntegerField()
     is_buy_in = models.BooleanField(initial=False)  # is this order an automatic buy-in?
-
+    timestamp = models.IntegerField(blank=True)
+    
     def to_dict(self):
         requested_quant = self.original_quantity if self.original_quantity else self.quantity
         return dict(
