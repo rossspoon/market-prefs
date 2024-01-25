@@ -677,13 +677,27 @@ def vars_for_forecast_template(player: Player):
     ret['hi'] = tick_upper
     ret['mp'] = mp
     
+    fcast_periods = scf.get_forecast_periods(player)
+    first_lab = 'This period' if fcast_periods[0] == 0 else 'Period'
     rn = player.round_number if ret['is_practice'] else player.round_number - Constants.num_practice
-    labels = [f'This period ({rn})', f'Next period ({rn +1})', f'Period {rn + 2}', f'Period {rn +3}']
+    fperiods = [rn + p for p in fcast_periods]
+    labels = [f'{first_lab} ({fperiods[0]})',
+              f'Period {fperiods[1]}',
+              f'Period {fperiods[2]}',
+              f'Period {fperiods[3]}']
     
-    #determine the number of labels
-    rn = player.round_number
-    all_rounds = Constants.num_rounds
-    num_sliders = min(4, all_rounds-rn + 1)
+    # store the target round numbers on the player object
+    player.fcast_rnd_0 = fperiods[0]
+    player.fcast_rnd_1 = fperiods[1]
+    player.fcast_rnd_2 = fperiods[2]
+    player.fcast_rnd_3 = fperiods[3]
+    
+    #determine the number of labels to show
+    num_rounds = Constants.num_market_rounds
+    num_sliders = 0
+    for p in fperiods:
+        if p <= num_rounds:
+            num_sliders += 1
     
     # set up the dict that controls sliders
     sections = [dict(label=lab, f=f'f{i}', tgt=f'tgt_{i}') for i, lab in enumerate(labels[:num_sliders])]
@@ -919,26 +933,34 @@ def determine_bonus(player: Player):
     ## Forcast Bonus
     forecast_bonus = 0
     forecast_data = []
-
     for i in range(Constants.num_practice, Constants.num_rounds):
         # sort out forecast data
         source_rnd = i + 1
         for look_ahead in range(4):
-            target_rnd = source_rnd + look_ahead
+            p = players[source_rnd]
+
+            #Determine target round, and convert to overall round number
+            target_rnd = p.field_maybe_none(f'fcast_rnd_{look_ahead}')
+            target_rnd = target_rnd + Constants.num_practice
             if target_rnd > Constants.num_rounds:
                 continue
             
+            #Get the price data and the forecast for the target round
             g = groups[target_rnd]
-            p = players[source_rnd]
             price = g.price
             forecast = p.field_maybe_none(f'f{look_ahead}')
+
             if not forecast:
                 continue  # skip out if no forecast was made
+                
+            # Determine error and apply threshold rule
             error = abs(price - forecast)
             freward = scf.get_forecast_reward(player) if error <= scf.get_forecast_thold(player) else 0
+            # aggergate
             forecast_bonus += freward
             
-            forecast_data.append(dict(
+            # Assemble debugging data
+            round_look_data = dict(
                     source_rnd = source_rnd - Constants.num_practice,
                     target_rnd = target_rnd - Constants.num_practice,
                     look_ahead = look_ahead,
@@ -946,8 +968,10 @@ def determine_bonus(player: Player):
                     price = int(price),
                     error = int(error),
                     reward = int(freward)
-                ))
-    #player.forecast_bonus_data = json.dumps(forecast_data)  #Keep for debugging purposes
+                )
+            forecast_data.append(round_look_data)
+            
+    # player.forecast_bonus_data = json.dumps(forecast_data)  #Keep for debugging purposes
     participant.FORECAST_PAYMENT = cu(forecast_bonus)
     
     ##

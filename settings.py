@@ -111,6 +111,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     forecast_thold=2.5,
     forecast_reward=5,
     forecast_range=50,
+    forecast_periods='0,2,5,10',
     market_time=20,
     fixate_time=2,
     forecast_time=20,

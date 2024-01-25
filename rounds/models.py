@@ -164,6 +164,10 @@ class Player(BasePlayer):
     f1 = models.IntegerField(blank=True)
     f2 = models.IntegerField(blank=True)
     f3 = models.IntegerField(blank=True)
+    fcast_rnd_0 = models.IntegerField(blank=True)
+    fcast_rnd_1 = models.IntegerField(blank=True)
+    fcast_rnd_2 = models.IntegerField(blank=True)
+    fcast_rnd_3 = models.IntegerField(blank=True)
     
     # TODO: Remove these three
     forecast_error = models.CurrencyField()
