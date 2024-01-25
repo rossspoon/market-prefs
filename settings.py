@@ -24,39 +24,19 @@ SESSION_CONFIGS = [
         app_sequence=['rounds'],
         num_demo_participants=3,
     )
-    , dict(
-        name='instructions',
-        app_sequence=['instructions'],
-        num_demo_participants=1,
 
-        _08_example_cash=60.00,
-        _08_example_short=2
-    )
     , dict(
         name='consent',
         app_sequence=['consent', 'payment'],
         num_demo_participants=1,
     )
-    , dict(
-        name='survey',
-        app_sequence=['survey'],
-        num_demo_participants=1,
-    )
+
     , dict(
         name='payment',
         app_sequence=['payment'],
         num_demo_participants=1
     )
-    , dict(
-        name='practice',
-        app_sequence=['practice'],
-        num_demo_participants=1,
-    )
-    , dict(
-        name='whole_experiment',
-        app_sequence=['consent', 'instructions', 'practice', 'rounds', 'survey', 'payment'],
-        num_demo_participants=2,
-    )
+
     , dict(
         participation_fee=0.75,
 
