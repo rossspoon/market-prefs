@@ -1,11 +1,12 @@
 
 let rad = 5;
 
-let NUM_GRID_LINES = 4;
-let PRICE_EXTREME = 100;
-let MINOR_TICK = 20
+let NUM_GRID_LINES = js_vars.num_grid_lines;
+let PRICE_EXTREME = js_vars.price_extreme;
+let MINOR_TICK = js_vars.minor_tick;
 let PRICE_PER_TICK = PRICE_EXTREME / ((NUM_GRID_LINES + 1) * MINOR_TICK);
 let PRICE_PER_LINE = PRICE_EXTREME / ((NUM_GRID_LINES + 1));
+let NUM_VERT_LINES = 4;
 let START_MSG = "Submit an order by clicking on the grid."
 let edgepad = 5;
 let textpad = 50;
@@ -173,7 +174,7 @@ function draw_grid(dark_left=false, dark_right=false) {
     let num_hor_lines = num_top + 1 + num_bottom
     let vspace = box / (num_hor_lines + 1);
 
-    let num_vert_line = (2* NUM_GRID_LINES) + 1;
+    let num_vert_line = (2* NUM_VERT_LINES) + 1;
     let hspace = box/(num_vert_line + 1);
 
 
@@ -231,7 +232,7 @@ function draw_grid(dark_left=false, dark_right=false) {
 
     /* vertical axis */
     ctx.beginPath();
-    let vaxis_loc = (edgepad + hspace* (NUM_GRID_LINES + 1));
+    let vaxis_loc = (edgepad + hspace* (NUM_VERT_LINES + 1));
     ctx.strokeStyle = `rgb(75, 75, 75)`;
     ctx.moveTo(vaxis_loc, edgepad);
     ctx.lineTo(vaxis_loc, box +edgepad);
@@ -272,8 +273,8 @@ function draw_grid(dark_left=false, dark_right=false) {
     ctx.save();
     ctx.font = "10pt sans";
     ctx.textAlign = 'center';
-    let start_q = -1 * (NUM_GRID_LINES+1)
-    let num_itr = 2*(NUM_GRID_LINES+1) +1
+    let start_q = -1 * (NUM_VERT_LINES+1)
+    let num_itr = 2*(NUM_VERT_LINES+1) +1
     for (let i = 0; i<num_itr; i++){
         let n = Math.abs(start_q + i)
         ctx.fillText(n.toString(), edgepad + i*hspace, edgepad+box+15)

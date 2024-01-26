@@ -15,6 +15,7 @@ import json
 import numpy as np
 import random
 import time
+import math
 
 
 #read in and pickle the decision tree for the risk elicitation task
@@ -152,6 +153,66 @@ def get_websockets_vars(player: Player, event_type='page_name'):
 
 def get_js_vars_fixate(player: Player):
     return get_websockets_vars(player, 'fixate')
+
+
+def get_grid_setting(extreme: int):
+    """
+    
+
+    Parameters
+    ----------
+    extreme : int
+        Possible price extreme.  This is the amount above and below the 
+        market price
+
+    Returns
+    -------
+    nlines : TYPE
+        Number of lines on the grid.  Will None is there is no even division
+    nticks : TYPE
+        Number of ticks per line. Will None is there is no even division
+
+    """
+    # number of grid lines is the 
+    nlines = None
+    for d in [5,4,3,2]:
+        if extreme % d == 0:
+            nlines = d
+            break
+        
+    if nlines is None:
+        return None, None
+        
+    nticks = extreme / nlines
+    
+    return nticks, nlines - 1
+
+
+
+def get_js_vars_grid(player: Player, factor=.2):
+    ret = get_js_vars(player)
+    
+    # get grid spacing variables
+    # Price Extreme is the range of price above and below the market price
+    
+    # initial guess of price extreme
+    init_extreme = math.ceil(ret['market_price'] * factor)
+
+    n_ticks, n_lines =  None, None
+    for extreme in range(init_extreme, init_extreme+5):
+        n_ticks, n_lines = get_grid_setting(extreme)
+        if n_ticks and n_lines:
+            break
+        
+    if not(n_ticks) or not(n_lines):
+        extreme = 10
+        n_ticks = 2
+        n_lines = 5
+        
+    ret['price_extreme'] = extreme
+    ret['num_grid_lines'] = n_lines
+    ret['minor_tick'] = n_ticks
+    return ret
 
 
 
@@ -1044,7 +1105,7 @@ class MarketGridChoice(Page):
     timer_text = 'Time Left:'
 
     # method bindings
-    js_vars = get_js_vars
+    js_vars = get_js_vars_grid
     vars_for_template = vars_for_market_template
     live_method = market_page_live_method
 
