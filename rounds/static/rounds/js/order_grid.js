@@ -19,6 +19,7 @@ let submitted_odata = null;
 let enable_left = true;
 let enable_right = true;
 let m_pos_valid = true;
+let load_time = Date.now()
 
 function is_on_left(x, box){
   return x < edgepad+box/2;
@@ -96,6 +97,8 @@ $(window).on('load', function () {
     $("#price-grid").on("click", function(e){
         if (o_data) {
             submitted_odata = o_data;
+            ts = Date.now() - load_time;
+            submitted_odata.ts = ts
             liveSend({'func': 'submit-order', 'data': submitted_odata});
             reset_grid();
         }

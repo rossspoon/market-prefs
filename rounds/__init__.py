@@ -175,7 +175,7 @@ def get_grid_setting(extreme: int):
     """
     # number of grid lines is the 
     nlines = None
-    for d in [5,4,3,2]:
+    for d in [5,4,3]:
         if extreme % d == 0:
             nlines = d
             break
@@ -440,9 +440,8 @@ def get_orders_by_type(existing_orders):
     return orders_cat
 
 
-def create_order_from_live_submit(player, o_type: OrderType, price, quant, o_cls=Order):
+def create_order_from_live_submit(player, o_type: OrderType, price, quant, ts, o_cls=Order):
     # TODO:  Does this need to go in a transaction?
-    ts = int(time.time()*1000)
     o = o_cls.create(player=player,
                      group=player.group,
                      order_type=o_type.value,
@@ -511,9 +510,10 @@ def market_page_live_method(player, d, o_cls=Order, show_warnings=True, show_not
     if func == 'submit-order':
         data = d['data']
         error_code, t, p, q = is_order_valid(player, data, orders_by_type)
+        ts = data['ts']
 
         if error_code == 0:
-            ret.update(create_order_from_live_submit(player, t, p, q, o_cls=o_cls))
+            ret.update(create_order_from_live_submit(player, t, p, q, ts, o_cls=o_cls))
             this_order_q = q
             this_order_p = p
             this_order_t = t
@@ -702,13 +702,6 @@ def get_short_message(limit, close, debt, delay, round_number):
     return class_attr, msg
 
 
-def to_mult_10(x, up=True):
-    d = 10 - x%10
-    if up:
-        return x+ d
-    else:
-        return x - x%10
-
 
 def vars_for_market_template(player: Player):
     ret = standard_vars_for_template(player)
@@ -720,20 +713,40 @@ def vars_for_market_template(player: Player):
     return ret
 
 
+def to_mult(x, mult, up=True):
+    mod = x % mult
+    if mod == 0:
+        return x
+    
+    if up:
+        d = mult - mod
+        return x+ d
+    else:
+        return x - mod
+
+
 def vars_for_forecast_template(player: Player):
     ret = standard_vars_for_template(player)
     
     mp = int(ret['market_price'])
-    
-    #forecast range
-    fcast_range = ret['forecast_range']
-    upper_lim = mp + fcast_range
-    lower_lim = max(1, mp-fcast_range)
-    tick_lower = to_mult_10(lower_lim, up=False)
-    tick_upper = to_mult_10(upper_lim, up=True)
-    
     ret['action_include'] = 'insert_forecast.html'
-    ret['ticks'] = list(np.arange(tick_lower, tick_upper +1, 10))
+    
+    #forecast range  
+    upper_lim = mp * 2
+
+    # determine tick spacing base on the upper lim
+    tick_step = 5
+    if upper_lim > 95 and upper_lim <= 190:
+        tick_step = 10
+    elif upper_lim > 190:
+        tick_step = 20
+        
+    # Round up to the tick step.
+    tick_upper = to_mult(upper_lim, tick_step, up=True)
+    tick_lower = 0
+  
+    # Generate ticks and save other information on the return object
+    ret['ticks'] = list(np.arange(tick_lower, tick_upper +1, tick_step))
     ret['lo'] = tick_lower
     ret['hi'] = tick_upper
     ret['mp'] = mp
