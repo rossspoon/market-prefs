@@ -1,0 +1,142 @@
+{{ extends 'global/Page.html' }}
+{{ block title }} Waiting For Others to Join {{ endblock }}
+
+{{ block content }}
+
+
+<div style="width: 900px; justify-content: center; text-align: center;">
+
+    <p>You have been waiting for <span id="timer"></span> minute(s).</p>
+
+    <progress id="progress_bar" max={{C.WAITING_PLAYERS_PER_GROUP}}></progress>
+    <p id="text"></p>
+
+    <p id="timeout"></p>
+
+    <button id="next" style="visibility:hidden">Start the Game</button>
+    <p></p>
+    <button id="end" type="button" style="visibility:hidden">End the Game</button>
+    
+    <a href="http://localhost:8000/room/market2?participant_label={{ player.participant.label }}">Link to Experiment</a>
+
+</div>
+
+<style>
+    p {
+        font-size: 20px;
+        text-align: center;
+    }
+    progress {
+        width: 450px;
+        height: 50px;
+    }
+    button {
+        text-align: center;
+        font-size: 20px;
+        width: 180px;
+        height: 60px;
+        border-radius: 8px;
+        background-color: orange;
+    }
+</style>
+
+
+<script>
+    var start = Date.now();
+    var progress_bar = document.getElementById("progress_bar");
+    var waiting_text = document.getElementById("text");
+    var timer = document.getElementById("timer");
+    var endBtn = document.getElementById("end");
+    timer.innerHTML = 0;
+    var timeout = document.getElementById("timeout");
+    var limit = Math.round({{ C.WAIT_TIMEOUT }} /60);
+    timeout.innerHTML = "Please wait shortly for other players to join.<br>Please stay close to the computer as the game may start anytime.<br>Please do NOT refresh this page. <br><br>If you are left waiting for longer than " 
+        + limit + " minutes, <br>the game will end and we will compensate you $10 for your time. <br>You will be guaranteed a $2 bonus for joining the game, and you will be able to earn up to $30 bonus through good performance.";
+    var num_more = {{ C.WAITING_PLAYERS_PER_GROUP }};
+    //var num_enrolled = 0;
+    var player_dropout = 0;
+    
+    //send a message to server when this page is shown
+    document.addEventListener("DOMContentLoaded", (event) => {
+        //liveSend({"out":0, "enrolled":-1}); //-1 meaning useless info
+        liveSend({"out":0});
+    });
+    
+    //send a message to server when the next button is clicked
+    // document.getElementById("next").addEventListener("click", (event) => {
+    //     liveSend({"enrolled":1, "out":-1});
+    // });
+
+    //if closed the tab, remove from waiting list
+    window.onbeforeunload = function () {
+        //player hasn't dropped, some but not enough ppl has enterred the game
+        if (player_dropout==0 & num_more >0){
+            //liveSend({"out":1, "enrolled":-1})
+            liveSend({"out":1});
+        }
+    };
+
+    //receive player data from server
+    function liveRecv(data) {
+        console.log(data);
+        progress_bar.value = data['arrived'];
+        num_more = {{ C.WAITING_PLAYERS_PER_GROUP }} - data['arrived'];
+        waiting_text.innerHTML = "Waiting for " + String(Math.max(num_more, 0)) + " more players to join.";
+        //num_enrolled = data['enrolled'];
+    }
+
+    
+    //check whether all players have arrived or timeout happened
+    function proceed(){
+        var time = (Date.now() - start)/1000;
+        timer.innerHTML = Math.round(time/60);
+        //time out
+        if ((time > {{C.WAIT_TIMEOUT}}) && (num_more > 0)){
+            //waiting_text.style.visibility="hidden";
+            timeout.innerHTML = "Not enough players showed up in time. "
+                +"<br>Please click the below button to get your completion code."
+                +"<br>Please close this tab after you are redirected to the completion page.";
+                // +"<br>You may also choose to keep waiting and earn up to $28 bonus by participating in the task.";
+            endBtn.style.visibility = 'visible';
+            endBtn.addEventListener("click", function() {
+                location.href = "{{session.prolific_completion_url}}";
+                //endBtn.innerHTML = "<b>{{session.prolific_completion_url}}</b>";
+                player_dropout = 1;
+                //liveSend({"out":1, "enrolled":-1});
+                liveSend({"out":1})
+            });
+        }
+        //all players arrived
+        if ((num_more <= 0) && (player_dropout==0)){
+            next.click();
+            //session has not started
+            // if (num_enrolled < {{C.MIN_PLAYERS_PER_GROUP}}){
+            //     timeout.innerHTML = "All players have arrived.";
+            //     document.getElementById("next").style.visibility = 'visible';
+            //     endBtn.style.visibility = 'hidden';
+            //     //sayReady();
+            //     next.click();
+  
+            // }//session has already started
+            // else{
+            //     document.getElementById("next").style.visibility = 'hidden'; //hid the start button
+            //     setTimeout(() => {     
+            //         timeout.innerHTML = "Sorry this session is full. Thanks for your interests. <br>Please use the code <b>C1KGSHEV</b> to get your compensation.";
+            //     }, 5000); //excuate after 5s
+            // }
+        }
+        
+    }
+    setInterval(proceed, 1000)
+    
+    // if (start==1){
+    //     $('.otree-timer__time-left').on('update.countdown', function (event) {
+    //         if (event.offset.totalSeconds === 60) {
+    //             $('.otree-timer').show();
+    //         }
+    //     });
+    // }
+</script>
+   
+
+{{ endblock }}

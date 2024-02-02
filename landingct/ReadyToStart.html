@@ -1,0 +1,73 @@
+{{ block title }}
+{{ endblock }}
+{{ block content }}
+
+
+
+<div id="full" style="display:none">
+    <p>Sorry this session is full. Thanks for your interests.</p>
+    <p>Please use the code C1KGSHEV to get your completion payment.</p>
+</div>
+
+<div id="start">
+    <p><b>You need to click Start the Game button before the timer runs out to be considered eligible.</b></p>
+    <p></p>
+    <button id="next">Start the Game</button>
+</div>
+
+<style>
+button {
+    text-align: center;
+    font-size: 20px;
+    width: 180px;
+    height: 60px;
+    border-radius: 8px;
+    background-color: Orange;
+}
+div {
+    text-align: center;
+    width: 950px;
+    font-size: 18px;
+}
+</style>
+
+<script>
+    var full = document.getElementById("full");
+    var start_btn = document.getElementById("next");
+    var num_enrolled = 0;
+
+    //send a message to server when this the button is clicked
+    window.onbeforeunload = function () {
+        liveSend({"enrolled":1});
+    }
+
+    //attention players
+    function sayReady() {
+        let msg = new SpeechSynthesisUtterance();
+        msg.language = 'en-US';
+        msg.text = "All players have arrived";
+        window.speechSynthesis.speak(msg);
+    }
+
+    //receive player data from server
+    function liveRecv(data) {
+        num_enrolled = data['num_enrolled'];
+    }
+    
+    //select what to show on the screen
+    function checkStatus(){
+        sayReady();
+        //more than X players have arrived
+        if (num_enrolled >= {{C.MIN_PLAYERS_PER_GROUP}}){
+            document.getElementById("start").style.visibility = 'hidden';
+            setTimeout(() => {
+                full.style.display = 'block';
+            }, 10000); //excuate after 10s
+
+        }
+    }
+    setInterval(checkStatus, 1000)
+
+
+</script>
+{{ endblock }}
