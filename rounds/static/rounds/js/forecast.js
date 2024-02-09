@@ -8,8 +8,5 @@ $(window).on('load', function () {
     }
     $('#' + target).text(val);
     $(this).parents('.fcast-box').children('input').val(val);
-
-    let mp = js_vars.market_price;
-    let fcast_price = Math.round(mp * (1 + val/100));
   });
 });

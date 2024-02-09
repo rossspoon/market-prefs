@@ -723,62 +723,77 @@ def to_mult(x, mult, up=True):
         return x+ d
     else:
         return x - mod
+    
+
+
+def get_slider_info(gap: int, mp: int, tgt_period: int, fnum:int):
+
+        mult = 2
+        if gap >= 5 and gap < 10:
+            mult = 2.5
+        elif gap >= 10:
+            mult = 3
+        
+        upper_lim = int(mp * mult)
+        
+        #determine tick spacing
+        tick_step = 5
+        if upper_lim > 95 and upper_lim <= 190:
+            tick_step = 10
+        elif upper_lim > 190:
+            tick_step = 20
+            
+        # Round up to the tick step.
+        tick_upper = to_mult(upper_lim, tick_step, up=True)
+        tick_lower = 0        
+        
+        slider_info = {}
+        # Generate ticks and save other information on the return object
+        slider_info['ticks'] = list(np.arange(tick_lower, tick_upper +1, tick_step))
+        slider_info['lo'] = tick_lower
+        slider_info['hi'] = tick_upper
+        slider_info['mp'] = mp
+        slider_info['tgt'] = tgt_period
+        
+        label = f'This period ({tgt_period})' if gap == 0 else f'Period  {tgt_period}'
+        slider_info['label'] = label
+        slider_info['f'] = f'f{fnum}'
+        
+        
+        return slider_info
+        
 
 
 def vars_for_forecast_template(player: Player):
     ret = standard_vars_for_template(player)
-    
-    mp = int(ret['market_price'])
     ret['action_include'] = 'insert_forecast.html'
     
-    #forecast range  
-    upper_lim = mp * 2
-
-    # determine tick spacing base on the upper lim
-    tick_step = 5
-    if upper_lim > 95 and upper_lim <= 190:
-        tick_step = 10
-    elif upper_lim > 190:
-        tick_step = 20
-        
-    # Round up to the tick step.
-    tick_upper = to_mult(upper_lim, tick_step, up=True)
-    tick_lower = 0
-  
-    # Generate ticks and save other information on the return object
-    ret['ticks'] = list(np.arange(tick_lower, tick_upper +1, tick_step))
-    ret['lo'] = tick_lower
-    ret['hi'] = tick_upper
-    ret['mp'] = mp
-    
     fcast_periods = scf.get_forecast_periods(player)
-    first_lab = 'This period' if fcast_periods[0] == 0 else 'Period'
-    rn = player.round_number if ret['is_practice'] else player.round_number - Constants.num_practice
-    fperiods = [rn + p for p in fcast_periods]
-    labels = [f'{first_lab} ({fperiods[0]})',
-              f'Period {fperiods[1]}',
-              f'Period {fperiods[2]}',
-              f'Period {fperiods[3]}']
+    real_rnd = player.round_number if ret['is_practice'] else player.round_number - Constants.num_practice
+    mp = int(ret['market_price'])
+
+
+    sliders = []
+    for i, gap in enumerate(fcast_periods):
+        target_period = real_rnd + gap
+        if target_period > Constants.num_market_rounds:
+            continue
+        
+        sliders.append(get_slider_info(gap, mp, target_period, i))
+        
+        #store target round number on the player object
+        if i == 0:
+            player.f0 = target_period
+        elif i == 1:
+            player.f1 = target_period
+        elif i == 2:
+            player.f2 = target_period
+        elif i == 3:
+            player.f3 = target_period
     
-    # store the target round numbers on the player object
-    player.fcast_rnd_0 = fperiods[0]
-    player.fcast_rnd_1 = fperiods[1]
-    player.fcast_rnd_2 = fperiods[2]
-    player.fcast_rnd_3 = fperiods[3]
-    
-    #determine the number of labels to show
-    num_rounds = Constants.num_market_rounds
-    num_sliders = 0
-    for p in fperiods:
-        if p <= num_rounds:
-            num_sliders += 1
-    
-    # set up the dict that controls sliders
-    sections = [dict(label=lab, f=f'f{i}', tgt=f'tgt_{i}') for i, lab in enumerate(labels[:num_sliders])]
-    ret['inputs'] = sections
-    
-    
+    ret['inputs'] = sliders
     return ret
+
 
 
 def vars_for_round_results_template(player: Player):
@@ -896,6 +911,7 @@ def get_round_result_messages(player: Player, d: dict):
 
 
 def pre_round_tasks(group: Group):
+
     assign_endowments(group)
 
     # Determine auto transaction statuses
@@ -1094,14 +1110,44 @@ def determine_bonus(player: Player):
     participant.payoff = cu(max(bonus, 0))
 
 
+    
+def group_by_arrival_time_method(subsession: Subsession, waiting_players:list):
+    print('######   group_by_arrival_time_method')
+
+    print(f'    waiting: {len(waiting_players)} / {len(subsession.get_players())}')
+    print([p.participant.label for p in waiting_players])
+    if len(waiting_players) != len(subsession.get_players()):
+        return
+    
+    print(f'   round_number: {subsession.round_number}')
+    if subsession.round_number != 1:
+        # should never get here.  The wait page GroupingWaitPage only runs once
+        # during round 1
+        return
+    
+    #group labels and non responders
+    responders = [p for p in subsession.get_players() if p.participant.label]
+    
+    print(f'    responders:  {len(responders)}')
+    return responders
+    
 
 ############
 # PAGES
 ##########
+class GroupingWaitPage(WaitPage):
+    body_text = "Waiting for the experiment to begin"
+    group_by_arrival_time=True
+    
+    @staticmethod
+    def is_displayed(player: Player):
+        return player.round_number==1
+    
+    
 class PreMarketWait(WaitPage):
     body_text = "Waiting for the experiment to begin"
     after_all_players_arrive = pre_round_tasks
-
+        
 
 class Fixate(Page):
     get_timeout_seconds = scf.get_fixate_time
@@ -1277,18 +1323,19 @@ class PracticeEndPage(Page):
         return player.round_number == Constants.num_practice + 1
 
 
-page_sequence = [PracticeStartPage,
-                 PracticeEndPage,
+page_sequence = [#GroupingWaitPage,
                  PreMarketWait,
-                 Fixate,
+                 PracticeStartPage,
+                 PracticeEndPage,
+                 #Fixate,
                  MarketGridChoice,
-                 Fixate,
+                 #Fixate,
                  ForecastPage,
-                 Fixate,
+                 #Fixate,
                  MarketWaitPage,
                  RoundResultsPage,
-                 Fixate,
-                 RiskWaitPage,
+                 #Fixate,
+                 #RiskWaitPage,
                  RiskPage1,
                  RiskPage2,
                  RiskPage3,

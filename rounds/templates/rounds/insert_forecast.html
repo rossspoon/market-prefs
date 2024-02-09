@@ -12,12 +12,12 @@
             <input type="hidden" name="{{ d.f }}" id="{{ d.f }}">
             {{ formfield_errors d.f }}
             <span class="slidecontainer">
-                <input type="range" min="{{ lo }}" max="{{ hi }}" value="{{ mp }}" class="slider"  id="sld_curr" target="{{ d.tgt }}">
+                <input type="range" min="{{ d.lo }}" max="{{ d.hi }}" value="{{ d.lo }}" class="slider"  id="sld_curr" target="{{ d.tgt }}">
                 <div class="dl_ticks unselectable">
-                    {{ for t in ticks }} <div>-</div> {{ endfor }}
+                    {{ for t in d.ticks }} <div>-</div> {{ endfor }}
                 </div>
                 <div class="dl_labs unselectable">
-                    {{ for t in ticks }} <div>{{ t }}</div> {{ endfor }}
+                    {{ for t in d.ticks }} <div>{{ t }}</div> {{ endfor }}
                 </div>
             </span>
             <span class="forecast-tgt" id="{{ d.tgt }}"></span>
