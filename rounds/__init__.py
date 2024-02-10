@@ -779,17 +779,18 @@ def vars_for_forecast_template(player: Player):
         if target_period > Constants.num_market_rounds:
             continue
         
-        sliders.append(get_slider_info(gap, mp, target_period, i))
-        
+        slider_info = get_slider_info(gap, mp, target_period, i)
+        sliders.append(slider_info)
+
         #store target round number on the player object
         if i == 0:
-            player.f0 = target_period
+            player.fcast_rnd_0 = target_period
         elif i == 1:
-            player.f1 = target_period
+            player.fcast_rnd_1 = target_period
         elif i == 2:
-            player.f2 = target_period
+            player.fcast_rnd_2 = target_period
         elif i == 3:
-            player.f3 = target_period
+            player.fcast_rnd_3 = target_period
     
     ret['inputs'] = sliders
     return ret
@@ -1031,6 +1032,9 @@ def determine_bonus(player: Player):
 
             #Determine target round, and convert to overall round number
             target_rnd = p.field_maybe_none(f'fcast_rnd_{look_ahead}')
+            if not target_rnd:
+                continue
+            
             target_rnd = target_rnd + Constants.num_practice
             if target_rnd > Constants.num_rounds:
                 continue
