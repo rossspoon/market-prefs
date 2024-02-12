@@ -367,7 +367,7 @@ def get_dec_tree(ps:BaseParamSpace, payouts:dict):
 
     Returns
     -------
-    bin_tree : common.BinTree
+    bin_tree : Node
         The decision tree.  A binary tree storing at each node the probability of the high payout.
 
     """
