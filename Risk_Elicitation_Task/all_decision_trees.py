@@ -1,15 +1,7 @@
 import numpy as np
-import sys
 import time
 
-import os
-print(os.getcwd())
 
-if '../' not in sys.path:
-    sys.path.append('../')
-
-print ("\n".join(sys.path))
-from common.BinTree import Node
 
 # This is an implementation of the DOSE method of risk preference elicitation, as described in:
 #         Wang, S.W., Filiba, M. and Camerer, C.F., 2010. Dynamically optimized sequential experimentation (DOSE) 
@@ -24,6 +16,12 @@ class BaseParamSpace():
     MU = np.arange(.1, 6.1, 0.1)
     QUESTIONS = np.arange(0, 1.01, .01)
     ACTIONS = [0, 1]
+    
+    MODELS = np.empty((len(R), len(MU), 2))
+    for i, r in enumerate(R):
+        for j, mu in enumerate(MU):
+            MODELS[i][j][0] = r
+            MODELS[i][j][1] = mu
     
     # Calculations based solely on the param space above
     pr = 1 / len(R)
@@ -42,6 +40,14 @@ class BaseParamSpace():
         str += f"Questions: {min(self.QUESTIONS): .2f} - {max(self.QUESTIONS): .2f} \n"
         str += f"Actions: {self.ACTIONS}"
         return str
+    
+    def get_r_array(self):
+        return self.MODELS[:,:, 0]
+    
+    def get_mu_array(self):
+        return self.MODELS[:, :, 1]
+    
+
 
 
 def utility(payout: float, r: float):
@@ -201,6 +207,8 @@ def run_KL(ps:BaseParamSpace, priors, questions, likelihoods):
     max_q = None
     max_ls = None
     max_lr = None
+    max_ds = None  #Denominator for the safe likelihoods for the max question
+    max_dr = None  #Denominator for the risk likelihoods for the max question
     kls = []
 
     # Determine the KL info for each question
@@ -243,6 +251,8 @@ def run_KL(ps:BaseParamSpace, priors, questions, likelihoods):
             max_q = q
             max_ls = likeli_s
             max_lr = likeli_r
+            max_ds = denom_s
+            max_dr = denom_r
             max_q_idx = q_idx
             
     # Remove the max question so that is does not get asked again. 
@@ -254,12 +264,93 @@ def run_KL(ps:BaseParamSpace, priors, questions, likelihoods):
     # This is equation (5) of the DOSE paper
     # If the question max_q is posed to a participant, that person will
     # choose risky or safe.  Update the priors in both cases
-    p0 = update_prior(max_ls, priors, denom_s)
-    p1 = update_prior(max_lr, priors, denom_r)
-    
+    p0 = update_prior(max_ls, priors, max_ds)
+    p1 = update_prior(max_lr, priors, max_dr)
+        
     
     return max_q, p0, p1, new_q, new_likes
 
+
+
+class Node():
+    
+    def __init__(self, ps:BaseParamSpace, priors, questions, likelihoods, curr_level=1, max_level=4):
+        self.ps = ps
+        self.priors = priors
+        self.questions = questions
+        self.likelihoods = likelihoods
+        self.right = None
+        self.left = None
+        
+        q, post_0, post_1, new_q, new_l = run_KL(ps, priors, questions, likelihoods)
+        
+        self.q = q
+        self.post_0 = post_0
+        self.post_1 = post_1
+        self.new_q = new_q
+        self.new_l = new_l
+        
+        #estimate parameters
+        r_arr = ps.get_r_array()
+        mu_arr = ps.get_mu_array()
+        
+        
+        self.r0 = sum(sum(r_arr * post_0))
+        self.mu0 = sum(sum(mu_arr * post_0))
+        self.r1 = sum(sum(r_arr * post_1))
+        self.mu1 = sum(sum(mu_arr * post_1))
+        
+        if curr_level < max_level:
+            self.left = Node(ps, post_1, new_q, new_l, curr_level=curr_level+1)
+            self.right = Node(ps, post_0, new_q, new_l, curr_level=curr_level+1)
+            
+    
+    def is_leaf(self):
+        return self.right is None and self.left is None
+ 
+
+
+    def to_dict(self):
+        right_d = self.right.to_dict() if self.right else None
+        left_d = self.left.to_dict() if self.left else None
+        
+        return dict(q=self.q,
+                    r0 = self.r0,
+                    r1 = self.r1,
+                    mu0 = self.mu0,
+                    mu1 = self.mu1,
+                    right = right_d,
+                    left = left_d,
+                    )
+    
+    
+    @staticmethod
+    def str_helper(node, tab=0):
+        ret = ''
+        right = node.right
+        left = node.left
+
+        if right:
+            ret += node.str_helper(right, tab=tab+1)
+        
+        if node.is_leaf():
+            ret += f"{'      '*(tab+1)}/(r: {node.r0: .2f}  mu: {node.mu0: .2f})\n"
+            
+        ret += f"{'      '*tab}{node.q: .2f}\n"
+        
+        if node.is_leaf():
+            ret += f"{'      '*(tab+1)}/(r: {node.r1: .2f}  mu: {node.mu1: .2f})\n"
+        
+        if left:
+            ret += node.str_helper(left, tab=tab+1)
+            
+        return ret
+
+    
+    def __str__(self):
+        return self.str_helper(self)
+    
+    
 
 
 def get_dec_tree(ps:BaseParamSpace, payouts:dict):
@@ -300,48 +391,13 @@ def get_dec_tree(ps:BaseParamSpace, payouts:dict):
 
     
     # Build Decision Tree
-    node_q = []
-    priors_q = []
-    questions = []
-    likelihoods = []
-    
-    # initial node
-    q, p1, p0, new_q, new_l = run_KL(ps, ps.UNI_PRIOR, ps.QUESTIONS, likelis_for_questions)
-    bin_tree = Node(q)
-    node_q.append(bin_tree)
-    priors_q.append(p1)
-    priors_q.append(p0)
-    questions.append(new_q)
-    likelihoods.append(new_l)
-    
-    for i in range(7):
-        p1 = priors_q.pop(0)
-        p0 = priors_q.pop(0)
-        new_q = questions.pop(0)
-        new_l = likelihoods.pop(0)
-        
-        q1, pr1, pr0, newq_1, newl_1 = run_KL(ps, p1, new_q, new_l)
-        q0, pl1, pl0, newq_0, newl_0 = run_KL(ps, p0, new_q, new_l)
-        
-    
-        node = node_q.pop(0)
-        nr = Node(q1)
-        nl = Node(q0)
-        node_q.append(nr)
-        node_q.append(nl)
-        node.right = nr
-        node.left = nl
-    
-        priors_q.append(pr1)
-        priors_q.append(pr0)
-        priors_q.append(pl1)
-        priors_q.append(pl0)
-        questions.append(newq_1)
-        questions.append(newq_0)
-        likelihoods.append(newl_1)
-        likelihoods.append(newl_0)
+    bin_tree = Node(ps, ps.UNI_PRIOR, ps.QUESTIONS, likelis_for_questions)
+
     
     return bin_tree
+
+
+
 
 
 #################################
@@ -350,7 +406,7 @@ def get_dec_tree(ps:BaseParamSpace, payouts:dict):
 if __name__ == '__main__':
     
     import pandas as pd
-    import jsonpickle
+    import json
     import multiprocessing as mp
     
     
@@ -409,8 +465,8 @@ if __name__ == '__main__':
     #sort the decision trees by the round number
     dec_trees = sorted(dec_trees, key=lambda x: x['round_number'])
         
-    # pickle them to JSON
-    json_str = jsonpickle.encode(dec_trees)     
+    #pickle them to JSON
+    json_str = json.dumps(dec_trees, default=lambda o: o.to_dict())     
     with open("decision_trees_and_gambles.json", "w") as out:
           out.write(json_str)
          
@@ -423,7 +479,8 @@ if __name__ == '__main__':
         outfile.write("\n========================\n")
         for d in dec_trees:
             outfile.write(f"====================================================\nRound: {d['round_number']}\nRisk Lo: {d['rl']} \nRisk Hi: {d['rh']} \nSafe Lo: {d['sl']} \nSafe Hi: {d['sh']} \n\n-- (Down is the SAFE pick) ---\n")                
-            outfile.write(str(d['dec_tree']))
+            dec_tree = d['dec_tree']
+            outfile.write(str(dec_tree))
 
     end = current_milli_time()
     print(f"Total Time: {end - start}")
@@ -434,7 +491,7 @@ if __name__ == '__main__':
 if __name__ == '__main__2':
 
     bps = BaseParamSpace()
-    bps.MU = np.arange(0, 10.1, 0.1)
+    #bps.MU = np.arange(0, 10.1, 0.1)
 
     start = current_milli_time()
     sh_u = [utility(19.25, r) for r in bps.R]
