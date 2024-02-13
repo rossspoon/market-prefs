@@ -61,7 +61,7 @@ def utility(payout: float, r: float):
 
 def compute_likelihood(u_s_hi, u_s_lo, u_r_hi, u_r_lo, q: float, mu:float):
     """
-    Likelihood function, probability of answering a (risky = 0, safe = 1)
+    Likelihood function, probability of choosing the safe gamble.
     
     u_s_hi, u_s_lo, u_r_hi, u_r_lo: the payoffs involved in any H-L payment structure.
     q: question, probability of high payoff
@@ -339,7 +339,7 @@ class Node():
         ret += f"{'      '*tab}{node.q: .2f}\n"
         
         if node.is_leaf():
-            ret += f"{'      '*(tab+1)}/(r: {node.r1: .2f}  mu: {node.mu1: .2f})\n"
+            ret += f"{'      '*(tab+1)}\(r: {node.r1: .2f}  mu: {node.mu1: .2f})\n"
         
         if left:
             ret += node.str_helper(left, tab=tab+1)
@@ -465,7 +465,8 @@ if __name__ == '__main__':
     #sort the decision trees by the round number
     dec_trees = sorted(dec_trees, key=lambda x: x['round_number'])
         
-    #pickle them to JSON
+    #Dump them to JSON
+    # Use the the Node class's to_dict method to encode the decision trees
     json_str = json.dumps(dec_trees, default=lambda o: o.to_dict())     
     with open("decision_trees_and_gambles.json", "w") as out:
           out.write(json_str)
