@@ -1,27 +1,24 @@
 import decimal
 from collections import defaultdict
-from math import ceil, floor
+from math import floor
 from rounds.call_market import CallMarket
 from . import tool_tip
 from .models import Player, Group, Order, OrderErrorCode, OrderType, cu, Page, WaitPage, BaseSubsession, BaseConstants, Subsession
 from .sample_hist import SAMPLE_HIST
 import common.SessionConfigFunctions as scf
 from common.ParticipantFuctions import generate_participant_ids, is_button_click
-from common import BinTree
 from otree import database
 import os
-import jsonpickle
 import json
 import numpy as np
 import random
-import time
 import math
 
 
 #read in and pickle the decision tree for the risk elicitation task
 with open("common/decision_trees_and_gambles.json", "r") as dec_tree:
     js = dec_tree.read()
-DECISION_TREES = jsonpickle.decode(js)
+DECISION_TREES = json.loads(js)
 
 
 NUM_ROUNDS = os.getenv('SSE_NUM_ROUNDS')
@@ -119,9 +116,18 @@ def get_js_vars_for_risk(player: Player, choice_num: int):
     ret['safe_pay'] = [sh, sl]
     ret['risk_pay'] = [rh, rl]
 
-    hi = traverse_dec_tree(player, risk_task['dec_tree'])
+    node = traverse_dec_tree(player, risk_task['dec_tree'])
+    hi = floor(float(node['q']) * 100)
     lo = 100 - hi
     ret['pct'] = [hi, lo]
+    
+    # risk parameters from the node, are stored in the html and sent back to the 
+    # Risk Page depending on the palyer's choice
+    ret['r0'] = node['r0']
+    ret['mu0'] = node['mu0']
+    ret['r1'] = node['r1']
+    ret['mu1'] = node['mu1']
+    
     
     #update player object (best place to do it)
     if player.field_maybe_none('risk_rh') is None:
@@ -134,6 +140,48 @@ def get_js_vars_for_risk(player: Player, choice_num: int):
     ws_vars = get_websockets_vars(player)
     ret.update(ws_vars)
     return ret
+
+
+def traverse_dec_tree(player: Player, dec_tree: dict):
+    """
+    Traverses the given binary tree based on the risk decisions of the player.
+    Returns the question (based on the DOSE task) stored in the resting node.
+    This is meant for the Risk Elicitation Pages.  The question will become the
+    probabilities underlying the pie charts on that page.
+
+    Parameters
+    ----------
+    player : Player
+        The player.
+    dec_tree : dict
+        The decision tree.  Expecting it to be of the form:
+            node = {q:<question>,  right: <node>,  left: <node>}.
+
+    Returns
+    -------
+    int : the question.  The percentage chance of a hi payout expressed as a
+            2-digit integer.
+    """
+    moves = []
+
+    # Three moves gets you to the leaf nodes of these trees
+    # 1=risky, 0=safe
+    for i in [1,2,3]:
+        rc = player.field_maybe_none(f"risk_{i}")
+        if rc is not None:
+            moves.append(rc)
+
+    #Traverse the tree
+    node = dec_tree
+    for move in moves:
+        if move == 1:
+            node = node['right']
+        else:
+            node = node['left']
+            
+    
+    return node
+
 
 
 def get_websockets_vars(player: Player, event_type='page_name'):
@@ -852,26 +900,6 @@ def vars_for_risk_template(player: Player):
 
 def vars_for_practice(player: Player):
     return scf.ensure_config(player)
-    
-
-
-def traverse_dec_tree(player: Player, dec_tree: BinTree):
-    moves = []
-
-    # On the fourth risk page the player will have made up to 3
-    # choices.  So we are only going to loop through those first three.
-    for i in [1,2,3]:
-        rc = player.field_maybe_none(f"risk_{i}")
-        if rc is not None:
-            moves.append(rc)
-
-    node = dec_tree
-    for move in moves:
-        if move == 1:
-            node = node.right
-        else:
-            node = node.left
-    return floor(float(node.val) * 100)
 
 
 def get_round_result_messages(player: Player, d: dict):
@@ -1226,7 +1254,7 @@ class RiskWaitPage(WaitPage):
 class RiskPage(Page):
     template_name = 'rounds/RiskPage.html'
     form_model = 'player'
-    form_fields = ['risk']
+    form_fields = ['risk', 'dr', 'dmu']
     timer_text = 'Time Left:'
 
     vars_for_template = vars_for_risk_template
@@ -1240,6 +1268,19 @@ class RiskPage1(RiskPage):
         player.risk_1 = player.field_maybe_none('risk')
         player.risk = None
         
+        # r param
+        r = player.field_maybe_none('dr')
+        if r:
+            player.dose_r = r
+        player.dr = None
+            
+        # mu param
+        m = player.field_maybe_none('dmu')
+        if m:
+            player.dose_mu = m
+        player.dmu = None
+        
+        
     @staticmethod
     def js_vars(player:Player):
         return get_js_vars_for_risk(player, 1)
@@ -1251,6 +1292,19 @@ class RiskPage2(RiskPage):
         player.risk_2 = player.field_maybe_none('risk')
         player.risk = None
        
+        # r param
+        r = player.field_maybe_none('dr')
+        if r:
+            player.dose_r = r
+        player.dr = None
+            
+        # mu param
+        m = player.field_maybe_none('dmu')
+        if m:
+            player.dose_mu = m
+        player.dmu = None
+        
+        
     @staticmethod
     def js_vars(player:Player):
         return get_js_vars_for_risk(player, 2)
@@ -1262,9 +1316,23 @@ class RiskPage3(RiskPage):
         player.risk_3 = player.field_maybe_none('risk')
         player.risk = None
        
+        # r param
+        r = player.field_maybe_none('dr')
+        if r:
+            player.dose_r = r
+        player.dr = None
+            
+        # mu param
+        m = player.field_maybe_none('dmu')
+        if m:
+            player.dose_mu = m
+        player.dmu = None
+        
+        
     @staticmethod
     def js_vars(player:Player):
         return get_js_vars_for_risk(player, 3)
+
 
 
 
@@ -1273,7 +1341,21 @@ class RiskPage4(RiskPage):
     def before_next_page(player: Player, timeout_happened):
         player.risk_4 = player.field_maybe_none('risk')
         player.risk = None
+        
        
+        # r param
+        r = player.field_maybe_none('dr')
+        if r:
+            player.dose_r = r
+        player.dr = None
+            
+        # mu param
+        m = player.field_maybe_none('dmu')
+        if m:
+            player.dose_mu = m
+        player.dmu = None
+        
+        
     @staticmethod
     def js_vars(player:Player):
         return get_js_vars_for_risk(player, 4)

@@ -103,10 +103,17 @@ function make_chart(ctx, pct, pay){
 
             //Set hidden field
             const rfield = $("#risk")
+            const drfield = $("#dr")
+            const dmufield = $('#dmu')
             if (chart.canvas.getAttribute('id') == 'risk_card'){
                 rfield.val(1)
+                drfield.val(js_vars.r1)
+                dmufield.val(js_vars.mu1)
+                
             } else {
                 rfield.val(0)
+                drfield.val(js_vars.r0)
+                dmufield.val(js_vars.mu0)
             }        },
         onHover: (e, elems, chart) =>
         {

@@ -192,6 +192,15 @@ class Player(BasePlayer):
     risk_phi_4 = models.FloatField(blank=True)
     
     risk_reward = models.StringField(initial='')
+    
+    # DOSE parameters   
+    dr = models.FloatField(blank=True, min=None)
+    dmu = models.FloatField(blank=True, min=None)
+    
+    # temporary DOSE params        
+    dose_r = models.FloatField(blank=True, min=None)
+    dose_mu = models.FloatField(blank=True, min=None)
+
 
     # Per-round Survey
     # emotion = models.IntegerField(
