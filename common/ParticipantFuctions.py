@@ -31,9 +31,8 @@ def generate_participant_ids(subsession: BaseSubsession):
     num_parts = len(players)
     ids = [generate_participant_id(x) for x in random.sample(population, num_parts)]
     for pid, player in zip(ids, players):
-        existing = player.participant.vars.get('PART_ID')
+        existing = player.participant.label
         if not existing:
-            player.participant.PART_ID = pid
             player.participant.label = pid
 
 

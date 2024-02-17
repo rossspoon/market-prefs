@@ -20,7 +20,7 @@
     </tr>
     {{ for o in orders }}
         <tr>
-            <td>{{ o.player.id_in_group }} - {{ o.player.participant.vars.PART_ID}}</td>
+            <td>{{ o.player.id_in_group }} - {{ o.player.participant.label}}</td>
             <td> {{ o.player.cash }} / {{ o.player.shares }} </td>
             <td>{{ if  o.order_type == -1 }}
                     BUY
