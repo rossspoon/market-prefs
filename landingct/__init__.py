@@ -196,4 +196,4 @@ class ReadyToStart(Page):
     #     if player.session.enrolled_ids >= {{C.MIN_PLAYERS_PER_GROUP}}:
     #         return upcoming_apps[-1]
 
-page_sequence = [ Instructions,  Survey1,  WaitForPlayers, ReadyToStart]
+page_sequence = [Consent, NoConsent,  Instructions,  Survey1,  WaitForPlayers, ReadyToStart]
