@@ -3,53 +3,43 @@
 
 {{ block content }}
 
-<p>
-    Thank you for participating in this study. The study should take about an hour complete. 
-    You will be paid a participation fee at $10. 
-    In addition, you will be eligible to earn up to $30 additional earnings, contingent on performance.  
-</p>
 
-<p>
-    This research is performed by cognitive scientists at California Institute of Technology and will be used to help understand human decision making.
-</p>
+<link rel="stylesheet" href="{{ static 'css/global.css' }}">
 
-<p>
-    In this study, you will be asked to read carefully instructions describing the experiment, and to answer some questions about the instructions. 
-    Afterwards you will be asked to make a number of decisions. 
-</p>
 
-<p>
-    No identifying information about you, like your name, phone number or address, will be recorded.
-</p>
 
-<p>
-    By agreeing to participate you are confirming that you are over 18 years of age, have normal or corrected-to-normal vision, and are not in the European Union and China.  
-</p>
+<div>
+    <iframe id="survey_frame" 
+        src="{{ consent_link }}={{ player.participant.label }}" width="800" height="600" 
+        frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+</div>
 
-<p>
-    Your participation in this research is completely voluntary. 
-    You have the right to withdraw at any point during the study, for any reason, and without any prejudice. 
-    If you would like to contact the investigators in the study to discuss this research, please message us via the Prolific messaging system.
-</p>
+        
+</div>
+<div id="next_button_container" class="bottom-row" style="visibility: hidden;">
+    <div class="centered">
+        <p>Do you wish to participate in the experiment?</p>
+        <button name="consent_given" value="True" class="btn-look-alike">Yes</button>
+        <button name="consent_given" value="False" class="btn-look-alike">No</button>
+    </div>
+</div>
 
-<p>
-    By continuing, you are confirming that you understand these instructions and conditions of participation.
-</p>
+{{ if show_next }}
+        <button name="consent_given" value="True" class="btn-look-alike">Next</button>
+{{ endif }}
 
-<p>
-    Click the button below to: <br>
-    (1) confirm that you understand these instructions and conditions of participation, 
-    (2) acknowledge that your participation in the study is voluntary, 
-    (3) that you are at least 18 years of age, 
-    (4) that you are not participating from the European Union or China, and 
-    (5) that you are aware that you may choose to terminate your participation in the study at any time and for any reason. 
+<script>
+  
+    page_num = 0
+    document.getElementById('survey_frame').onload = function(e){
+        page_num += 1;
+        if (page_num >= js_vars.consent_pg_cnt){
+            document.getElementById('next_button_container').style.visibility = "visible";
+            //document.getElementById('survey_frame').style.visibility = "hidden";
+        }
+    }
 
-</p>
+</script>
 
-<p>
-    Or you will be directed to return this study when you are timed out.
-</p>
-
-{{ next_button label="Consent"}}
 
 {{ endblock }}

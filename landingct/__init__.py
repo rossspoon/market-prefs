@@ -5,14 +5,13 @@ doc = ''
 
 class C(BaseConstants):
     NAME_IN_URL = 'wait'
-    PLAYERS_PER_GROUP = 40 #should be 25+15
-    WAITING_PLAYERS_PER_GROUP = 26 #should be 25+2
+    PLAYERS_PER_GROUP = None
     MIN_PLAYERS_PER_GROUP = 3 #should be 25
     NUM_ROUNDS = 1
-    WAIT_TIMEOUT = 1500 #25min max for waiting room
+    WAIT_TIMEOUT = 1200 #20min max for waiting room
     INST_TIMEOUT = 1200 #20min max for instructions 
     SURVEY1_TIMEOUT = 900 #15min max for instructions 
-    CONSENT_TIMEOUT = 120 #2min max for consent
+    CONSENT_TIMEOUT = 900 #2min max for consent
     START_TIMEOUT = 120 #2min for start the game
     
 
@@ -27,8 +26,7 @@ def creating_session(subsession: Subsession):
         player.participant.is_single=0
     session.arrived_ids = set()
     session.enrolled_ids = 0
-    session.prolific_completion_url = 'https://app.prolific.co/submissions/complete?cc=C1I28ND3'
-    #session.incomplete_code = 'C1KGSHEV'
+
     
     generate_participant_ids(subsession)
     for p in subsession.get_players():
@@ -40,61 +38,58 @@ class Group(BaseGroup):
 
 class Player(BasePlayer):
     timeout = models.FloatField(initial=0.0)
-    quiz1 = models.IntegerField(
-        label='1. On the left hand side of the decision screen, everyone sees _____ simulated weather forecasts',
-        choices=[
-            [1, 'the same'],
-            [2, 'different']
-        ]
-    )
-    quiz2 = models.IntegerField(
-        label='2. You can click on a prediction  _____ times during each 10 second decision trial',
-        choices=[
-            [1, '1'],
-            [2, '2'],
-            [3, 'as many as you want']
-        ]
-    )
-    quiz3 = models.IntegerField(
-        label='3. Your payoff for the trial is determined by  _____',
-        choices=[
-            [1, 'the amount of time you maintain a correct prediction'],
-            [2, 'the correctness of your last decision'],
-            [3, 'All of the above']
-        ]
-    )
-    quiz4 = models.IntegerField(
-        label='4. If the right side of your screen shows you information from 3 neighbors, 2 of which depict Rain and 1 of which is empty, this means that _____',
-        choices=[
-            [1, 'A majority of your neighbors are predicting Rain'],
-            [2, 'None of your neighbors are prediction Sun'],
-            [3, 'One of your neighbors has not made a choice yet'],
-            [4, 'All of the above']
-        ]
-    )
-    # quiz5 = models.IntegerField(
-    #     label='5. Your neighbors will be _____ on every round',
-    #     choices=[
-    #         [1, 'the same'],
-    #         [2, 'different']
-    #     ]
-    # )
+    consent_given = models.BooleanField(blank=True)
 
-    
+
+
+def get_exp_link(player: Player):
+    config = player.session.config
+    is_local = config['experiment_link_is_local']
+    if is_local:
+        exp_link = config['experiment_link_local']
+    else:
+        exp_link = config['experiment_link']
+        
+    return exp_link
+
+
 
 class Consent(Page):
-    timeout_seconds = C.CONSENT_TIMEOUT
-    @staticmethod
-    def before_next_page(player: Player, timeout_happened):
-        if timeout_happened:
-            player.participant.consent = 0
-        else:
-            player.participant.consent = 1
+     timeout_seconds = C.CONSENT_TIMEOUT
+     timer_text = "Time Left to Complete the Consent: "
+     form_model = 'player'
+     form_fields = ['consent_given']
+         
+    
+     @staticmethod 
+     def vars_for_template(player: Player):
+         config = player.session.config
+         print(config)
+         return config
+    
+     
+     @staticmethod
+     def js_vars(player: Player):
+         config = player.session.config
+         consent_pg_cnt = config.get('consent_pg_cnt')
+         return dict(
+             survey_pg_cnt=consent_pg_cnt
+             )
+     
+     @staticmethod
+     def before_next_page(player: Player, timeout_happened):
+         if timeout_happened:
+             player.consent_given = False
+             
 
+             
+class NoConsent(Page):
     @staticmethod
-    def app_after_this_page(player, upcoming_apps):
-        if player.participant.consent == 0:
-            return upcoming_apps[-1]
+    def is_displayed(player: Player):
+        return not player.consent_given
+
+             
+
 
 class Instructions(Page):
     timeout_seconds = C.INST_TIMEOUT
@@ -113,33 +108,33 @@ class Instructions(Page):
         if player.participant.inactive == True:
             return upcoming_apps[-1]
         
+    @staticmethod
+    def js_vars(player: Player):
+        config = player.session.config
+        inst_id = config.get('instruction_id')
+        return dict(inst_id=inst_id, show_next=config['show_next'])
+    
+    @staticmethod 
+    def vars_for_template(player: Player):
+        config = player.session.config
+        return config
+    
+    
     
 class Survey1(Page):
-     #timeout_seconds = C.SURVEY1_TIMEOUT
-     timer_text = "Time Left to Complete the Instructions: "
+     timeout_seconds = C.SURVEY1_TIMEOUT
+     timer_text = "Time Left to Complete the Survey: "
      form_model = 'player'
-     
-     @staticmethod
-     def before_next_page(player: Player, timeout_happened):
-         pass
          
      @staticmethod
      def vars_for_template(player: Player):
          config = player.session.config
-         print(config)
-         survey_link = config.get('survey_1_link')
-         print(survey_link)
-         return dict(
-             survey_link = survey_link,
-             )
+         return config
      
      @staticmethod
      def js_vars(player: Player):
          config = player.session.config
-         survey_1_pg_cnt = config.get('survey_1_pg_cnt')
-         return dict(
-             survey_pg_cnt=survey_1_pg_cnt
-             )
+         return config
 
      
              
@@ -154,16 +149,14 @@ class WaitForPlayers(Page):
             session.arrived_ids.remove(player.id_in_group)
 
         return {0: {'arrived': len(session.arrived_ids)}}
+
     
-        # if data['out']==0:
-        #     session.arrived_ids[group-1].add(player.id_in_group)
-        # elif data['out']==1:
-        #     session.arrived_ids[group-1].remove(player.id_in_group)
-        # if data['enrolled'] ==1:
-        #     session.enrolled_ids[group-1].add(player.id_in_group)
-        # return {0: dict({'arrived': len(session.arrived_ids[group-1]),
-        #              'enrolled': len(session.enrolled_ids[group-1])})}
     
+    @staticmethod
+    def vars_for_template(player: Player):        
+        ret = player.session.config.copy()
+        ret['prolific_completion_url'] = player.session.vars.get('prolific_completion_url', 'http://www.vt.edu')
+        return ret
         
 
 class Calibration(Page):  
@@ -172,6 +165,14 @@ class Calibration(Page):
 class ReadyToStart(Page):
     timeout_seconds = C.START_TIMEOUT
     timer_text = "Time Left to Enroll in the Game: "
+    
+    @staticmethod
+    def vars_for_template(player: Player):
+        exp_link = get_exp_link(player)
+            
+        return dict(exp_link = exp_link)
+    
+
     @staticmethod
     def live_method(player: Player, data):
         session = player.session
@@ -180,6 +181,7 @@ class ReadyToStart(Page):
             session.enrolled_ids += 1
         return {0: {'num_enrolled': session.enrolled_ids}}
     
+
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
         player.participant.wait_page_arrival = time.time()
@@ -194,4 +196,4 @@ class ReadyToStart(Page):
     #     if player.session.enrolled_ids >= {{C.MIN_PLAYERS_PER_GROUP}}:
     #         return upcoming_apps[-1]
 
-page_sequence = [Consent, Survey1, Instructions, WaitForPlayers, ReadyToStart]
+page_sequence = [Consent, NoConsent,  Instructions,  Survey1,  WaitForPlayers, ReadyToStart]

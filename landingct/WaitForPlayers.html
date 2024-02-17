@@ -8,7 +8,7 @@
 
     <p>You have been waiting for <span id="timer"></span> minute(s).</p>
 
-    <progress id="progress_bar" max={{C.WAITING_PLAYERS_PER_GROUP}}></progress>
+    <progress id="progress_bar" max={{ waiting_group_size }}></progress>
     <p id="text"></p>
 
     <p id="timeout"></p>
@@ -17,8 +17,7 @@
     <p></p>
     <button id="end" type="button" style="visibility:hidden">End the Game</button>
     
-    <a href="http://localhost:8000/room/market2?participant_label={{ player.participant.label }}">Link to Experiment</a>
-
+    {{if show_next }} {{ next_button }} {{ endif }}
 </div>
 
 <style>
@@ -49,29 +48,24 @@
     var endBtn = document.getElementById("end");
     timer.innerHTML = 0;
     var timeout = document.getElementById("timeout");
-    var limit = Math.round({{ C.WAIT_TIMEOUT }} /60);
-    timeout.innerHTML = "Please wait shortly for other players to join.<br>Please stay close to the computer as the game may start anytime.<br>Please do NOT refresh this page. <br><br>If you are left waiting for longer than " 
-        + limit + " minutes, <br>the game will end and we will compensate you $10 for your time. <br>You will be guaranteed a $2 bonus for joining the game, and you will be able to earn up to $30 bonus through good performance.";
-    var num_more = {{ C.WAITING_PLAYERS_PER_GROUP }};
+    timeout.innerHTML = "Please wait for other players to join. This may take up to 20 minutes." + 
+    "<br>Please stay close to the computer as the game may start anytime." +
+    "<br>Please do NOT refresh this page." + 
+    "<br> When all players have arived, you will receive an audible alert that the experiment is ready to start.";
+
+    var num_more = {{ waiting_group_size }};
     //var num_enrolled = 0;
     var player_dropout = 0;
     
     //send a message to server when this page is shown
     document.addEventListener("DOMContentLoaded", (event) => {
-        //liveSend({"out":0, "enrolled":-1}); //-1 meaning useless info
         liveSend({"out":0});
     });
-    
-    //send a message to server when the next button is clicked
-    // document.getElementById("next").addEventListener("click", (event) => {
-    //     liveSend({"enrolled":1, "out":-1});
-    // });
 
     //if closed the tab, remove from waiting list
     window.onbeforeunload = function () {
         //player hasn't dropped, some but not enough ppl has enterred the game
         if (player_dropout==0 & num_more >0){
-            //liveSend({"out":1, "enrolled":-1})
             liveSend({"out":1});
         }
     };
@@ -80,9 +74,8 @@
     function liveRecv(data) {
         console.log(data);
         progress_bar.value = data['arrived'];
-        num_more = {{ C.WAITING_PLAYERS_PER_GROUP }} - data['arrived'];
+        num_more = {{ waiting_group_size }} - data['arrived'];
         waiting_text.innerHTML = "Waiting for " + String(Math.max(num_more, 0)) + " more players to join.";
-        //num_enrolled = data['enrolled'];
     }
 
     
@@ -91,20 +84,11 @@
         var time = (Date.now() - start)/1000;
         timer.innerHTML = Math.round(time/60);
         //time out
-        if ((time > {{C.WAIT_TIMEOUT}}) && (num_more > 0)){
+        if ((time > {{ landing_wait_timeout }}) && (num_more > 0)){
             //waiting_text.style.visibility="hidden";
-            timeout.innerHTML = "Not enough players showed up in time. "
-                +"<br>Please click the below button to get your completion code."
-                +"<br>Please close this tab after you are redirected to the completion page.";
-                // +"<br>You may also choose to keep waiting and earn up to $28 bonus by participating in the task.";
-            endBtn.style.visibility = 'visible';
-            endBtn.addEventListener("click", function() {
-                location.href = "{{session.prolific_completion_url}}";
-                //endBtn.innerHTML = "<b>{{session.prolific_completion_url}}</b>";
-                player_dropout = 1;
-                //liveSend({"out":1, "enrolled":-1});
-                liveSend({"out":1})
-            });
+            timeout.innerHTML = "Not enough players showed up in time. " +
+            "<br>You may continue to wait or click <a href='{{ prolific_completion_url }}' /a> to quit stop. You will still recieve the show-up compensations."
+ 
         }
         //all players arrived
         if ((num_more <= 0) && (player_dropout==0)){

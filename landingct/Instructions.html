@@ -2,12 +2,11 @@
 {{ block title }}Instructions{{ endblock }}
 
 {{ block content }}
-
-
+<link rel="stylesheet" href="{{ static 'css/global.css' }}">
 
 
  <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
-    <div id="player"></div>
+    <div id="player" class="centered"></div>
 
     <script>
       // 2. This code loads the IFrame Player API code asynchronously.
@@ -22,9 +21,9 @@
       var player;
       function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
-          height: '390',
-          width: '640',
-          videoId: 'QC8iQqtG0hg',
+          height: '540',
+          width: '960',
+          videoId: js_vars.inst_id,
           playerVars: {
             'playsinline': 1
           },
@@ -51,6 +50,12 @@
       function stopVideo() {
         player.stopVideo();
       }
+      
+        window.onload = function(e){
+            if (js_vars.show_next){
+                document.getElementById("next_button_container").style.visibility = "visible";     
+            }
+        }
     </script>
 
 

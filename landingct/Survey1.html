@@ -9,23 +9,23 @@
 </style>
 
 <div>
-    <!--<a id="survey_link" href= '{{ survey_link }}{{ player.participant.label }}'>here is the survey </a>!-->
     <iframe id="survey_frame" 
-        src="{{ survey_link }}={{ player.participant.label }}" width="800" height="600" 
+        src="{{ survey_1_link }}={{ player.participant.label }}" width="800" height="600" 
         frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
 </div>
 
     <div id="next_button_container" style="visibility: hidden;">{{ next_button }}</div>
-
-
+{{ if show_next }}
+        {{next_button}}
+{{ endif }}
 <script>
   
     page_num = 0
     document.getElementById('survey_frame').onload = function(e){
         page_num += 1;
-        if (page_num == js_vars.survey_pg_cnt){
+        if (page_num >= js_vars.survey_1_pg_cnt){
             document.getElementById('next_button_container').style.visibility = "visible";
-            document.getElementById('survey_frame').style.visibility = "hidden";
+            //document.getElementById('survey_frame').style.visibility = "hidden";
         }
     }
 
