@@ -81,4 +81,5 @@ class ConsentWaitPage(UpdatedWaitPage):
                 "The experiment will start when all participants have joined. Please be patient."
 
 
-page_sequence = [SplashPage, ConsentWaitPage, InfoSheet, ConsentPage, IdPage]
+# page_sequence = [SplashPage, ConsentWaitPage, InfoSheet, ConsentPage, IdPage]
+page_sequence = [ConsentWaitPage, ConsentPage]

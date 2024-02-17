@@ -1,4 +1,5 @@
 {% block title %}
+Welcome to the Market Experiment.
 {% endblock %}
 
 {% block content %}
@@ -16,13 +17,7 @@
     </div>
 
     <div class="main-block">
-        <p>By clicking "Yes" below, you are confirming that you...</p>
-        <ul>
-            <li>Are 18 years of age or over</li>
-            <li>Can read and comprehend the English language</li>
-            <li>Have read and understood the information sheet</li>
-            <li>Are participating in this experiment voluntarily.</li>
-        </ul>
+        <p>Please click "Next" to continue.</p>
     </div>
 
     <input type="hidden" name="button_clicked" id="button_clicked" value="False"/>
@@ -30,8 +25,7 @@
     <div class="bottom-row">
         <div class="centered">
             <p>Do you wish to participate in the experiment?</p>
-            <button name="consent_given" value="True" class="btn-look-alike">Yes</button>
-            <button name="consent_given" value="False" class="btn-look-alike">No</button>
+            <button name="consent_given" value="True" class="btn-look-alike">Next</button>
         </div>
     </div>
     </div>
