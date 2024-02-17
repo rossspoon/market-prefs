@@ -20,6 +20,22 @@ SESSION_CONFIGS = [
         auto_trans_delay=0,
     )
     , dict(
+        name="ctlanding",
+        app_sequence=['landingct'],
+        num_demo_participants=40,
+        consent_link="https://docs.google.com/forms/d/e/1FAIpQLScuxDtP9dEzRk89ru7z2ekLCmG0a5TQKFYgA-cB7EMtunar5w/viewform?embedded=true&usp=pp_url&entry.755475846",
+        consent_pg_cnt=4,
+        survey_1_link="https://docs.google.com/forms/d/e/1FAIpQLSffLRaG5rYyrSYGaSK8Vzj6b_yllfQ5A8sWPMfvLdEf5xMISA/viewform?embedded=true&usp=pp_url&entry.181925610",
+        survey_1_pg_cnt = 8,
+        instruction_id = '27o9QHn6dWk',
+        experiment_link = "https://vt-market-experiment.herokuapp.com/room/market2",
+        experiment_link_local = 'http://localhost:8000/room/market2',
+        experiment_link_is_local=False,
+        waiting_group_size=10,
+        landing_wait_timeout=1200,
+    )
+    
+    , dict(
         name='sim_1',
         app_sequence=['rounds'],
         num_demo_participants=3,
@@ -105,6 +121,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     is_pilot=False,
     expected_time_pilot=1,
     expected_time_live=2,
+    arrived_ids=0,
 )
 if environ.get('MTURK_HIT_TYPE') == 'SCREEN_PILOT':
     SESSION_CONFIG_DEFAULTS['mturk_hit_settings'] = dict(
@@ -165,8 +182,8 @@ elif environ.get('MTURK_HIT_TYPE') == 'EXP':
         qualification_requirements=[]
         # grant_qualification_id='YOUR_QUALIFICATION_ID_HERE', # to prevent retakes
     )
-PARTICIPANT_FIELDS = ['PART_ID', 'CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT', 'RISK_PAYMENT', 'finished']
-SESSION_FIELDS = ['prolific_completion_url']
+PARTICIPANT_FIELDS = ['CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT', 'RISK_PAYMENT', 'finished', 'consent', 'inactive', 'survey_1_click']
+SESSION_FIELDS = ['prolific_completion_url', 'arrived_ids']
 
 # ISO-639 code
 # for example: de, fr, ja, ko, zh-hans
@@ -191,7 +208,7 @@ ROOMS = [
         name='market',
         display_name='Market Experiment',
         participant_label_file='_rooms/market.txt',
-        use_secure_urls=True
+        use_secure_urls=False
     ),
     dict(
         name='market2',
@@ -204,5 +221,9 @@ ROOMS = [
     dict(
         name='landing',
         display_name='Landing Page Room'
-    )
+    ),
+    dict(
+        name='CTlanding',
+        display_name='CT - Landing Page Room'
+    ),
 ]
