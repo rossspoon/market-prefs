@@ -73,7 +73,7 @@ class Consent(Page):
          config = player.session.config
          consent_pg_cnt = config.get('consent_pg_cnt')
          return dict(
-             survey_pg_cnt=consent_pg_cnt
+             consent_pg_cnt=consent_pg_cnt
              )
      
      @staticmethod
