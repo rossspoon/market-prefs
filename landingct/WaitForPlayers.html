@@ -87,7 +87,7 @@
         if ((time > {{ landing_wait_timeout }}) && (num_more > 0)){
             //waiting_text.style.visibility="hidden";
             timeout.innerHTML = "Not enough players showed up in time. " +
-            "<br>You may continue to wait or click <a href='{{ prolific_completion_url }}' /a> to quit stop. You will still recieve the show-up compensations."
+            "<br>You may continue to wait or click <a href='{{ prolific_completion_url }}'>here</a> to quit. You will still recieve the show-up compensations."
  
         }
         //all players arrived
@@ -105,7 +105,7 @@
             // else{
             //     document.getElementById("next").style.visibility = 'hidden'; //hid the start button
             //     setTimeout(() => {     
-            //         timeout.innerHTML = "Sorry this session is full. Thanks for your interests. <br>Please use the code <b>C1KGSHEV</b> to get your compensation.";
+            //         timeout.innerHTML = "Sorry this session is full. Thanks for your interest. <br>Please clcik here <a href='{{ prolific_completion_url }}'>here</a>  return the study.";
             //     }, 5000); //excuate after 5s
             // }
         }
