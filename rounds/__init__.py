@@ -1093,7 +1093,7 @@ def determine_bonus(player: Player):
                 )
             forecast_data.append(round_look_data)
             
-    # player.forecast_bonus_data = json.dumps(forecast_data)  #Keep for debugging purposes
+    player.forecast_bonus_data = json.dumps(forecast_data)  #Keep for debugging purposes
     participant.FORECAST_PAYMENT = cu(forecast_bonus)
     
     ##
@@ -1127,7 +1127,7 @@ def determine_bonus(player: Player):
         choice_data['rnd'] = choice_data['rnd'] - Constants.num_practice
         
         #save choice artifacts on the player object
-        #player.risk_reward = json.dumps(choice_data) # keep for debugging
+        player.risk_reward = json.dumps(choice_data) # keep for debugging
     risk_payment = (risk_bonus/conversion)/10
     participant.RISK_PAYMENT = cu(risk_payment) 
     
@@ -1375,6 +1375,8 @@ class FinalResultsPage(Page):
 
     @staticmethod
     def vars_for_template(player: Player):
+        player.participant.finished = True
+        
         determine_bonus(player)
         participant = player.participant
         session = player.session
