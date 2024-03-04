@@ -13,6 +13,7 @@ class C(BaseConstants):
     SURVEY1_TIMEOUT = 900 #15min max for instructions 
     CONSENT_TIMEOUT = 900 #2min max for consent
     START_TIMEOUT = 120 #2min for start the game
+    QUIZ_TIMEOUT = 600
     
 
 class Subsession(BaseSubsession):
@@ -237,11 +238,12 @@ def quiz_live_method(player, data):
                    )
         return {player.id_in_group: ret}
  
-   
+    
+ 
 class Quiz(Page):
     form_model = 'player'
     form_fields = ['quiz_1', 'quiz_2', 'quiz_3', 'quiz_4', 'quiz_5']
-    # timeout_seconds = 600
+    timeout_seconds = C.QUIZ_TIMEOUT
 
     live_method = quiz_live_method
     
