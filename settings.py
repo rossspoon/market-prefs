@@ -31,7 +31,7 @@ SESSION_CONFIGS = [
         experiment_link = "https://vt-market-experiment.herokuapp.com/room/market2",
         experiment_link_local = 'http://localhost:8000/room/market2',
         experiment_link_is_local=False,
-        waiting_group_size=10,
+        waiting_group_size=20,
         landing_wait_timeout=1200,
     )
     
