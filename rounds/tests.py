@@ -26,9 +26,9 @@ class PlayerBot(Bot):
             
         
             
-        yield Submission(Fixate, check_html=False)
+        # yield Submission(Fixate, check_html=False)
         yield Submission(MarketGridChoice, check_html=False)
-        yield Submission(Fixate, check_html=False)
+        # yield Submission(Fixate, check_html=False)
         
         #Generate forcast amount
         price = self.group.get_last_period_price()
@@ -37,16 +37,16 @@ class PlayerBot(Bot):
         f2 = int(max(0, random.randint(-6, 6) + price))
         f3 = int(max(0, random.randint(-6, 6) + price))
         yield Submission(ForecastPage, dict(f0=f0, f1=f1, f2=f2, f3=f3), check_html=False)
-        yield Submission(Fixate, check_html=False)
+        # yield Submission(Fixate, check_html=False)
         yield Submission(RoundResultsPage, check_html=False)
-        yield Submission(Fixate, check_html=False)
+        # yield Submission(Fixate, check_html=False)
         yield Submission(RiskPage1, dict(risk=random.randint(0,1)), check_html=False)
         yield Submission(RiskPage2, dict(risk=random.randint(0,1)), check_html=False)
         yield Submission(RiskPage3, dict(risk=random.randint(0,1)), check_html=False)
         yield Submission(RiskPage4, dict(risk=random.randint(0,1)), check_html=False)
         
-        # if self.round_number == Constants.num_rounds:
-        #     yield Submission(FinalResultsPage, check_html=False)
+        if self.round_number == Constants.num_rounds:
+            yield Submission(FinalResultsPage, check_html=False)
 
 
 def call_live_method(method, **kwargs):
@@ -74,7 +74,7 @@ def place_order(method, id_, type_, price, quant, valid=True, code_expect=None):
     _quant = str(quant)
     _type = str(type_)
 
-    req = {'func': 'submit-order', 'data': {'type': _type, 'price': _price, 'quantity': _quant}}
+    req = {'func': 'submit-order', 'data': {'type': _type, 'price': _price, 'quantity': _quant, 'ts':time.time()}}
     res = method(id_, req)
     data = res.get(id_)
 

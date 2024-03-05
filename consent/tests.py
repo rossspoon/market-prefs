@@ -12,6 +12,6 @@ class PlayerBot(Bot):
         if scf.is_online(self.player):
             yield Submission(InfoSheet, {'consent_given': True, 'button_clicked': True})
         else:
-            yield Submission(SplashPage, check_html=False)
+            #yield Submission(SplashPage, check_html=False)
             yield Submission(ConsentPage, {'consent_given': True, 'button_clicked': True})
-            yield Submission(IdPage, check_html=False)
+            #yield Submission(IdPage, check_html=False)
