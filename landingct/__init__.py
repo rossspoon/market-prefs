@@ -218,9 +218,8 @@ def quiz_live_method(player, data):
         player.quiz_4 = form_data['quiz_4']
         player.quiz_5 = form_data['quiz_5']
         
-        
-        
         return ret
+
     
     ###
     ##
