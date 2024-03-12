@@ -218,10 +218,7 @@ ROOMS = [
         name='prescreen',
         display_name='Pre-Screen Survey Room'
     ),
-    dict(
-        name='landing',
-        display_name='Landing Page Room'
-    ),
+
     dict(
         name='CTlanding',
         display_name='CT - Landing Page Room'
