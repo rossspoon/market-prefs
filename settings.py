@@ -26,7 +26,7 @@ SESSION_CONFIGS = [
         consent_link="https://docs.google.com/forms/d/e/1FAIpQLScuxDtP9dEzRk89ru7z2ekLCmG0a5TQKFYgA-cB7EMtunar5w/viewform?embedded=true&usp=pp_url&entry.755475846",
         consent_pg_cnt=4,
         survey_1_link="https://docs.google.com/forms/d/e/1FAIpQLSffLRaG5rYyrSYGaSK8Vzj6b_yllfQ5A8sWPMfvLdEf5xMISA/viewform?embedded=true&usp=pp_url&entry.181925610",
-        survey_1_pg_cnt = 8,
+        survey_1_pg_cnt = 7,
         instruction_id = '27o9QHn6dWk',
         experiment_link = "https://vt-market-experiment.herokuapp.com/room/market2",
         experiment_link_local = 'http://localhost:8000/room/market2',
@@ -71,13 +71,7 @@ SESSION_CONFIGS = [
         slot_09='',
         slot_10='',
     )
-    , dict(
-        name='landing',
-        app_sequence=['landing'],
-        num_demo_participants=1,
-        start_time='202206171530',
-        default_url='http://localhost:8000/room/market2?participant_label={}',
-    )
+
 ]
 
 # if you set a property in SESSION_CONFIG_DEFAULTS, it will be inherited by all configs
