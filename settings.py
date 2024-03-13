@@ -80,7 +80,7 @@ SESSION_CONFIGS = [
 # e.g. self.session.config['participation_fee']
 
 SESSION_CONFIG_DEFAULTS = dict(
-    real_world_currency_per_point=0.01,
+    real_world_currency_per_point=0.005,
     participation_fee=12.00,
     doc="",
     use_browser_bots=False,
@@ -99,12 +99,12 @@ SESSION_CONFIG_DEFAULTS = dict(
     initial_price=14.0,
     bonus_cap=None,
     forecast_thold=2.5,
-    forecast_reward=5,
+    forecast_reward=2.5,
     forecast_range=50,
     forecast_periods='0,2,5,10',
     market_time=20,
     fixate_time=2,
-    forecast_time=20,
+    forecast_time=30,
     summary_time=10,
     practice_time=15,
     risk_elic_time=5,
