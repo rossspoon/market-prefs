@@ -7,6 +7,7 @@ from otree.api import (
     BaseSubsession,
     BaseGroup,
     BasePlayer, cu,
+    models,
 )
 from pdflatex import pdflatex
 
@@ -95,27 +96,31 @@ class Group(BaseGroup):
 
 
 class Player(BasePlayer):
-    pass
-
+    market_bonus = models.CurrencyField(initial=0)
+    forecast_bonus = models.CurrencyField(initial=0)
+    risk_bonus = models.CurrencyField(initial=0)
 
 def custom_export(players):
-    yield (['session', 'participant', 'part_label', 'clicked_button', 'round_number', 'final_cash', 'bonus',
-            'show-up', 'cash_plus_show', 'bonus_plus_show'])
+    yield (['session', 'participant', 'part_label', 'clicked_button',
+            'market_bonus', 'forecast_bonus', 'risk_bonus', 'total_bonus', 'showup', 'total_payment'])
 
     for p in players:
         participant = p.participant
         session = p.session
-        round_players = list(rounds.Player.objects_filter(participant=participant).order_by('round_number'))
-        if not round_players or len(round_players) == 0:
-            continue
 
-        last_player: rounds.Player = round_players[-1]
-        cash_result = last_player.field_maybe_none('cash_result')
-        cash_result = cash_result if cash_result is not None else 0
-        cash_result = cu(max(0, cash_result))
-        cash = cu(cash_result).to_real_world_currency(session)
-        bonus = participant.payoff.to_real_world_currency(session)
+        market_bonus = p.field_maybe_none('market_bonus')
+        forecast_bonus = p.field_maybe_none('forecast_bonus')
+        risk_bonus = p.field_maybe_none('risk_bonus')
+        
+        #Ensure bonus amounts are not null
+        market_bonus = 0 if market_bonus is None else market_bonus
+        forecast_bonus = 0 if forecast_bonus is None else forecast_bonus
+        risk_bonus = 0 if risk_bonus is None else risk_bonus
+        
+        total_bonus = market_bonus + forecast_bonus + risk_bonus
         show_up = cu(session.config['participation_fee'])
+        total_payment = show_up + total_bonus
         clicked = is_button_click(p)
-        yield(session.code, participant.code, participant.label, clicked, last_player.round_number,
-              cash, bonus, show_up, cash + show_up, bonus + show_up)
+        yield(session.code, participant.code, participant.label, clicked, 
+              market_bonus, forecast_bonus, risk_bonus, total_bonus, show_up, total_payment,
+              )

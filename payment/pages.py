@@ -42,6 +42,12 @@ class FinalResultsPage(Page):
         url = self.player.session.vars.get('prolific_completion_url')
         if not url:
             url = "https://www.vt.edu"
+            
+            
+        self.player.risk_bonus = risk_bonus
+        self.player.forecast_bonus = forecast_bonus
+        self.player.market_bonus = market_bonus
+
 
         return {'market_bonus': market_bonus,
                 'forecast_bonus': forecast_bonus,
