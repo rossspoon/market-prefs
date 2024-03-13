@@ -1127,7 +1127,7 @@ def determine_bonus(player: Player):
         choice_data['rnd'] = choice_data['rnd'] - Constants.num_practice
         
         #save choice artifacts on the player object
-        player.risk_reward = json.dumps(choice_data) # keep for debugging
+        player.risk_reward =  json.dumps(choice_data)[:180]# keep for debugging
         
     risk_payment = (risk_bonus/conversion)/10
     participant.RISK_PAYMENT = cu(risk_payment) 
