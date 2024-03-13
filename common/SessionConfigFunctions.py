@@ -194,7 +194,7 @@ def get_forecast_thold(obj):
 
 def get_forecast_reward(obj):
     config = ensure_config(obj)
-    return get_item_as_int(config, SK_FORECAST_REWARD)
+    return get_item_as_float(config, SK_FORECAST_REWARD)
 
 
 def get_forecast_range(obj):
