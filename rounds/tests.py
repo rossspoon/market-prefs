@@ -32,10 +32,11 @@ class PlayerBot(Bot):
         
         #Generate forcast amount
         price = self.group.get_last_period_price()
-        f0 = int(max(0, random.randint(-6, 6) + price))
-        f1 = int(max(0, random.randint(-6, 6) + price))
-        f2 = int(max(0, random.randint(-6, 6) + price))
-        f3 = int(max(0, random.randint(-6, 6) + price))
+        f_range = 10
+        f0 = int(max(0, random.randint(-1*f_range, f_range) + price))
+        f1 = int(max(0, random.randint(-1*f_range, f_range) + price))
+        f2 = int(max(0, random.randint(-1*f_range, f_range) + price))
+        f3 = int(max(0, random.randint(-1*f_range, f_range) + price))
         yield Submission(ForecastPage, dict(f0=f0, f1=f1, f2=f2, f3=f3), check_html=False)
         # yield Submission(Fixate, check_html=False)
         yield Submission(RoundResultsPage, check_html=False)
