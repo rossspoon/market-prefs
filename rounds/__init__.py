@@ -1127,7 +1127,8 @@ def determine_bonus(player: Player):
         choice_data['rnd'] = choice_data['rnd'] - Constants.num_practice
         
         #save choice artifacts on the player object
-        #player.risk_reward = json.dumps(choice_data) # keep for debugging
+        player.risk_reward = json.dumps(choice_data) # keep for debugging
+        
     risk_payment = (risk_bonus/conversion)/10
     participant.RISK_PAYMENT = cu(risk_payment) 
     
@@ -1403,6 +1404,7 @@ class PracticeStartPage(Page):
 
 class PracticeEndPage(Page):
     get_timeout_seconds = scf.get_practice_time
+    timer_text = "Market Begins in:"
     vars_for_template = vars_for_practice
     js_vars = get_websockets_vars
 
