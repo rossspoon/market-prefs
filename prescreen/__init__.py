@@ -148,7 +148,9 @@ def custom_export(players):
 
 def vars_for_admin_report(subsession):
     slots = get_date_times(subsession)
-    return {'slots': slots.values()}
+    comp_url = subsession.session.vars.get('prolific_completion_url', 'none')
+    return {'slots': slots.values(),
+            'comp_url': comp_url}
 
 
 # PAGES
