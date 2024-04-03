@@ -1,6 +1,7 @@
 from otree.api import *
 from common.ParticipantFuctions import generate_participant_ids
 import time
+from datetime import date
 doc = ''
 
 class C(BaseConstants):
@@ -9,7 +10,7 @@ class C(BaseConstants):
     MIN_PLAYERS_PER_GROUP = 3 #should be 25
     NUM_ROUNDS = 1
     WAIT_TIMEOUT = 1200 #20min max for waiting room
-    INST_TIMEOUT = 1200 #20min max for instructions 
+    INST_TIMEOUT = 720 #12min max for instructions 
     SURVEY1_TIMEOUT = 900 #15min max for instructions 
     CONSENT_TIMEOUT = 900 #2min max for consent
     START_TIMEOUT = 120 #2min for start the game
@@ -21,6 +22,12 @@ class Subsession(BaseSubsession):
 
 def creating_session(subsession: Subsession):
     session = subsession.session
+    
+    #Set the date as the label
+    today = date.today().strftime("%Y-%m-%d")
+    session.label=today
+    session.comment = "Landing Page"
+    
     #for each group in session, create an empty set
     for player in subsession.get_players():
         player.participant.inactive=False
@@ -89,6 +96,12 @@ def get_exp_link(player: Player):
     return exp_link
 
 
+def template_vars_commom(player: Player):        
+    ret = player.session.config.copy()
+    ret['prolific_completion_url'] = player.session.vars.get('prolific_completion_url', 'http://www.prolific.com')
+    return ret
+
+
 
 class Consent(Page):
      timeout_seconds = C.CONSENT_TIMEOUT
@@ -119,11 +132,11 @@ class Consent(Page):
 
              
 class NoConsent(Page):
-    @staticmethod
-    def is_displayed(player: Player):
-        return not player.consent_given
+    vars_for_template = template_vars_commom
+        
 
-             
+def is_displayed_common(player: Player):
+    return player.consent_given
 
 
 class Instructions(Page):
@@ -154,6 +167,8 @@ class Instructions(Page):
         config = player.session.config
         return config
     
+    is_displayed = is_displayed_common
+    
 
 def quiz_grade_vars(player: Player, data:dict):
         ## Grade the quiz
@@ -172,6 +187,7 @@ def quiz_grade_vars(player: Player, data:dict):
                     5: q5_score,
                     'total_score': total_score,
                     }   
+
     
 def quiz_live_method(player, data):
     func = data['func']
@@ -245,25 +261,27 @@ class Quiz(Page):
     timeout_seconds = C.QUIZ_TIMEOUT
 
     live_method = quiz_live_method
+    is_displayed = is_displayed_common
     
 
 
     
 class Survey1(Page):
-     timeout_seconds = C.SURVEY1_TIMEOUT
-     timer_text = "Time Left to Complete the Survey: "
-     form_model = 'player'
-         
-     @staticmethod
-     def vars_for_template(player: Player):
-         config = player.session.config
-         return config
-     
-     @staticmethod
-     def js_vars(player: Player):
-         config = player.session.config
-         return config
-
+    timeout_seconds = C.SURVEY1_TIMEOUT
+    timer_text = "Time Left to Complete the Survey: "
+    form_model = 'player'
+        
+    @staticmethod
+    def vars_for_template(player: Player):
+        config = player.session.config
+        return config
+    
+    @staticmethod
+    def js_vars(player: Player):
+        config = player.session.config
+        return config
+    
+    is_displayed = is_displayed_common
      
              
 class WaitForPlayers(Page):
@@ -278,18 +296,15 @@ class WaitForPlayers(Page):
 
         return {0: {'arrived': len(session.arrived_ids)}}
 
-    
-    
-    @staticmethod
-    def vars_for_template(player: Player):        
-        ret = player.session.config.copy()
-        ret['prolific_completion_url'] = player.session.vars.get('prolific_completion_url', 'http://www.vt.edu')
-        return ret
+
+    vars_for_template = template_vars_commom
+    is_displayed = is_displayed_common
         
 
 class ReadyToStart(Page):
     timeout_seconds = C.START_TIMEOUT
     timer_text = "Time Left to Enroll in the Game: "
+    is_displayed = is_displayed_common
     
     @staticmethod
     def vars_for_template(player: Player):
@@ -297,14 +312,6 @@ class ReadyToStart(Page):
             
         return dict(exp_link = exp_link)
     
-
-    @staticmethod
-    def live_method(player: Player, data):
-        session = player.session
-        if data['enrolled'] == 1:
-            player.participant.wait_page_arrival = time.time() #record enroll time
-            session.enrolled_ids += 1
-        return {0: {'num_enrolled': session.enrolled_ids}}
     
 
     @staticmethod
@@ -321,4 +328,4 @@ class ReadyToStart(Page):
     #     if player.session.enrolled_ids >= {{C.MIN_PLAYERS_PER_GROUP}}:
     #         return upcoming_apps[-1]
 
-page_sequence = [Consent, NoConsent,  Instructions, Quiz, Survey1,  WaitForPlayers, ReadyToStart]
+page_sequence = [Consent,  Instructions, Quiz, Survey1,  WaitForPlayers, ReadyToStart, NoConsent, ]
