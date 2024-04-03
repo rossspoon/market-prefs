@@ -27,7 +27,7 @@ SESSION_CONFIGS = [
         consent_pg_cnt=4,
         survey_1_link="https://docs.google.com/forms/d/e/1FAIpQLSffLRaG5rYyrSYGaSK8Vzj6b_yllfQ5A8sWPMfvLdEf5xMISA/viewform?embedded=true&usp=pp_url&entry.181925610",
         survey_1_pg_cnt = 7,
-        instruction_id = 'FQzUPYaP6Zg',
+        instruction_id = 'TL9FDvMBFrU',
         experiment_link = "https://vt-market-experiment.herokuapp.com/room/market2",
         experiment_link_local = 'http://localhost:8000/room/market2',
         experiment_link_is_local=False,
