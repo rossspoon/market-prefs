@@ -13,7 +13,10 @@ POST = requests.post
 LOCAL_SERVER_URL = 'http://localhost:8000'
 SERVER_URL = 'https://vt-market-experiment.herokuapp.com'
 BASE_URL = [SERVER_URL]
-REST_KEY = environ.get('REST_FKEY')
+REST_KEY = "s+Uj_g5Zunap3?TfZ6uUQ7" #"environ.get('REST_FKEY')"
+
+COMP_URL_EXP = 'https://app.prolific.com/submissions/complete?cc=CT8QWJ3A'
+COMP_URL_PRE = 'https://app.prolific.com/submissions/complete?cc=C1BNU59M'
 
 def call_api(method, *path_parts, **params) -> dict:
     path_parts = '/'.join(path_parts)
@@ -32,48 +35,50 @@ def check_session(code):
     del resp_check['participants']
     return resp_check
 
-def make_exp(N, l, is_pilot, start_time, is_prolific, is_mturk, dist):
+def make_exp(N, l, dist, comp_url=COMP_URL_EXP):
 
-    participation_fee = 8.00 if is_pilot else 16.00
+    participation_fee = 12.00
 
     session_configs = dict(
-        is_pilot = is_pilot,
-        is_prolific = is_prolific,
-        is_mturk = is_mturk,
         endow_stock = dist,
         participation_fee = participation_fee,
-        start_time = start_time,
     )
+
 
     # Create the experiment session
     resp_exp_create = call_api(POST, 'sessions',
-                session_config_name='whole_experiment',
+                session_config_name='rounds',
                 room_name='market2',
                 num_participants=N,
                 modified_session_config_fields=session_configs,
                 )
     exp_code = resp_exp_create['code']
     resp_exp_check = check_session(exp_code)
+    
+    #Set the completion URL
+    call_api(POST, 'session_vars', exp_code, vars={'prolific_completion_url':comp_url})
 
+    
     # Create the landing session
     resp_land_create = call_api(POST, 'sessions',
-                session_config_name='landing',
-                room_name='landing',
+                session_config_name='ctlanding',
+                room_name='CTlanding',
                 num_participants=l,
                 modified_session_config_fields=session_configs,
                 )
     land_code = resp_land_create['code']
     resp_land_check = check_session(land_code)
+    
+    # Set the completion URL
+    call_api(POST, 'session_vars', land_code, vars={'prolific_completion_url':comp_url})
 
     return {exp_code: resp_exp_check, land_code: resp_land_check}
 
 
-def make_screen(N, is_pilot, is_prolific, is_mturk, times, participation_fee=0.75):
+def make_screen(N, times, participation_fee=0.50, comp_url=COMP_URL_PRE):
     session_configs = dict(
-        is_pilot = is_pilot,
-        is_prolific = is_prolific,
-        is_mturk = is_mturk,
         participation_fee = participation_fee,
+        is_prolific = True,
         slot_01='',
         slot_02='',
         slot_03='',
@@ -83,6 +88,7 @@ def make_screen(N, is_pilot, is_prolific, is_mturk, times, participation_fee=0.7
         slot_07='',
         slot_08='',
         slot_09='',
+        
         slot_10='',
     )
 
@@ -100,12 +106,16 @@ def make_screen(N, is_pilot, is_prolific, is_mturk, times, participation_fee=0.7
                 )
     screen_code = resp_screen_create['code']
     resp_screen_check = check_session(screen_code)
+    
+    
+    # Set the completion URL
+    call_api(POST, 'session_vars', screen_code, vars={'prolific_completion_url':comp_url})
 
     return {screen_code: resp_screen_check}
 
 
 USAGE = 'create_session.py  -s <exp | screen> -n <num_participants> -l <landing_page_participants> p ' \
-        't <start time> --dist=<share distribution>  --prolific --mturk --local'
+        '--dist=<share distribution> '
 
 def main(argv):
     stage = ''               # s:
@@ -113,10 +123,6 @@ def main(argv):
     is_pilot = False         # p
     N = 0                    # n:
     l_num = 0                # l:
-    start_time = None        # t:
-    is_prolific = True       # prolific
-    is_mturk = False         # mturk
-    base_url = SERVER_URL    # --local
     times = ""               # times=
 
     try:
@@ -139,35 +145,24 @@ def main(argv):
         elif opt == '-l':
             l_num = int(arg)
 
-        elif opt == '-t':
-            start_time = arg
-
         elif opt == '--dist':
             dist = arg
 
-        elif opt == '--prolific':
-            is_prolific = True
-            is_mturk = False
-
-        elif opt == '--mturk':
-            is_prolific = False
-            is_mturk = True
-
-        elif opt == '--local':
-            BASE_URL[0] = LOCAL_SERVER_URL
-            print(BASE_URL[0])
-
         elif opt == '--times':
             times = arg
+            
+        elif opt == '--local':
+            BASE_URL[0] = LOCAL_SERVER_URL
+            print(BASE_URL)
 
 
     print (opts)
-    if stage not in ['exp', 'screen'] or (stage == 'exp' and not start_time):
+    if stage not in ['exp', 'screen']:
         print(USAGE)
         sys.exit(2)
 
     if stage == 'exp':
-        resp = make_exp(N, l_num, is_pilot, start_time, is_prolific, is_mturk, dist)
+        resp = make_exp(N, l_num, dist)
         pprint(resp)
         print("SESSIONS CREATED:")
         keys = list(resp.keys())
@@ -175,7 +170,7 @@ def main(argv):
         print(f"Experiment: {keys[0]}")
 
     if stage == 'screen':
-        resp = make_screen(N, is_pilot, is_prolific, is_mturk, times)
+        resp = make_screen(N, times)
         pprint(resp)
 
 
