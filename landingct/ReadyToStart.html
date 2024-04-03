@@ -54,22 +54,11 @@ div {
         window.speechSynthesis.speak(msg);
     }
 
-    //receive player data from server
-    function liveRecv(data) {
-        num_enrolled = data['num_enrolled'];
-    }
-    
+   
     //select what to show on the screen
     function checkStatus(){
         sayReady();
-        //more than X players have arrived
-        if (num_enrolled >= {{C.MIN_PLAYERS_PER_GROUP}}){
-            document.getElementById("start").style.visibility = 'hidden';
-            setTimeout(() => {
-                full.style.display = 'block';
-            }, 10000); //excuate after 10s
 
-        }
     }
     setInterval(checkStatus, 1000)
 
