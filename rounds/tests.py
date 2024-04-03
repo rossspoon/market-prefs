@@ -11,7 +11,6 @@ SELL_RANGE = 5
 
 class PlayerBot(Bot):
     def __init__(self, **kwargs):
-        self.f0s = [14.00] * (Constants.num_rounds + 1)
         super().__init__(**kwargs)
 
 
@@ -55,7 +54,6 @@ def call_live_method(method, **kwargs):
     page_class = kwargs.get('page_class')
     if not (page_class is MarketGridChoice):
         return
-    print(page_class)
 
     
     group: Group = kwargs.get('group')
@@ -65,8 +63,15 @@ def call_live_method(method, **kwargs):
         buy_price = mp + random.randint(BUY_RANGE[0], BUY_RANGE[1])
         sell_price = buy_price + random.randint(1, SELL_RANGE)
         
-        place_order(method, player.id_in_group, 'BUY', buy_price, 1)
-        place_order(method, player.id_in_group, 'SELL', sell_price, 1)
+        if player.cash > buy_price:
+            place_order(method, player.id_in_group, 'BUY', buy_price, 1)
+        else:
+            print(f"Player {player.id_in_group} - NO BUY")
+        
+        if player.shares > 0:
+            place_order(method, player.id_in_group, 'SELL', sell_price, 1)
+        else:
+            print(f"Player {player.id_in_group} - NO BUY")
         
 
 

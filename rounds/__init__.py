@@ -13,6 +13,7 @@ import json
 import numpy as np
 import random
 import math
+from datetime import date
 
 
 #read in and pickle the decision tree for the risk elicitation task
@@ -47,6 +48,13 @@ print(f"Number of Market Rounds: {Constants.num_rounds - Constants.num_practice}
 
 # determine which rounds are practice by the setting is_practice on the group objects
 def creating_session(subsession: Subsession):
+    
+    #Set the date as the label
+    session = subsession.session
+    today = date.today().strftime("%Y-%m-%d")
+    session.label=today
+    session.comment = "Market Experiment"
+    
     if subsession.round_number <= Constants.num_practice:
         for g in subsession.get_groups():
             g.is_practice = True
@@ -1008,6 +1016,7 @@ def vars_for_admin_report(subsession: BaseSubsession):
     group = subsession.get_groups()[0]
     players = group.get_players()
     return {"orders": Order.filter(group=group),
+            "sess_vars": subsession.session.label,
             "plys": players}
 
 
