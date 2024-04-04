@@ -119,7 +119,7 @@ USAGE = 'create_session.py  -s <exp | screen> -n <num_participants> -l <landing_
 
 def main(argv):
     stage = ''               # s:
-    dist = '0 2 4'           # dist=
+    dist = '4 4 4'           # dist=
     is_pilot = False         # p
     N = 0                    # n:
     l_num = 0                # l:
