@@ -30,10 +30,11 @@ def generate_participant_ids(subsession: BaseSubsession):
     population = list(range(PARTICIPANT_ID_SPACE))
     num_parts = len(players)
     ids = [generate_participant_id(x) for x in random.sample(population, num_parts)]
+    sess_id = subsession.session.code
     for pid, player in zip(ids, players):
         existing = player.participant.label
         if not existing:
-            player.participant.label = pid
+            player.participant.label = f"{sess_id}_{pid}"
 
 
 def ensure_participant(obj):
