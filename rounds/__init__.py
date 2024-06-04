@@ -1057,9 +1057,6 @@ def determine_bonus(player: Player):
             groups[p.round_number] = p.group
             players[p.round_number] = p
     
-    print(f"Include Practice: {include_practice}")
-    print(f"Groups Len: {len(groups)}")
-    print(f"IN ALL:  {len(player.in_all_rounds())}\n {player.in_all_rounds()}")
 
     ##
     ##
