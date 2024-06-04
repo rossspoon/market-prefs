@@ -45,7 +45,7 @@ class PlayerBot(Bot):
         yield Submission(RiskPage3, dict(risk=random.randint(0,1)), check_html=False)
         yield Submission(RiskPage4, dict(risk=random.randint(0,1)), check_html=False)
         
-        if  self.round_number == Constants.num_practice:
+        if self.round_number == Constants.num_rounds or self.round_number == Constants.num_practice:
             yield Submission(FinalResultsPage, check_html=False)
 
 
