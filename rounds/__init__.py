@@ -1047,15 +1047,20 @@ def determine_bonus(player: Player):
     ## Loop through history and gather data
     risk_choices = []
     current_group = player.group
+    include_practice = current_group.is_practice
     groups = {}
     players = {}
     for p in player.in_all_rounds():
         # Ignore practice rounds
-        if (p.round_number > Constants.num_practice and not current_group.is_practice) or (p.round_number <= Constants.num_practice and current_group.is_practice):
+        if not(p.group.is_practice) or include_practice:
             risk_choices.extend(p.get_risk_task_data())
             groups[p.round_number] = p.group
             players[p.round_number] = p
     
+    print(f"Include Practice: {include_practice}")
+    print(f"Groups Len: {len(groups)}")
+    print(f"IN ALL:  {len(player.in_all_rounds())}\n {player.in_all_rounds()}")
+
     ##
     ##
     ## Forcast Bonus
@@ -1063,6 +1068,7 @@ def determine_bonus(player: Player):
     forecast_data = []
     r_start = 0 if current_group.is_practice else Constants.num_practice
     r_end = Constants.num_practice -1 if current_group.is_practice else Constants.num_rounds
+    
     for i in range(r_start, r_end):
         # sort out forecast data
         source_rnd = i + 1
@@ -1079,7 +1085,10 @@ def determine_bonus(player: Player):
                 continue
             
             #Get the price data and the forecast for the target round
-            g = groups[target_rnd]
+            g = groups.get(target_rnd)
+            if not g:
+                continue
+            
             price = g.price
             forecast = p.field_maybe_none(f'f{look_ahead}')
 
@@ -1378,7 +1387,7 @@ class RiskPage4(RiskPage):
 class FinalResultsPage(Page):
     js_vars = get_js_vars_final_results
     form_model = 'player'
-    timeout_seconds = 120
+    timeout_seconds = 75
     timer_text = "Next Page in:"
 
     @staticmethod
