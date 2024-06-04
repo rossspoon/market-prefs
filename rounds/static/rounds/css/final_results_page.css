@@ -1,7 +1,7 @@
 .layout-box {
     display: grid;
     grid-template-columns: 800px 1fr;
-    grid-template-rows: 50px auto;
+    grid-template-rows: 50px auto 100px;
     gap: 10px;
 }
 .vitals{
@@ -20,6 +20,13 @@
     grid-column: 2;
     grid-row: 2;
     padding: 10px 30px;
+}
+
+.shares-box {
+    grid-column: 1/3;
+    grid-row: 3;
+    
+    text-align: center;
 }
 
 .results-ul {
@@ -69,4 +76,12 @@ table {
 .vitals div {
     width: 70%;
     margin: auto;
+}
+
+.red {
+    color: red;
+}
+
+.white {
+    color: white;
 }

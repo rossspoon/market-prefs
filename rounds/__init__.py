@@ -1021,8 +1021,8 @@ def vars_for_admin_report(subsession: BaseSubsession):
 
 
 def determine_bonus(player: Player):
-
-    if player.round_number != Constants.num_rounds:
+    rn = player.round_number
+    if rn != Constants.num_rounds and rn != Constants.num_practice:
         return
 
     bankrupt = player.is_bankrupt()
@@ -1046,22 +1046,24 @@ def determine_bonus(player: Player):
     ##
     ## Loop through history and gather data
     risk_choices = []
+    current_group = player.group
     groups = {}
     players = {}
     for p in player.in_all_rounds():
         # Ignore practice rounds
-        if p.round_number > Constants.num_practice:
+        if (p.round_number > Constants.num_practice and not current_group.is_practice) or (p.round_number <= Constants.num_practice and current_group.is_practice):
             risk_choices.extend(p.get_risk_task_data())
             groups[p.round_number] = p.group
             players[p.round_number] = p
-
-
+    
     ##
     ##
     ## Forcast Bonus
     forecast_bonus = 0
     forecast_data = []
-    for i in range(Constants.num_practice, Constants.num_rounds):
+    r_start = 0 if current_group.is_practice else Constants.num_practice
+    r_end = Constants.num_practice -1 if current_group.is_practice else Constants.num_rounds
+    for i in range(r_start, r_end):
         # sort out forecast data
         source_rnd = i + 1
         for look_ahead in range(4):
@@ -1377,15 +1379,18 @@ class FinalResultsPage(Page):
     js_vars = get_js_vars_final_results
     form_model = 'player'
     timeout_seconds = 120
-    timer_text = "Survey starts in:"
+    timer_text = "Next Page in:"
 
     @staticmethod
     def is_displayed(player: Player):
-        return player.round_number == Constants.num_rounds
+        rn = player.round_number
+        return rn == Constants.num_rounds or rn == Constants.num_practice
 
     @staticmethod
     def vars_for_template(player: Player):
-        player.participant.finished = True
+        player.participant.finished = not(player.group.is_practice)  # Set true only on the very last round
+        
+        ret = standard_vars_for_template(player)
         
         determine_bonus(player)
         participant = player.participant
@@ -1393,11 +1398,17 @@ class FinalResultsPage(Page):
         market_bonus = participant.vars.get('MARKET_PAYMENT').to_real_world_currency(session)
         forecast_bonus = participant.vars.get('FORECAST_PAYMENT').to_real_world_currency(session)
         risk_bonus = participant.vars.get('RISK_PAYMENT').to_real_world_currency(session)
-        return {'market_bonus': market_bonus,
+        
+        conv = scf.get_conversion_rate(player)
+        buy_back_amt = player.shares_result * ret['buy_back'] * conv
+        return ret | {'market_bonus': market_bonus,
                 'forecast_bonus': forecast_bonus,
                 'risk_bonus': risk_bonus,
                 'total_pay': participant.payoff_plus_participation_fee(),
                 'is_online': scf.is_online(player),
+                'conv':   int(1/conv),
+                'buy_back_amt': buy_back_amt
+
                 }
 
 
@@ -1419,13 +1430,12 @@ class PracticeEndPage(Page):
 
     @staticmethod
     def is_displayed(player: Player):
-        return player.round_number == Constants.num_practice + 1
+        return player.round_number == Constants.num_practice
 
 
 page_sequence = [#GroupingWaitPage,
                  PreMarketWait,
                  PracticeStartPage,
-                 PracticeEndPage,
                  #Fixate,
                  MarketGridChoice,
                  #Fixate,
@@ -1439,4 +1449,6 @@ page_sequence = [#GroupingWaitPage,
                  RiskPage2,
                  RiskPage3,
                  RiskPage4,
-                 FinalResultsPage]
+                 FinalResultsPage,
+                 PracticeEndPage,
+]

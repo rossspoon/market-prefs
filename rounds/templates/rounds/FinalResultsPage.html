@@ -7,6 +7,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 <script src="{{ static 'rounds/js/price_history.js' }}"></script>
 <script src="{{ static 'rounds/js/biotrigger.js' }}"></script>
+<script>
+$(window).on('load', function () {
+    
+    //Add practice page background
+    if (js_vars.is_practice) {
+        $('body').addClass('practice-bg');
+        $('.otree-title').addClass('white');
+    }
+});
+</script>
 
 <link rel="stylesheet" href="{{ static 'css/global.css' }}">
 <link rel="stylesheet" href="{{ static 'rounds/css/common.css' }}">
@@ -14,7 +24,13 @@
 
 <div class="layout-box">
         <div class="boxed_area vitals">
-            <div class="larger-font">You have completed the market portion of this experiment.</div>
+            {{ if is_practice }}
+                <div class="larger-font">Practice earnings do not count toward your final payment.</div>           
+
+            {{ else }}
+                 <div class="larger-font">You have completed the market portion of this experiment.</div>           
+            {{ endif}}
+
         </div>
 
         <div class="chart-box boxed_area">
@@ -31,7 +47,11 @@
         <div class="results-layout-box">
             <div>&nbsp;</div>
             <div class="results-div larger-font">
-                <p> Your final payment will be:</p>
+                {{ if is_practice }}
+                    <p> This is a sample payment break down:</p>
+                {{ else }}
+                    <p> Your final payment will be:</p>
+                {{ endif }}
 
              <table>
                 <tr>
@@ -73,5 +93,13 @@
             </div>
         </div>
         </div>
+        
+        {{ if is_practice }}
+        <div class="shares-box boxed_area larger-font">
+        <p>You ended the practice rounds with {{player.shares_result}} shares.  You received <span class="red">{{ buy_back }}</span> for each share.</p>
+        
+        <p>This contributed {{ player.shares_result }} x {{ buy_back }} / {{ conv }}  =  {{buy_back_amt }} to the Market Bonus portion of your payment.</p>
+        </div>
+        {{ endif }}
 </div>
 {{ endblock }}
