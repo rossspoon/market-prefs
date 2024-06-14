@@ -242,3 +242,7 @@
 .hilite{
     border: 2px dashed red;
 }
+
+.hidden {
+    visibility: hidden;
+}

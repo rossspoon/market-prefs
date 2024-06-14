@@ -73,8 +73,8 @@ class Player(BasePlayer):
                 )
     
     quiz_5 = models.StringField(blank=True,
-                 label = "After the final trading period, you have 4 remaining units of STOCK. The market price in the final period is 29. How many units of experiment CASH do you receive in exchange for your STOCK?",
-                 choices=["4", "29", "56", "116"]
+                 label = "After the final trading period, you have 1 remaining unit of STOCK. The market price in the final period is 29. How many units of experiment CASH do you receive in exchange for your STOCK?",
+                 choices=["1", "29", "14", "30"]
                 )
     
     quiz_1_init = models.StringField(blank=True)
@@ -83,6 +83,9 @@ class Player(BasePlayer):
     quiz_4_init = models.StringField(blank=True)
     quiz_5_init = models.StringField(blank=True)
     
+    quiz_attempt = models.IntegerField(initial=0)
+    quiz_failed = models.BooleanField(initial=False)
+        
 
 
 def get_exp_link(player: Player):
@@ -136,7 +139,7 @@ class NoConsent(Page):
         
 
 def is_displayed_common(player: Player):
-    return player.consent_given
+    return player.consent_given and not(player.quiz_failed)
 
 
 class Instructions(Page):
@@ -170,13 +173,13 @@ class Instructions(Page):
     is_displayed = is_displayed_common
     
 
-def quiz_grade_vars(player: Player, data:dict):
+def quiz_grade_vars(data:dict):
         ## Grade the quiz
         q1_score = 1 if data.get('quiz_1') == '2' else 0
         q2_score = 1 if data.get('quiz_2') == '2' else 0
         q3_score = 1 if data.get('quiz_3') == '210' else 0
         q4_score = 1 if data.get('quiz_4') == '110' else 0
-        q5_score = 1 if data.get('quiz_5') == '56' else 0
+        q5_score = 1 if data.get('quiz_5') == '14' else 0
         total_score = q1_score + q2_score + q3_score + q4_score + q5_score
         
         return {
@@ -191,7 +194,7 @@ def quiz_grade_vars(player: Player, data:dict):
     
 def quiz_live_method(player, data):
     func = data['func']
-    
+    attempt = player.quiz_attempt
 
   
     ###
@@ -200,18 +203,12 @@ def quiz_live_method(player, data):
     ##
     ###
     if func == 'grade_it':
-    
-        
+        attempt += 1
+      
         form_data = data['data']
         
         # record initial responses
-        q1_i = player.field_maybe_none('quiz_1_init')
-        q2_i = player.field_maybe_none('quiz_2_init')
-        q3_i = player.field_maybe_none('quiz_3_init')
-        q4_i = player.field_maybe_none('quiz_4_init')
-        q5_i = player.field_maybe_none('quiz_5_init')
-        
-        if not q1_i and not q2_i and not q3_i and not q4_i and not q5_i:
+        if attempt == 1:
             player.quiz_1_init = form_data['quiz_1']
             player.quiz_2_init = form_data['quiz_2']
             player.quiz_3_init = form_data['quiz_3']
@@ -220,11 +217,13 @@ def quiz_live_method(player, data):
             
         
             
-        grades = quiz_grade_vars(player, form_data)
+        grades = quiz_grade_vars(form_data)
         show_next = grades['total_score'] == 5
+        init_fail = grades['total_score'] == 0 and attempt == 1
         ret = {player.id_in_group: dict(func = "graded",
                                          grades = grades,
-                                         show_next = show_next
+                                         show_next = show_next,
+                                         failed = init_fail,
                                          )}
         
         # Save form data to the player object for persistance
@@ -233,6 +232,8 @@ def quiz_live_method(player, data):
         player.quiz_3 = form_data['quiz_3']
         player.quiz_4 = form_data['quiz_4']
         player.quiz_5 = form_data['quiz_5']
+        player.quiz_attempt = attempt
+        player.quiz_failed = init_fail
         
         return ret
 
@@ -243,14 +244,26 @@ def quiz_live_method(player, data):
     ##
     ###
     elif func == 'load':
-        ## Initial page load
-        ret = dict(func="load",
-                   id_quiz_1 = player.field_maybe_none('quiz_1'),
-                   id_quiz_2 = player.field_maybe_none('quiz_2'),
-                   id_quiz_3 = player.field_maybe_none('quiz_3'),
-                   id_quiz_4 = player.field_maybe_none('quiz_4'),
-                   id_quiz_5 = player.field_maybe_none('quiz_5'),
-                   )
+        
+        ret = dict (
+            func="load",
+            quiz_1 = player.field_maybe_none('quiz_1'),
+            quiz_2 = player.field_maybe_none('quiz_2'),
+            quiz_3 = player.field_maybe_none('quiz_3'),
+            quiz_4 = player.field_maybe_none('quiz_4'),
+            quiz_5 = player.field_maybe_none('quiz_5'),
+        )
+        
+        # grade quiz
+        if attempt > 0:
+            grades = quiz_grade_vars(ret)
+            show_next = grades['total_score'] == 5
+            init_fail = grades['total_score'] == 0 and attempt == 1
+        
+            ret['grades'] = grades
+            ret['show_next'] = show_next
+            ret['failed'] = init_fail
+
         return {player.id_in_group: ret}
  
     
