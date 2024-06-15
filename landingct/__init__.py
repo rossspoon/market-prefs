@@ -173,6 +173,12 @@ class Instructions(Page):
     is_displayed = is_displayed_common
     
 
+
+class QuizInstructions(Page):
+    timeout_seconds = 6000
+    
+
+
 def quiz_grade_vars(data:dict):
         ## Grade the quiz
         q1_score = 1 if data.get('quiz_1') == '2' else 0
@@ -341,4 +347,4 @@ class ReadyToStart(Page):
     #     if player.session.enrolled_ids >= {{C.MIN_PLAYERS_PER_GROUP}}:
     #         return upcoming_apps[-1]
 
-page_sequence = [Consent,  Instructions, Quiz, Survey1,  WaitForPlayers, ReadyToStart, NoConsent, ]
+page_sequence = [Consent,  Instructions, QuizInstructions, Quiz, Survey1,  WaitForPlayers, ReadyToStart, NoConsent, ]
