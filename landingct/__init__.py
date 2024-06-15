@@ -175,7 +175,7 @@ class Instructions(Page):
 
 
 class QuizInstructions(Page):
-    timeout_seconds = 6000
+    timeout_seconds = 60
     
 
 
