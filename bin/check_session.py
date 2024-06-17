@@ -12,7 +12,7 @@ POST = requests.post
 # if using Heroku, change this to https://YOURAPP.herokuapp.com
 LOCAL_SERVER_URL = 'http://localhost:8000'
 SERVER_URL = 'https://vt-market-experiment.herokuapp.com'
-BASE_URL = [SERVER_URL]
+BASE_URL = [LOCAL_SERVER_URL]
 REST_KEY = environ.get('REST_FKEY')
 
 def call_api(method, *path_parts, **params) -> dict:
@@ -27,6 +27,6 @@ def call_api(method, *path_parts, **params) -> dict:
         raise Exception(msg)
     return resp.json()
 
-res = call_api(GET, 'sessions', 'ek269bvz')
-del res['participants']
+res = call_api(GET, 'sessions', 'pzcw1xit') #, participant_labels=['pzcw1xit_98F'])
+
 pprint(res)
