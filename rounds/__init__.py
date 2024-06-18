@@ -1418,30 +1418,40 @@ class FinalResultsPage(Page):
                 }
 
 
-class PracticeStartPage(Page):
+class PracticeMarkerPage(Page):
     get_timeout_seconds = scf.get_practice_time
     vars_for_template = vars_for_practice
     js_vars = get_websockets_vars
+    timer_text = 'Next page in:'
+    
+    @staticmethod
+    def get_timeout_seconds(player: Player):
+        if player.round_number == 1:
+            return scf.get_practice_time(player)
+        else:
+            return scf.get_practice_end_time(player)
+        
+    
+    @staticmethod 
+    def js_vars(player: Player):
+        ret = {}
+        if player.round_number == 1:
+            ret['timer_text'] = 'Practice Begins in: '
+        else:
+            ret['timer_text'] = 'Experiment Begins in: '
+            
+        return ret
 
     @staticmethod
     def is_displayed(player: Player):
-        return player.round_number == 1
+        return player.round_number == 1  or player.round_number == Constants.num_practice + 1
 
 
-class PracticeEndPage(Page):
-    get_timeout_seconds = scf.get_practice_time
-    timer_text = "Market Begins in:"
-    vars_for_template = vars_for_practice
-    js_vars = get_websockets_vars
-
-    @staticmethod
-    def is_displayed(player: Player):
-        return player.round_number == Constants.num_practice
 
 
 page_sequence = [#GroupingWaitPage,
                  PreMarketWait,
-                 PracticeStartPage,
+                 PracticeMarkerPage,
                  #Fixate,
                  MarketGridChoice,
                  #Fixate,
@@ -1456,5 +1466,4 @@ page_sequence = [#GroupingWaitPage,
                  RiskPage3,
                  RiskPage4,
                  FinalResultsPage,
-                 PracticeEndPage,
 ]

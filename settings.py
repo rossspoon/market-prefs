@@ -107,6 +107,7 @@ SESSION_CONFIG_DEFAULTS = dict(
     forecast_time=30,
     summary_time=10,
     practice_time=15,
+    practice_end_time=30,
     risk_elic_time=5,
     show_next=False,
     is_prolific=False,
