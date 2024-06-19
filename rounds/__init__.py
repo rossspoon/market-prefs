@@ -1384,7 +1384,7 @@ class RiskPage4(RiskPage):
 class FinalResultsPage(Page):
     js_vars = get_js_vars_final_results
     form_model = 'player'
-    timeout_seconds = 75
+    get_timeout_seconds = scf.get_final_results_time
     timer_text = "Next Page in:"
 
     @staticmethod
@@ -1406,20 +1406,19 @@ class FinalResultsPage(Page):
         risk_bonus = participant.vars.get('RISK_PAYMENT').to_real_world_currency(session)
         
         conv = scf.get_conversion_rate(player)
-        buy_back_amt = player.shares_result * ret['buy_back'] * conv
+        buy_back_amt = player.shares_result * ret['buy_back']
         return ret | {'market_bonus': market_bonus,
                 'forecast_bonus': forecast_bonus,
                 'risk_bonus': risk_bonus,
                 'total_pay': participant.payoff_plus_participation_fee(),
                 'is_online': scf.is_online(player),
                 'conv':   int(1/conv),
-                'buy_back_amt': buy_back_amt
-
+                'buy_back_amt': buy_back_amt,
+                'market_price': player.group.price,
                 }
 
 
 class PracticeMarkerPage(Page):
-    get_timeout_seconds = scf.get_practice_time
     vars_for_template = vars_for_practice
     js_vars = get_websockets_vars
     timer_text = 'Next page in:'

@@ -1,6 +1,6 @@
 .layout-box {
     display: grid;
-    grid-template-columns: 800px 1fr;
+    grid-template-columns: 40% 1fr;
     grid-template-rows: 50px auto 100px;
     gap: 10px;
 }

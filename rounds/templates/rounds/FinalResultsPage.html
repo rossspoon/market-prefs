@@ -48,10 +48,24 @@ $(window).on('load', function () {
             <div>&nbsp;</div>
             <div class="results-div larger-font">
                 {{ if is_practice }}
-                    <p> This is a sample payment break down:</p>
+                <p> Summary of Practice Results</p>
+                <table>
+                <tr>
+                    <td>Number of Shares of STOCK You Own: </td>
+                    <td> {{ player.shares_result}}
+                </tr>
+                <tr>
+                    <td>STOCK Trade-in Value:</td>
+                    <td> <span class="red">{{ buy_back }}</span> per share</td>
+                </tr>
+                <tr>
+                    <td>Total Trade-in Amount:</td>
+                    <td>{{ buy_back_amt }}</td>
+                </tr>
+                </table>
+                
                 {{ else }}
-                    <p> Your final payment will be:</p>
-                {{ endif }}
+                <p> Your final payment will be:</p>
 
              <table>
                 <tr>
@@ -84,9 +98,15 @@ $(window).on('load', function () {
                     <td class="bold-text">{{ total_pay }}</td>
                 </tr>
             </table>
+            {{ endif }}
             </div>
             <div class="next-button-div">
+                {{ if is_practice }}
+                <p class="larger-font">Click Next to start the experiment:</p>
+
+                {{ else }}
                 <p class="larger-font">Click Next to take a brief survey:</p>
+                {{ endif }}
                 <div class="bottom-right">
                     {{ next_button }}
                 </div>
@@ -96,9 +116,8 @@ $(window).on('load', function () {
         
         {{ if is_practice }}
         <div class="shares-box boxed_area larger-font">
-        <p>You ended the practice rounds with {{player.shares_result}} shares.  You received <span class="red">{{ buy_back }}</span> for each share.</p>
-        
-        <p>This contributed {{ player.shares_result }} x {{ buy_back }} / {{ conv }}  =  {{buy_back_amt }} to the Market Bonus portion of your payment.</p>
+        <p>The market price in the last practice round was {{ market_price }}.</p>
+        <p>  Concider whether you are willing to buy STOCK at this price concidering the trade-in amount after the last round.</p>
         </div>
         {{ endif }}
 </div>
