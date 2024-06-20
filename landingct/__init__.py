@@ -177,7 +177,11 @@ class Instructions(Page):
 
 class QuizInstructions(Page):
     timeout_seconds = 60
-    
+     
+    @staticmethod 
+    def vars_for_template(player: Player):
+        config = player.session.config
+        return config   
 
 
 def quiz_grade_vars(data:dict):
