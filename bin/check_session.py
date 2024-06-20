@@ -27,6 +27,7 @@ def call_api(method, *path_parts, **params) -> dict:
         raise Exception(msg)
     return resp.json()
 
-res = call_api(GET, 'sessions', 'pzcw1xit') #, participant_labels=['pzcw1xit_98F'])
-
+res = call_api(POST, 'participant_vars', room_name='market2', participant_label='xyz', vars={'quiz_grade': 3})
+'participant_vars',
+        
 pprint(res)

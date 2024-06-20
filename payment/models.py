@@ -99,10 +99,12 @@ class Player(BasePlayer):
     market_bonus = models.CurrencyField(initial=0)
     forecast_bonus = models.CurrencyField(initial=0)
     risk_bonus = models.CurrencyField(initial=0)
+    quiz_bonus = models.CurrencyField(initial=0)
+
 
 def custom_export(players):
     yield (['session', 'participant', 'part_label', 'clicked_button',
-            'market_bonus', 'forecast_bonus', 'risk_bonus', 'total_bonus', 'showup', 'total_payment'])
+            'market_bonus', 'forecast_bonus', 'risk_bonus', 'quiz_bonus', 'total_bonus', 'showup', 'total_payment'])
 
     for p in players:
         participant = p.participant
@@ -111,16 +113,18 @@ def custom_export(players):
         market_bonus = p.field_maybe_none('market_bonus')
         forecast_bonus = p.field_maybe_none('forecast_bonus')
         risk_bonus = p.field_maybe_none('risk_bonus')
+        quiz_bonus = p.field_maybe_none('quiz_bonus')
         
         #Ensure bonus amounts are not null
         market_bonus = 0 if market_bonus is None else market_bonus
         forecast_bonus = 0 if forecast_bonus is None else forecast_bonus
         risk_bonus = 0 if risk_bonus is None else risk_bonus
+        quiz_bonus = 0 if quiz_bonus is None else quiz_bonus
         
-        total_bonus = market_bonus + forecast_bonus + risk_bonus
+        total_bonus = market_bonus + forecast_bonus + risk_bonus + quiz_bonus
         show_up = cu(session.config['participation_fee'])
         total_payment = show_up + total_bonus
         clicked = is_button_click(p)
         yield(session.code, participant.code, participant.label, clicked, 
-              market_bonus, forecast_bonus, risk_bonus, total_bonus, show_up, total_payment,
+              market_bonus, forecast_bonus, risk_bonus, quiz_bonus, total_bonus, show_up, total_payment,
               )

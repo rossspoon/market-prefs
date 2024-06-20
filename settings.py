@@ -102,6 +102,9 @@ SESSION_CONFIG_DEFAULTS = dict(
     forecast_reward=2.5,
     forecast_range=50,
     forecast_periods='0,2,5,10',
+    
+    quiz_reward = .25,
+    
     market_time=20,
     fixate_time=2,
     forecast_time=30,
@@ -178,7 +181,7 @@ elif environ.get('MTURK_HIT_TYPE') == 'EXP':
         qualification_requirements=[]
         # grant_qualification_id='YOUR_QUALIFICATION_ID_HERE', # to prevent retakes
     )
-PARTICIPANT_FIELDS = ['CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT', 'RISK_PAYMENT', 'finished', 'consent', 'inactive', 'survey_1_click']
+PARTICIPANT_FIELDS = ['CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT', 'RISK_PAYMENT', 'QUIZ_PAYMENT',  'quiz_grade', 'finished', 'consent', 'inactive', 'survey_1_click']
 SESSION_FIELDS = ['prolific_completion_url', 'arrived_ids']
 
 # ISO-639 code

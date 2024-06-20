@@ -58,6 +58,10 @@ def creating_session(subsession: Subsession):
     if subsession.round_number <= Constants.num_practice:
         for g in subsession.get_groups():
             g.is_practice = True
+            
+    #initialize quiz bonus
+    for p in subsession.get_players():
+        p.participant.quiz_grade = 0
 
 
 # assign treatments
@@ -1065,50 +1069,50 @@ def determine_bonus(player: Player):
     forecast_data = []
     r_start = 0 if current_group.is_practice else Constants.num_practice
     r_end = Constants.num_practice -1 if current_group.is_practice else Constants.num_rounds
-    
+        
     for i in range(r_start, r_end):
         # sort out forecast data
         source_rnd = i + 1
         for look_ahead in range(4):
             p = players[source_rnd]
 
-            #Determine target round, and convert to overall round number
-            target_rnd = p.field_maybe_none(f'fcast_rnd_{look_ahead}')
-            if not target_rnd:
-                continue
+        #Determine target round, and convert to overall round number
+        target_rnd = p.field_maybe_none(f'fcast_rnd_{look_ahead}')
+        if not target_rnd:
+            continue
+        
+        target_rnd = target_rnd + Constants.num_practice
+        if target_rnd > Constants.num_rounds:
+            continue
+        
+        #Get the price data and the forecast for the target round
+        g = groups.get(target_rnd)
+        if not g:
+            continue
+        
+        price = g.price
+        forecast = p.field_maybe_none(f'f{look_ahead}')
+    
+        if not forecast:
+            continue  # skip out if no forecast was made
             
-            target_rnd = target_rnd + Constants.num_practice
-            if target_rnd > Constants.num_rounds:
-                continue
-            
-            #Get the price data and the forecast for the target round
-            g = groups.get(target_rnd)
-            if not g:
-                continue
-            
-            price = g.price
-            forecast = p.field_maybe_none(f'f{look_ahead}')
-
-            if not forecast:
-                continue  # skip out if no forecast was made
-                
-            # Determine error and apply threshold rule
-            error = abs(price - forecast)
-            freward = scf.get_forecast_reward(player) if error <= scf.get_forecast_thold(player) else 0
-            # aggergate
-            forecast_bonus += freward
-            
-            # Assemble debugging data
-            round_look_data = dict(
-                    source_rnd = source_rnd - Constants.num_practice,
-                    target_rnd = target_rnd - Constants.num_practice,
-                    look_ahead = look_ahead,
-                    forecast = int(forecast),
-                    price = int(price),
-                    error = int(error),
-                    reward = int(freward)
-                )
-            forecast_data.append(round_look_data)
+        # Determine error and apply threshold rule
+        error = abs(price - forecast)
+        freward = scf.get_forecast_reward(player) if error <= scf.get_forecast_thold(player) else 0
+        # aggergate
+        forecast_bonus += freward
+        
+        # Assemble debugging data
+        round_look_data = dict(
+                source_rnd = source_rnd - Constants.num_practice,
+                target_rnd = target_rnd - Constants.num_practice,
+                look_ahead = look_ahead,
+                forecast = int(forecast),
+                price = int(price),
+                error = int(error),
+                reward = int(freward)
+            )
+        forecast_data.append(round_look_data)
             
     #player.forecast_bonus_data = json.dumps(forecast_data)  #Keep for debugging purposes
     participant.FORECAST_PAYMENT = cu(forecast_bonus)
@@ -1151,9 +1155,16 @@ def determine_bonus(player: Player):
     
     ##
     ##
+    ## Quiz Bonus
+    quiz_bonus = player.participant.quiz_grade * scf.get_quiz_reward(player) / conversion
+    participant.QUIZ_PAYMENT = cu(quiz_bonus)
+
+    
+    ##
+    ##
     ##
     # Determine total bonus and round up to whole dollar amount.
-    bonus = market_bonus + forecast_bonus + risk_payment
+    bonus = market_bonus + forecast_bonus + risk_payment + quiz_bonus
     # is_online = scf.is_online(player)
     # if not is_online:  # only round up for in-person sessions
     #     bonus = ceil(bonus * conversion) / conversion
@@ -1404,12 +1415,14 @@ class FinalResultsPage(Page):
         market_bonus = participant.vars.get('MARKET_PAYMENT').to_real_world_currency(session)
         forecast_bonus = participant.vars.get('FORECAST_PAYMENT').to_real_world_currency(session)
         risk_bonus = participant.vars.get('RISK_PAYMENT').to_real_world_currency(session)
+        quiz_bonus = participant.vars.get('QUIZ_PAYMENT').to_real_world_currency(session)
         
         conv = scf.get_conversion_rate(player)
         buy_back_amt = player.shares_result * ret['buy_back']
         return ret | {'market_bonus': market_bonus,
                 'forecast_bonus': forecast_bonus,
                 'risk_bonus': risk_bonus,
+                'quiz_bonus': quiz_bonus,
                 'total_pay': participant.payoff_plus_participation_fee(),
                 'is_online': scf.is_online(player),
                 'conv':   int(1/conv),

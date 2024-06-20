@@ -4,7 +4,7 @@ from .models import Group
 import random
 import time
 
-from rounds import Constants,PracticeStartPage,PracticeEndPage,Fixate,MarketGridChoice,ForecastPage,RoundResultsPage,RiskPage1,RiskPage2,RiskPage3,RiskPage4,FinalResultsPage
+from rounds import Constants,PracticeMarkerPage,Fixate,MarketGridChoice,ForecastPage,RoundResultsPage,RiskPage1,RiskPage2,RiskPage3,RiskPage4,FinalResultsPage
 
 BUY_RANGE = (-5, 5)
 SELL_RANGE = 5
@@ -17,12 +17,8 @@ class PlayerBot(Bot):
 
     def play_round(self):
         
-        if self.round_number == 1:
-            yield Submission(PracticeStartPage, check_html=False)
-            
-        if self.round_number == Constants.num_practice + 1:
-            yield Submission(PracticeEndPage, check_html=False)
-            
+        if self.round_number == 1 or self.round_number == Constants.num_practice + 1:
+            yield Submission(PracticeMarkerPage, check_html=False)                      
         
             
         # yield Submission(Fixate, check_html=False)
@@ -45,7 +41,7 @@ class PlayerBot(Bot):
         yield Submission(RiskPage3, dict(risk=random.randint(0,1)), check_html=False)
         yield Submission(RiskPage4, dict(risk=random.randint(0,1)), check_html=False)
         
-        if self.round_number == Constants.num_rounds or self.round_number == Constants.num_practice:
+        if self.round_number == Constants.num_practice or self.round_number == Constants.num_rounds:
             yield Submission(FinalResultsPage, check_html=False)
 
 

@@ -21,6 +21,7 @@ SK_FORECAST_THOLD = 'forecast_thold'
 SK_FORECAST_REWARD = 'forecast_reward'
 SK_FORECAST_RANGE = 'forecast_range'
 SK_FORECAST_PERIODS='forecast_periods'
+SK_QUIZ_REWARD='quiz_reward'
 SK_MARKET_TIME = 'market_time'
 SK_FIXATE_TIME = 'fixate_time'
 SK_RISK_ELIC_TIME = 'risk_elic_time'
@@ -207,6 +208,11 @@ def get_forecast_periods(obj):
     config = ensure_config(obj)
     p = config.get(SK_FORECAST_PERIODS)
     return [int(x) for x in p.split(',')]
+
+
+def get_quiz_reward(obj):
+    config = ensure_config(obj)
+    return get_item_as_float(config, SK_QUIZ_REWARD)
 
 
 def get_market_time(obj):
