@@ -82,6 +82,7 @@ class Player(BasePlayer):
     quiz_3_init = models.StringField(blank=True)
     quiz_4_init = models.StringField(blank=True)
     quiz_5_init = models.StringField(blank=True)
+    quiz_grade = models.IntegerField(initial=0)
     
     quiz_attempt = models.IntegerField(initial=0)
     quiz_failed = models.BooleanField(initial=False)
@@ -224,8 +225,9 @@ def quiz_live_method(player, data):
         
             
         grades = quiz_grade_vars(form_data)
-        show_next = grades['total_score'] == 5
-        init_fail = grades['total_score'] == 0 and attempt == 1
+        quiz_grade = grades['total_score']            
+        show_next = quiz_grade == 5
+        init_fail = quiz_grade == 0 and attempt == 1
         ret = {player.id_in_group: dict(func = "graded",
                                          grades = grades,
                                          show_next = show_next,
@@ -241,6 +243,9 @@ def quiz_live_method(player, data):
         player.quiz_attempt = attempt
         player.quiz_failed = init_fail
         
+        if attempt==1:
+            player.quiz_grade = quiz_grade
+           
         return ret
 
     
