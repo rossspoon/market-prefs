@@ -11,7 +11,7 @@ POST = requests.post
 # if using Heroku, change this to https://YOURAPP.herokuapp.com
 LOCAL_SERVER_URL = 'http://localhost:8000'
 SERVER_URL = 'https://vt-market-experiment.herokuapp.com'
-BASE_URL = [LOCAL_SERVER_URL]
+BASE_URL = [SERVER_URL]
 REST_KEY = "s+Uj_g5Zunap3?TfZ6uUQ7" #"environ.get('REST_FKEY')"
 
 landing_data = pd.read_csv('~/Downloads/landing_data.csv')
