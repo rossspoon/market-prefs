@@ -286,7 +286,7 @@ def quiz_live_method(player, data):
 class Quiz(Page):
     form_model = 'player'
     form_fields = ['quiz_1', 'quiz_2', 'quiz_3', 'quiz_4', 'quiz_5']
-    timeout_seconds = 10#C.QUIZ_TIMEOUT
+    timeout_seconds = C.QUIZ_TIMEOUT
 
     live_method = quiz_live_method
     is_displayed = is_displayed_common
