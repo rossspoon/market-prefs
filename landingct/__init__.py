@@ -231,7 +231,10 @@ def quiz_live_method(player, data):
         grades = quiz_grade_vars(form_data)
         quiz_grade = grades['total_score']            
         show_next = quiz_grade == 5
-        init_fail = quiz_grade == 0 and attempt == 1
+        
+        is_prolific = len(player.participant.label) > 20
+        
+        init_fail = quiz_grade == 0 and attempt == 1 and is_prolific
         ret = {player.id_in_group: dict(func = "graded",
                                          grades = grades,
                                          show_next = show_next,
