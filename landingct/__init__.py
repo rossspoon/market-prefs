@@ -289,7 +289,7 @@ def quiz_live_method(player, data):
 class Quiz(Page):
     form_model = 'player'
     form_fields = ['quiz_1', 'quiz_2', 'quiz_3', 'quiz_4', 'quiz_5']
-    timeout_seconds = C.QUIZ_TIMEOUT
+    timeout_seconds = 10#C.QUIZ_TIMEOUT
 
     live_method = quiz_live_method
     is_displayed = is_displayed_common
@@ -297,7 +297,9 @@ class Quiz(Page):
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
         if timeout_happened:
-            player.quiz_failed = True
+            is_prolific = len(player.participant.label) > 20
+
+            player.quiz_failed = is_prolific
 
 
     
