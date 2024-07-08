@@ -31,7 +31,7 @@ SESSION_CONFIGS = [
         experiment_link = "https://vt-market-experiment.herokuapp.com/room/market2",
         experiment_link_local = 'http://localhost:8000/room/market2',
         experiment_link_is_local=False,
-        waiting_group_size=20,
+        waiting_group_size=25,
         landing_wait_timeout=1200,
     )
     
@@ -181,7 +181,7 @@ elif environ.get('MTURK_HIT_TYPE') == 'EXP':
         qualification_requirements=[]
         # grant_qualification_id='YOUR_QUALIFICATION_ID_HERE', # to prevent retakes
     )
-PARTICIPANT_FIELDS = ['CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT', 'RISK_PAYMENT', 'QUIZ_PAYMENT',  'quiz_grade', 'finished', 'consent', 'inactive', 'survey_1_click']
+PARTICIPANT_FIELDS = ['CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT', 'RISK_PAYMENT', 'QUIZ_PAYMENT',  'quiz_grade', 'finished', 'consent', 'inactive', 'wait_page_arrival', 'survey_1_click']
 SESSION_FIELDS = ['prolific_completion_url', 'arrived_ids']
 
 # ISO-639 code
