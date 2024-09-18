@@ -2,6 +2,8 @@ from otree.api import *
 from common.ParticipantFuctions import generate_participant_ids
 import time
 from datetime import date
+import common.SessionConfigFunctions as scf
+
 doc = ''
 
 class C(BaseConstants):
@@ -175,6 +177,27 @@ class Instructions(Page):
     
 
 
+class HighStakes(Page):
+    timeout_seconds = 30
+    
+    @staticmethod
+    def is_displayed(player: Player):
+        common = is_displayed_common(player)
+        config = player.session.config
+        is_hi = config.get('is_hi_stakes')
+        
+        return common and is_hi
+    
+    @staticmethod
+    def vars_for_template(player: Player):
+        ret = player.session.config
+        conversion = scf.get_conversion_rate(player)
+        ret['conv'] = int(1 / conversion)
+        return ret
+
+        
+    
+
 class QuizInstructions(Page):
     timeout_seconds = 60
      
@@ -182,6 +205,9 @@ class QuizInstructions(Page):
     def vars_for_template(player: Player):
         config = player.session.config
         return config   
+
+    is_displayed = is_displayed_common
+
 
 
 def quiz_grade_vars(data:dict):
@@ -365,4 +391,4 @@ class ReadyToStart(Page):
     #     if player.session.enrolled_ids >= {{C.MIN_PLAYERS_PER_GROUP}}:
     #         return upcoming_apps[-1]
 
-page_sequence = [Consent,  Instructions, QuizInstructions, Quiz, Survey1,  WaitForPlayers, ReadyToStart, NoConsent, ]
+page_sequence = [Consent,  Instructions, HighStakes, QuizInstructions, Quiz, Survey1,  WaitForPlayers, ReadyToStart, NoConsent, ]

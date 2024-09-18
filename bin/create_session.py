@@ -35,14 +35,20 @@ def check_session(code):
     del resp_check['participants']
     return resp_check
 
-def make_exp(N, l, dist, comp_url=COMP_URL_EXP):
+def make_exp(N, l, dist, is_hi, show_next, comp_url=COMP_URL_EXP):
 
     participation_fee = 12.00
 
     session_configs = dict(
         endow_stock = dist,
         participation_fee = participation_fee,
+        real_world_currency_per_point = 0.005,
+        show_next = show_next,
     )
+    
+    if is_hi:
+        session_configs['real_world_currency_per_point'] = 0.025
+        session_configs['is_hi_stakes'] = True
 
 
     # Create the experiment session
@@ -124,9 +130,11 @@ def main(argv):
     N = 0                    # n:
     l_num = 0                # l:
     times = ""               # times=
+    is_hi = False            # h
+    show_next = False        # x
 
     try:
-        opts, args = getopt.getopt(argv, "ps:n:l:t:", ["dist=", "local", "prolific", "mturk", "times="])
+        opts, args = getopt.getopt(argv, "phxs:n:l:t:", ["dist=", "local", "prolific", "mturk", "times="])
     except getopt.GetoptError as e:
         print("Error parsing options: ", e)
         print (USAGE)
@@ -135,6 +143,12 @@ def main(argv):
     for opt, arg in opts:
         if opt == '-p':
             is_pilot = True
+            
+        elif opt == '-h':
+            is_hi = True
+            
+        elif opt == '-x':
+            show_next = True
 
         elif opt == '-s':
             stage = arg
@@ -162,7 +176,7 @@ def main(argv):
         sys.exit(2)
 
     if stage == 'exp':
-        resp = make_exp(N, l_num, dist)
+        resp = make_exp(N, l_num, dist, is_hi, show_next)
         pprint(resp)
         print("SESSIONS CREATED:")
         keys = list(resp.keys())
