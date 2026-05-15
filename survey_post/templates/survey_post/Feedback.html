@@ -1,0 +1,29 @@
+{{ block title }}Feedback Task{{ endblock }}
+{{ block scripts }}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('._formfield').forEach(field => {
+        const hasRequired = field.querySelector('[required]');
+        if (hasRequired) {
+            const label = field.querySelector('label.col-form-label');
+            if (label) {
+                const star = document.createElement('span');
+                star.textContent = ' *';
+                star.style.color = 'red';
+                star.style.fontSize = '1.5em';
+                star.style.fontWeight = 'bold';
+                star.style.lineHeight = '1';  // prevents it from pushing the label height
+                label.appendChild(star);
+            }
+        }
+    });
+});
+</script>
+{{ endblock }}
+{{ block content }}
+<p>Please provide a few answers regarding this experiment.</p>
+
+{{ formfields }}
+
+{{ next_button }}
+{{ endblock }}

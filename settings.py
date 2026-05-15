@@ -2,6 +2,24 @@ from os import environ
 
 SESSION_CONFIGS = [
     dict(
+        name='whole_exp',
+        app_sequence=['landingct', 'rounds', 'survey_post', 'payment'],
+        num_demo_participants=2,
+        random_hist=False,
+        consent_link="https://docs.google.com/forms/d/e/1FAIpQLScuxDtP9dEzRk89ru7z2ekLCmG0a5TQKFYgA-cB7EMtunar5w/viewform?embedded=true&usp=pp_url&entry.755475846",
+        consent_pg_cnt=4,
+        survey_1_link="https://docs.google.com/forms/d/e/1FAIpQLSffLRaG5rYyrSYGaSK8Vzj6b_yllfQ5A8sWPMfvLdEf5xMISA/viewform?embedded=true&usp=pp_url&entry.181925610",
+        survey_1_pg_cnt = 7,
+        instruction_id = '232inD_HChc', 
+        experiment_link = "https://vt-market-experiment.herokuapp.com/room/market2",
+        experiment_link_local = 'http://localhost:8000/room/market2',
+        experiment_link_is_local=False,
+        waiting_group_size=25,
+        landing_wait_timeout=1200,
+        is_hi_stakes=False,
+    )
+    
+    ,dict(
         name='rounds',
         app_sequence=['consent', 'rounds', 'payment'],
         num_demo_participants=2,
@@ -43,8 +61,8 @@ SESSION_CONFIGS = [
     )
 
     , dict(
-        name='consent',
-        app_sequence=['consent', 'payment'],
+        name='survey_post',
+        app_sequence=['survey_post'],
         num_demo_participants=1,
     )
 
@@ -182,7 +200,10 @@ elif environ.get('MTURK_HIT_TYPE') == 'EXP':
         qualification_requirements=[]
         # grant_qualification_id='YOUR_QUALIFICATION_ID_HERE', # to prevent retakes
     )
-PARTICIPANT_FIELDS = ['CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 'FORECAST_PAYMENT', 'RISK_PAYMENT', 'QUIZ_PAYMENT',  'quiz_grade', 'finished', 'consent', 'inactive', 'wait_page_arrival', 'survey_1_click']
+PARTICIPANT_FIELDS = ['CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 
+                      'FORECAST_PAYMENT', 'RISK_PAYMENT', 'QUIZ_PAYMENT',  
+                      'quiz_grade', 'finished', 'consent', 'inactive', 'wait_page_arrival', 
+                      'survey_1_click', 'is_dropout']
 SESSION_FIELDS = ['prolific_completion_url', 'arrived_ids']
 
 # ISO-639 code
@@ -206,12 +227,6 @@ SECRET_KEY = '7763949237284'
 ROOMS = [
     dict(
         name='market',
-        display_name='Market Experiment',
-        participant_label_file='_rooms/market.txt',
-        use_secure_urls=False
-    ),
-    dict(
-        name='market2',
         display_name='Market Experiment (w/o participant labels)'
     ),
     dict(

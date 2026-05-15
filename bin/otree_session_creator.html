@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>oTree Session Creator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e1117;
+    --surface: #161b25;
+    --surface2: #1e2535;
+    --border: #2a3348;
+    --border-hi: #3d4f6e;
+    --accent: #4f9cf9;
+    --accent-dim: #1e3a5f;
+    --green: #3ddc97;
+    --green-dim: #0d3324;
+    --amber: #f5a623;
+    --amber-dim: #3d2800;
+    --red: #f05252;
+    --red-dim: #3d1010;
+    --text: #e8eaf0;
+    --text-muted: #7a8499;
+    --text-dim: #4a5568;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --radius: 6px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+  }
+  .logo span { color: var(--text-muted); font-weight: 400; }
+  .version-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    padding: 1px 6px;
+    letter-spacing: 0.08em;
+  }
+  .save-indicator {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.3s;
+  }
+  .save-indicator.saved { color: var(--green); }
+  .save-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* LAYOUT */
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 0;
+    height: calc(100vh - 52px);
+  }
+
+  /* LEFT PANEL */
+  .left-panel {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .panel-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* FORM ELEMENTS */
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    letter-spacing: 0.03em;
+    font-family: var(--mono);
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="password"],
+  select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder,
+  input[type="number"]::placeholder { color: var(--text-dim); }
+
+  select option { background: var(--surface2); }
+
+  /* RADIO GROUP */
+  .radio-group {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .radio-group label {
+    flex: 1;
+    margin: 0;
+    cursor: pointer;
+  }
+  .radio-group input[type="radio"] { display: none; }
+  .radio-group .rb-label {
+    display: block;
+    text-align: center;
+    padding: 7px 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border-right: 1px solid var(--border);
+    transition: all 0.15s;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+  }
+  .radio-group label:last-child .rb-label { border-right: none; }
+  .radio-group input[type="radio"]:checked + .rb-label {
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* CHECKBOX */
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .checkbox-row:hover { border-color: var(--border-hi); }
+  .checkbox-row input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .checkbox-row .cb-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    margin: 0;
+  }
+
+  /* SERVER URL DISPLAY */
+  .url-display {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 7px 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    word-break: break-all;
+    min-height: 32px;
+    transition: border-color 0.15s;
+  }
+
+  /* SESSION TYPE BUTTONS */
+  .session-type-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .session-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+  .session-btn:hover { border-color: var(--border-hi); color: var(--text); }
+  .session-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ADVANCED CONFIG */
+  .advanced-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .advanced-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .toggle-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: var(--radius);
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+  .toggle-btn:hover { border-color: var(--border-hi); color: var(--text); }
+  .toggle-btn.open { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  .advanced-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+
+  .adv-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 20px;
+  }
+  .adv-grid .field { margin-bottom: 0; }
+  .adv-grid .full { grid-column: 1 / -1; }
+
+  .adv-section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding: 16px 0 10px;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+    grid-column: 1 / -1;
+  }
+  .adv-section-title:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+
+  /* OUTPUT LOG */
+  .output-area {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+  }
+  .output-header {
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .output-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .clear-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: color 0.15s;
+  }
+  .clear-btn:hover { color: var(--text-muted); }
+
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 24px;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.7;
+  }
+  .log-line { display: flex; gap: 12px; }
+  .log-time { color: var(--text-dim); flex-shrink: 0; }
+  .log-msg { color: var(--text-muted); }
+  .log-msg.ok { color: var(--green); }
+  .log-msg.err { color: var(--red); }
+  .log-msg.info { color: var(--accent); }
+  .log-msg.warn { color: var(--amber); }
+
+  /* ACTION BUTTONS */
+  .action-bar {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 11px 16px;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .btn-secondary {
+    width: 100%;
+    background: none;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 16px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--border-hi); color: var(--text); }
+
+  /* STATUS */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+  .status-pill.idle { background: var(--surface2); color: var(--text-dim); }
+  .status-pill.connecting { background: var(--amber-dim); color: var(--amber); }
+  .status-pill.ok { background: var(--green-dim); color: var(--green); }
+  .status-pill.err { background: var(--red-dim); color: var(--red); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-hi); }
+
+  /* SPINNER */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+  }
+
+  .hidden { display: none !important; }
+
+  /* CONN STATUS BADGE */
+  .conn-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .conn-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .conn-dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .conn-dot.err { background: var(--red); }
+  .conn-dot.checking { background: var(--amber); }
+  .conn-text { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="logo">oTree<span>/session</span></span>
+    <span class="version-badge">v5.11</span>
+  </div>
+  <div class="save-indicator" id="saveIndicator">
+    <span class="save-dot"></span>
+    <span id="saveText">unsaved</span>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- LEFT: MAIN CONFIG -->
+  <div class="left-panel">
+
+    <!-- SERVER -->
+    <div class="panel-section">
+      <div class="section-label">Server</div>
+
+      <div class="field">
+        <label>Target</label>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="serverMode" value="remote" id="radioRemote" checked>
+            <span class="rb-label">Remote</span>
+          </label>
+          <label>
+            <input type="radio" name="serverMode" value="local" id="radioLocal">
+            <span class="rb-label">Local</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field" id="fieldRemoteUrl">
+        <label>Remote URL</label>
+        <input type="text" id="remoteUrl" value="https://vt-market-experiment.herokuapp.com" placeholder="https://…">
+      </div>
+      <div class="field hidden" id="fieldLocalUrl">
+        <label>Local URL</label>
+        <input type="text" id="localUrl" value="http://localhost:8000" placeholder="http://localhost:8000">
+      </div>
+
+      <div class="field">
+        <label>Active URL</label>
+        <div class="url-display" id="activeUrl">https://vt-market-experiment.herokuapp.com</div>
+      </div>
+
+      <div class="field">
+        <label>REST Key</label>
+        <input type="password" id="restKey" value='s+Uj_g5Zunap3?TfZ6uUQ7' placeholder="REST key">
+      </div>
+
+      <div class="conn-badge">
+        <div class="conn-dot" id="connDot"></div>
+        <span class="conn-text" id="connText">Not tested</span>
+        <button class="btn-secondary" style="width:auto;padding:4px 10px;font-size:11px;margin-left:auto" onclick="testConnection()">Test</button>
+      </div>
+    </div>
+
+    <!-- SESSION TYPE -->
+    <div class="panel-section">
+      <div class="section-label">Session Type</div>
+      <div class="session-type-group">
+        <div class="session-btn active" id="btn-exp" onclick="setStage('exp')">Experiment</div>
+        <div class="session-btn" id="btn-screen" onclick="setStage('screen')">Prescreening</div>
+      </div>
+    </div>
+
+    <!-- CORE PARAMS -->
+    <div class="panel-section">
+      <div class="section-label">Parameters</div>
+
+      <div class="field">
+        <label>Number of Subjects</label>
+        <input type="number" id="numSubjects" value="25" min="1" max="500">
+      </div>
+
+      <div class="field">
+        <label>Participation Fee ($)</label>
+        <input type="number" id="participationFee" value="12.00" step="0.25" min="0">
+      </div>
+
+      <div class="field">
+        <label>Real World Currency / Point</label>
+        <input type="number" id="rwcpp" value="0.005" step="0.001" min="0">
+      </div>
+
+      <div class="field">
+        <div class="checkbox-row" onclick="toggleCheckbox('showNext')">
+          <input type="checkbox" id="showNext">
+          <span class="cb-label">show_next</span>
+        </div>
+      </div>
+
+      <!-- Exp-only fields -->
+      <div id="expFields">
+        <div class="field">
+          <label>Stock Distribution (e.g. "4 4 4")</label>
+          <input type="text" id="endowStock" value="4 4 4" placeholder="4 4 4">
+        </div>
+      </div>
+
+      <!-- Screen-only fields -->
+      <div id="screenFields" class="hidden">
+        <div class="field">
+          <label>Available Times (space-separated)</label>
+          <input type="text" id="screenTimes" value="" placeholder="09:00 10:00 11:00 …">
+        </div>
+        <div class="field">
+          <label>Screening Fee ($)</label>
+          <input type="number" id="screenFee" value="0.50" step="0.25" min="0">
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLETION URLS -->
+    <div class="panel-section">
+      <div class="section-label">Prolific</div>
+      <div class="field">
+        <label>Completion URL (Experiment)</label>
+        <input type="text" id="compUrlExp" value="https://app.prolific.com/submissions/complete?cc=CT8QWJ3A">
+      </div>
+      <div class="field">
+        <label>Completion URL (Pre-screen)</label>
+        <input type="text" id="compUrlPre" value="https://app.prolific.com/submissions/complete?cc=C1BNU59M">
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="action-bar">
+      <button class="btn-primary" id="createBtn" onclick="createSession()">Create Session</button>
+      <button class="btn-secondary" onclick="saveConfig()">Save Configuration</button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: ADVANCED + LOG -->
+  <div class="right-panel">
+
+    <div class="advanced-header">
+      <span class="advanced-title">Advanced Configuration</span>
+      <button class="toggle-btn" id="advToggle" onclick="toggleAdvanced()">Expand ↓</button>
+    </div>
+
+    <div class="advanced-body" id="advBody">
+      <div style="text-align:center; padding: 60px 20px; color: var(--text-dim); font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em;">
+        EXPAND TO CONFIGURE ALL SESSION DEFAULTS
+      </div>
+    </div>
+
+    <!-- ADVANCED FORM (hidden until expanded) -->
+    <div id="advancedForm" class="hidden advanced-body" style="overflow-y:auto; flex:1;">
+      <div class="adv-grid">
+
+        <div class="adv-section-title">Market / Timing (seconds)</div>
+
+        <div class="field">
+          <label>market_time</label>
+          <input type="number" id="marketTime" value="20">
+        </div>
+        <div class="field">
+          <label>fixate_time</label>
+          <input type="number" id="fixateTime" value="2">
+        </div>
+        <div class="field">
+          <label>forecast_time</label>
+          <input type="number" id="forecastTime" value="30">
+        </div>
+        <div class="field">
+          <label>summary_time</label>
+          <input type="number" id="summaryTime" value="10">
+        </div>
+        <div class="field">
+          <label>practice_time</label>
+          <input type="number" id="practiceTime" value="15">
+        </div>
+        <div class="field">
+          <label>practice_end_time</label>
+          <input type="number" id="practiceEndTime" value="30">
+        </div>
+        <div class="field">
+          <label>final_results_time</label>
+          <input type="number" id="finalResultsTime" value="75">
+        </div>
+        <div class="field">
+          <label>risk_elic_time</label>
+          <input type="number" id="riskElicTime" value="5">
+        </div>
+
+        <div class="adv-section-title">Dividends & Market</div>
+
+        <div class="field">
+          <label>interest_rate</label>
+          <input type="number" id="interestRate" value="0.05" step="0.01">
+        </div>
+        <div class="field">
+          <label>initial_price</label>
+          <input type="number" id="initialPrice" value="14.0" step="0.5">
+        </div>
+        <div class="field full">
+          <label>div_amount (space-separated)</label>
+          <input type="text" id="divAmount" value="0.40 1.00">
+        </div>
+        <div class="field full">
+          <label>div_dist (space-separated probabilities)</label>
+          <input type="text" id="divDist" value=".5 .5">
+        </div>
+        <div class="field">
+          <label>endow_worth</label>
+          <input type="number" id="endowWorth" value="156.0" step="1">
+        </div>
+        <div class="field">
+          <label>float_ratio_cap</label>
+          <input type="number" id="floatRatioCap" value="1.0" step="0.1" min="0" max="1">
+        </div>
+
+        <div class="adv-section-title">Margin</div>
+
+        <div class="field">
+          <label>margin_ratio</label>
+          <input type="number" id="marginRatio" value="0.5" step="0.05">
+        </div>
+        <div class="field">
+          <label>margin_premium</label>
+          <input type="number" id="marginPremium" value="0.1" step="0.01">
+        </div>
+        <div class="field">
+          <label>margin_target_ratio</label>
+          <input type="number" id="marginTargetRatio" value="0.6" step="0.05">
+        </div>
+        <div class="field">
+          <label>auto_trans_delay</label>
+          <input type="number" id="autoTransDelay" value="0">
+        </div>
+
+        <div class="adv-section-title">Forecasting</div>
+
+        <div class="field">
+          <label>forecast_thold</label>
+          <input type="number" id="forecastThold" value="2.5" step="0.5">
+        </div>
+        <div class="field">
+          <label>forecast_reward</label>
+          <input type="number" id="forecastReward" value="2.5" step="0.5">
+        </div>
+        <div class="field">
+          <label>forecast_range</label>
+          <input type="number" id="forecastRange" value="50">
+        </div>
+        <div class="field full">
+          <label>forecast_periods (comma-separated)</label>
+          <input type="text" id="forecastPeriods" value="0,2,5,10">
+        </div>
+
+        <div class="adv-section-title">Rewards & Bonuses</div>
+
+        <div class="field">
+          <label>quiz_reward ($)</label>
+          <input type="number" id="quizReward" value="0.25" step="0.05">
+        </div>
+        <div class="field">
+          <label>bonus_cap</label>
+          <input type="text" id="bonusCap" value="" placeholder="None">
+        </div>
+
+        <div class="adv-section-title">Flags</div>
+
+        <div class="field">
+          <div class="checkbox-row" onclick="toggleCheckbox('isProlific')">
+            <input type="checkbox" id="isProlific">
+            <span class="cb-label">is_prolific</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="checkbox-row" onclick="toggleCheckbox('isMturk')">
+            <input type="checkbox" id="isMturk">
+            <span class="cb-label">is_mturk</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="checkbox-row" onclick="toggleCheckbox('isPilot')">
+            <input type="checkbox" id="isPilot">
+            <span class="cb-label">is_pilot</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="checkbox-row" onclick="toggleCheckbox('randomHist')">
+            <input type="checkbox" id="randomHist">
+            <span class="cb-label">random_hist</span>
+          </div>
+        </div>
+
+        <div class="adv-section-title">Expected Time</div>
+
+        <div class="field">
+          <label>expected_time_pilot (hrs)</label>
+          <input type="number" id="expectedTimePilot" value="1" step="0.5">
+        </div>
+        <div class="field">
+          <label>expected_time_live (hrs)</label>
+          <input type="number" id="expectedTimeLive" value="2" step="0.5">
+        </div>
+
+        <div class="adv-section-title">Landing Page (ctlanding)</div>
+
+        <div class="field full">
+          <label>instruction_id (YouTube ID)</label>
+          <input type="text" id="instructionId" value="232inD_HChc">
+        </div>
+        <div class="field full">
+          <label>experiment_link</label>
+          <input type="text" id="experimentLink" value="https://vt-market-experiment.herokuapp.com/room/market2">
+        </div>
+        <div class="field full">
+          <label>experiment_link_local</label>
+          <input type="text" id="experimentLinkLocal" value="http://localhost:8000/room/market2">
+        </div>
+        <div class="field">
+          <label>waiting_group_size</label>
+          <input type="number" id="waitingGroupSize" value="25">
+        </div>
+        <div class="field">
+          <label>landing_wait_timeout (s)</label>
+          <input type="number" id="landingWaitTimeout" value="1200">
+        </div>
+        <div class="field">
+          <label>consent_pg_cnt</label>
+          <input type="number" id="consentPgCnt" value="4">
+        </div>
+        <div class="field">
+          <label>survey_1_pg_cnt</label>
+          <input type="number" id="survey1PgCnt" value="7">
+        </div>
+        <div class="field full">
+          <label>consent_link</label>
+          <input type="text" id="consentLink" value="https://docs.google.com/forms/d/e/1FAIpQLScuxDtP9dEzRk89ru7z2ekLCmG0a5TQKFYgA-cB7EMtunar5w/viewform?embedded=true&usp=pp_url&entry.755475846">
+        </div>
+        <div class="field full">
+          <label>survey_1_link</label>
+          <input type="text" id="survey1Link" value="https://docs.google.com/forms/d/e/1FAIpQLSffLRaG5rYyrSYGaSK8Vzj6b_yllfQ5A8sWPMfvLdEf5xMISA/viewform?embedded=true&usp=pp_url&entry.181925610">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- OUTPUT LOG -->
+    <div class="output-area">
+      <div class="output-header">
+        <span class="output-title">Output Log</span>
+        <button class="clear-btn" onclick="clearLog()">clear</button>
+      </div>
+      <div id="log"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── STATE ──────────────────────────────────────────────────────────────
+  let stage = 'exp';
+  let advancedOpen = false;
+
+  const CONFIG_KEY = 'otree_session_creator_config';
+
+  // ── INIT ───────────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    loadConfig();
+    bindAutoSave();
+    updateActiveUrl();
+    log('info', 'Session Creator loaded. Config restored from storage.');
+  });
+
+  // ── SERVER MODE ────────────────────────────────────────────────────────
+  document.querySelectorAll('input[name="serverMode"]').forEach(r => {
+    r.addEventListener('change', () => {
+      const isRemote = document.getElementById('radioRemote').checked;
+      document.getElementById('fieldRemoteUrl').classList.toggle('hidden', !isRemote);
+      document.getElementById('fieldLocalUrl').classList.toggle('hidden', isRemote);
+      updateActiveUrl();
+    });
+  });
+
+  function updateActiveUrl() {
+    const isRemote = document.getElementById('radioRemote').checked;
+    const url = isRemote
+      ? document.getElementById('remoteUrl').value
+      : document.getElementById('localUrl').value;
+    document.getElementById('activeUrl').textContent = url || '—';
+  }
+
+  document.getElementById('remoteUrl').addEventListener('input', updateActiveUrl);
+  document.getElementById('localUrl').addEventListener('input', updateActiveUrl);
+
+  // ── SESSION TYPE ────────────────────────────────────────────────────────
+  function setStage(s) {
+    stage = s;
+    document.getElementById('btn-exp').classList.toggle('active', s === 'exp');
+    document.getElementById('btn-screen').classList.toggle('active', s === 'screen');
+    document.getElementById('expFields').classList.toggle('hidden', s !== 'exp');
+    document.getElementById('screenFields').classList.toggle('hidden', s !== 'screen');
+    log('info', `Session type set to: ${s}`);
+  }
+
+  // ── CHECKBOX TOGGLE ─────────────────────────────────────────────────────
+  function toggleCheckbox(id) {
+    const cb = document.getElementById(id);
+    cb.checked = !cb.checked;
+  }
+
+  // ── ADVANCED PANEL ──────────────────────────────────────────────────────
+  function toggleAdvanced() {
+    advancedOpen = !advancedOpen;
+    const btn = document.getElementById('advToggle');
+    const placeholder = document.getElementById('advBody');
+    const form = document.getElementById('advancedForm');
+    btn.textContent = advancedOpen ? 'Collapse ↑' : 'Expand ↓';
+    btn.classList.toggle('open', advancedOpen);
+    placeholder.classList.toggle('hidden', advancedOpen);
+    form.classList.toggle('hidden', !advancedOpen);
+  }
+
+  // ── CONNECTION TEST ─────────────────────────────────────────────────────
+  async function testConnection() {
+    const url = getBaseUrl();
+    const key = document.getElementById('restKey').value;
+    const dot = document.getElementById('connDot');
+    const txt = document.getElementById('connText');
+    dot.className = 'conn-dot checking';
+    txt.textContent = 'Testing…';
+    log('info', `Testing connection to ${url}…`);
+    try {
+      const resp = await fetch(`${url}/api/sessions/`, {
+        method: 'GET',
+        headers: { 'otree-rest-key': key },
+        signal: AbortSignal.timeout(6000)
+      });
+      if (resp.ok) {
+        dot.className = 'conn-dot ok';
+        txt.textContent = `Connected (${resp.status})`;
+        log('ok', `Connection OK — ${url}`);
+      } else {
+        dot.className = 'conn-dot err';
+        txt.textContent = `Error ${resp.status}`;
+        log('err', `Connection failed: HTTP ${resp.status}`);
+      }
+    } catch(e) {
+      dot.className = 'conn-dot err';
+      txt.textContent = 'Unreachable';
+      log('err', `Connection error: ${e.message}`);
+    }
+  }
+
+  // ── HELPERS ─────────────────────────────────────────────────────────────
+  function getBaseUrl() {
+    const isRemote = document.getElementById('radioRemote').checked;
+    return isRemote
+      ? document.getElementById('remoteUrl').value.replace(/\/$/, '')
+      : document.getElementById('localUrl').value.replace(/\/$/, '');
+  }
+
+  function getVal(id) { return document.getElementById(id).value; }
+  function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
+  function getBool(id) { return document.getElementById(id).checked; }
+
+  // ── CREATE SESSION ──────────────────────────────────────────────────────
+  async function createSession() {
+    const btn = document.getElementById('createBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Creating…';
+
+    const baseUrl = getBaseUrl();
+    const restKey = getVal('restKey');
+    const N = parseInt(getVal('numSubjects')) || 1;
+
+    try {
+      if (stage === 'exp') {
+        await createExpSession(baseUrl, restKey, N);
+      } else {
+        await createScreenSession(baseUrl, restKey, N);
+      }
+    } catch(e) {
+      log('err', `Failed: ${e.message}`);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = 'Create Session';
+  }
+
+  async function apiCall(method, baseUrl, restKey, ...pathParts) {
+    const path = pathParts.join('/');
+    const url = `${baseUrl}/api/${path}/`;
+    const body = method._body || {};
+    const resp = await fetch(url, {
+      method: method._method || 'GET',
+      headers: { 'Content-Type': 'application/json', 'otree-rest-key': restKey },
+      body: method._method === 'POST' ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(15000)
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`HTTP ${resp.status}: ${text}`);
+    }
+    return resp.json();
+  }
+
+  function POST_body(body) { return { _method: 'POST', _body: body }; }
+  function GET_method() { return { _method: 'GET' }; }
+
+  async function doPost(baseUrl, restKey, path, body) {
+    const url = `${baseUrl}/api/${path}/`;
+    log('info', `POST → ${url}`);
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'otree-rest-key': restKey },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(15000)
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`HTTP ${resp.status}: ${text}`);
+    }
+    return resp.json();
+  }
+
+  async function createExpSession(baseUrl, restKey, N) {
+    const sessionConfigs = {
+      endow_stock: getVal('endowStock'),
+      participation_fee: getNum('participationFee'),
+      real_world_currency_per_point: getNum('rwcpp'),
+      show_next: getBool('showNext'),
+      interest_rate: getNum('interestRate'),
+      div_amount: getVal('divAmount'),
+      div_dist: getVal('divDist'),
+      margin_ratio: getNum('marginRatio'),
+      margin_premium: getNum('marginPremium'),
+      margin_target_ratio: getNum('marginTargetRatio'),
+      auto_trans_delay: getNum('autoTransDelay'),
+      market_time: getNum('marketTime'),
+      fixate_time: getNum('fixateTime'),
+      forecast_time: getNum('forecastTime'),
+      summary_time: getNum('summaryTime'),
+      practice_time: getNum('practiceTime'),
+      practice_end_time: getNum('practiceEndTime'),
+      final_results_time: getNum('finalResultsTime'),
+      risk_elic_time: getNum('riskElicTime'),
+      forecast_thold: getNum('forecastThold'),
+      forecast_reward: getNum('forecastReward'),
+      forecast_range: getNum('forecastRange'),
+      forecast_periods: getVal('forecastPeriods'),
+      quiz_reward: getNum('quizReward'),
+      initial_price: getNum('initialPrice'),
+      endow_worth: getNum('endowWorth'),
+      float_ratio_cap: getNum('floatRatioCap'),
+      is_prolific: getBool('isProlific'),
+      is_mturk: getBool('isMturk'),
+      is_pilot: getBool('isPilot'),
+      random_hist: getBool('randomHist'),
+    };
+    const bonusCap = getVal('bonusCap');
+    if (bonusCap && bonusCap !== 'None') sessionConfigs.bonus_cap = parseFloat(bonusCap);
+
+    log('info', `Creating experiment session: N=${N}`);
+
+    const created = await doPost(baseUrl, restKey, 'sessions', {
+      session_config_name: 'rounds',
+      room_name: 'market2',
+      num_participants: N,
+      modified_session_config_fields: sessionConfigs,
+    });
+
+    const code = created.code;
+    log('ok', `Session created: code=${code}`);
+
+    const compUrl = getVal('compUrlExp');
+    await doPost(baseUrl, restKey, `session_vars/${code}`, {
+      vars: { prolific_completion_url: compUrl }
+    });
+    log('ok', `Completion URL set: ${compUrl}`);
+    log('ok', `Session URL: ${baseUrl}/SessionStartLinks/${code}`);
+    log('ok', `Admin URL:   ${baseUrl}/sessions/${code}`);
+  }
+
+  async function createScreenSession(baseUrl, restKey, N) {
+    const times = getVal('screenTimes').trim().split(/\s+/).filter(Boolean);
+    const fee = getNum('screenFee');
+
+    const sessionConfigs = {
+      participation_fee: fee,
+      is_prolific: true,
+      slot_01: '', slot_02: '', slot_03: '', slot_04: '', slot_05: '',
+      slot_06: '', slot_07: '', slot_08: '', slot_09: '', slot_10: '',
+    };
+    times.forEach((t, i) => {
+      const k = `slot_${String(i+1).padStart(2,'0')}`;
+      sessionConfigs[k] = t;
+    });
+
+    log('info', `Creating screening session: N=${N}, times=[${times.join(', ')}]`);
+
+    const created = await doPost(baseUrl, restKey, 'sessions', {
+      session_config_name: 'prescreen',
+      room_name: 'prescreen',
+      num_participants: N,
+      modified_session_config_fields: sessionConfigs,
+    });
+
+    const code = created.code;
+    log('ok', `Screening session created: code=${code}`);
+
+    const compUrl = getVal('compUrlPre');
+    await doPost(baseUrl, restKey, `session_vars/${code}`, {
+      vars: { prolific_completion_url: compUrl }
+    });
+    log('ok', `Completion URL set: ${compUrl}`);
+    log('ok', `Session URL: ${baseUrl}/SessionStartLinks/${code}`);
+  }
+
+  // ── CONFIG PERSISTENCE ─────────────────────────────────────────────────
+  const FIELDS = [
+    'remoteUrl','localUrl','restKey','numSubjects','participationFee','rwcpp',
+    'showNext','endowStock','screenTimes','screenFee','compUrlExp','compUrlPre',
+    'marketTime','fixateTime','forecastTime','summaryTime','practiceTime',
+    'practiceEndTime','finalResultsTime','riskElicTime','interestRate',
+    'initialPrice','divAmount','divDist','endowWorth','floatRatioCap',
+    'marginRatio','marginPremium','marginTargetRatio','autoTransDelay',
+    'forecastThold','forecastReward','forecastRange','forecastPeriods',
+    'quizReward','bonusCap','isProlific','isMturk','isPilot','randomHist',
+    'expectedTimePilot','expectedTimeLive','instructionId','experimentLink',
+    'experimentLinkLocal','waitingGroupSize','landingWaitTimeout',
+    'consentPgCnt','survey1PgCnt','consentLink','survey1Link'
+  ];
+
+  function gatherConfig() {
+    const cfg = { stage, serverMode: document.getElementById('radioRemote').checked ? 'remote' : 'local' };
+    FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      cfg[id] = el.type === 'checkbox' ? el.checked : el.value;
+    });
+    return cfg;
+  }
+
+  function applyConfig(cfg) {
+    if (!cfg) return;
+    if (cfg.serverMode === 'local') {
+      document.getElementById('radioLocal').checked = true;
+      document.getElementById('fieldRemoteUrl').classList.add('hidden');
+      document.getElementById('fieldLocalUrl').classList.remove('hidden');
+    }
+    FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el || cfg[id] === undefined) return;
+      if (el.type === 'checkbox') el.checked = cfg[id];
+      else el.value = cfg[id];
+    });
+    if (cfg.stage) setStage(cfg.stage);
+    updateActiveUrl();
+  }
+
+  function saveConfig() {
+    const cfg = gatherConfig();
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+    setSaved(true);
+    log('ok', 'Configuration saved to browser storage.');
+  }
+
+  function loadConfig() {
+    try {
+      const raw = localStorage.getItem(CONFIG_KEY);
+      if (raw) {
+        applyConfig(JSON.parse(raw));
+        setSaved(true);
+      }
+    } catch(e) {
+      log('warn', `Could not load saved config: ${e.message}`);
+    }
+  }
+
+  function setSaved(yes) {
+    const ind = document.getElementById('saveIndicator');
+    const txt = document.getElementById('saveText');
+    ind.className = 'save-indicator' + (yes ? ' saved' : '');
+    txt.textContent = yes ? 'saved' : 'unsaved';
+  }
+
+  function bindAutoSave() {
+    const onChange = () => setSaved(false);
+    FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', onChange);
+      if (el) el.addEventListener('change', onChange);
+    });
+    document.querySelectorAll('input[name="serverMode"]').forEach(r =>
+      r.addEventListener('change', onChange)
+    );
+  }
+
+  // Export config as JSON file
+  function exportConfig() {
+    const cfg = gatherConfig();
+    const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'otree_session_config.json';
+    a.click();
+  }
+
+  // ── LOGGING ─────────────────────────────────────────────────────────────
+  function log(level, msg) {
+    const logEl = document.getElementById('log');
+    const now = new Date().toTimeString().slice(0,8);
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.innerHTML = `<span class="log-time">${now}</span><span class="log-msg ${level}">${msg}</span>`;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function clearLog() {
+    document.getElementById('log').innerHTML = '';
+  }
+</script>
+</body>
+</html>

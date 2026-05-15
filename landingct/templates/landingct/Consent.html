@@ -1,0 +1,630 @@
+{{ block title }}Informed Consent{{ endblock }}
+
+{{ block content }}
+
+<style>
+/* ── Layout ── */
+.consent-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+}
+
+/* ── Intro box ── */
+.consent-intro {
+    background: #fff8e1;
+    border: 1px solid #f5a623;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+.consent-intro a {
+    color: #1a73e8;
+}
+
+/* ── Page flipper ── */
+.consent-viewer {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+.consent-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ccc;
+    padding: 8px 14px;
+}
+.consent-nav button {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .15s;
+}
+.consent-nav button:hover:not(:disabled) { background: #e8e8e8; }
+.consent-nav button:disabled { opacity: .4; cursor: not-allowed; }
+.page-indicator {
+    font-size: 13px;
+    color: #555;
+    font-weight: bold;
+}
+.consent-pages {
+    padding: 24px 32px;
+    min-height: 420px;
+    background: #fff;
+    font-size: 14px;
+    line-height: 1.7;
+}
+.consent-page { display: none; }
+.consent-page.active { display: block; }
+
+/* ── Page content styles ── */
+.consent-pages h1 {
+    color: #E07020;
+    font-size: 22px;
+    margin: 0 0 2px 0;
+}
+.consent-pages .irb-header {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 4px;
+}
+.consent-pages .doc-title {
+    text-align: center;
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+}
+.consent-pages h2 {
+    font-size: 14px;
+    font-weight: bold;
+    margin: 14px 0 4px 0;
+    text-decoration: underline;
+}
+.consent-pages p { margin: 0 0 8px 0; }
+.consent-pages .notice-box {
+    border: 1px solid #333;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 13px;
+}
+.consent-pages table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+.consent-pages table th {
+    background: #e0e0e0;
+    padding: 5px 8px;
+    text-align: left;
+    border: 1px solid #aaa;
+}
+.consent-pages table td {
+    padding: 5px 8px;
+    border: 1px solid #aaa;
+    vertical-align: top;
+}
+.consent-pages ol { padding-left: 20px; }
+.consent-pages ol li { margin-bottom: 4px; }
+.sig-line {
+    border-bottom: 1px solid #333;
+    width: 280px;
+    display: inline-block;
+    margin-right: 20px;
+}
+.sig-row { margin: 12px 0; }
+
+/* ── Read-all nudge ── */
+.read-nudge {
+    display: none;
+    background: #e8f4fd;
+    border: 1px solid #90caf9;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #1565c0;
+    margin-bottom: 14px;
+}
+.read-nudge.visible { display: block; }
+
+/* ── Consent form (shown after reading) ── */
+.consent-form-section {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-bottom: 18px;
+    background: #fafafa;
+}
+.consent-form-section h3 {
+    font-size: 15px;
+    margin: 0 0 14px 0;
+    color: #333;
+}
+.consent-question {
+    margin-bottom: 18px;
+}
+.consent-question label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #222;
+}
+.consent-question label span.req {
+    color: red; font-size: 1.3em; font-weight: bold;
+}
+.consent-question .radio-opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    cursor: pointer;
+}
+.consent-question .radio-opt input { margin-top: 3px; flex-shrink: 0; }
+
+/* ── Consent buttons ── */
+.consent-btn-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 20px;
+    justify-content: center;
+}
+.btn-give-consent {
+    background: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 13px 32px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background .15s;
+}
+.btn-give-consent:hover { background: #1b5e20; }
+.btn-give-consent:disabled { background: #aaa; cursor: not-allowed; }
+.btn-no-consent {
+    background: #c62828;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 13px 32px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background .15s;
+}
+.btn-no-consent:hover { background: #7f0000; }
+
+.validation-msg {
+    color: red;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 8px;
+    min-height: 20px;
+}
+
+.nav-btn {
+    display: inline-block;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: none;
+    color: #333;
+    transition: background .15s;
+}
+.nav-btn:hover { background: #e8e8e8; }
+.nav-btn.disabled { opacity: .4; pointer-events: none; }
+</style>
+
+<div class="consent-wrap">
+
+    <!-- Intro -->
+    <div class="consent-intro">
+        <strong>Please read the consent form carefully before proceeding.</strong><br>
+        Use the Previous / Next buttons to move through all 7 pages.<br>
+        You may also
+        <a href="{{ static 'consent_form.pdf' }}" download="Caltech_Consent_Form.pdf">
+            📄 download a PDF copy of this consent form
+        </a>
+        for your records.
+    </div>
+
+    <!-- Page flipper -->
+    <div class="consent-viewer">
+        <div class="consent-nav">
+            <a href="#" id="prevBtn" class="nav-btn" onclick="changePage(-1); return false;">← Previous</a>
+            <span class="page-indicator">Page <span id="curPage">1</span> of 7</span>
+            <a href="#" id="nextBtn" class="nav-btn"  onclick="changePage(1); return false;">Next →</a>
+        </div>
+
+        <div class="consent-pages">
+
+            <!-- PAGE 1 -->
+            <div class="consent-page active" id="cp-1">
+                <h1>Caltech</h1>
+                <div class="irb-header">Committee for the Protection of Human Subjects (IRB)</div>
+                <div class="doc-title">Informed Consent for Participation in Research Activities</div>
+
+                <p><strong>Project Title:</strong> Decisions, Games and Markets</p>
+                <p><strong>Principal Investigator:</strong> Colin Camerer; Address: MC228-77, California Institute of Technology, Pasadena, CA 91125; Phone: 626-395-4054; Email: camerer@hss.caltech.edu</p>
+                <p><strong>Approval Period:</strong> 07/21/2023 – 07/20/2024</p>
+
+                <h2>Project Summary</h2>
+                <p>This project studies how people make complex economic choices and how those choices are impacted by factors such as degree of risk, time-frame of payout, and potential economic impact on other people.</p>
+                <p>We will study this by studying participants' choices in computerized experimental economic 'games', as well as their physiological activity (e.g., heart rate, breathing rate, etc...), brain activity recorded from electrodes placed on the scalp, and visual attention during the games.</p>
+                <p>Volunteer interns may observe some in-lab eyetracking studies. The volunteers may be high school students and may be minors (under age 18). They will observe the procedure with some participants and in most cases, will be present at the start and end of subject participation (when participants are instructed and then paid). This is an educational opportunity for the minor observers. Allowing observers does not interfere with the studies. It poses no cost to the participants unless they are sensitive to having a 16-17 year old minor student present instead of a 18-22 year old undergraduate or an older PhD student or postdoc (or a faculty member). At two places in the consent form, participants are notified about the possibility of a minor observer and are asked to verbally notify the investigator if they do not want a minor observer.</p>
+
+                <h2>Purpose of This Research Study</h2>
+                <p>The purpose of this study is research. This is not a clinical study and we do not provide medical treatment.</p>
+                <p>The scientific purpose is to understand what psychological and economic processes influences the choices people make. The choices can involve willpower, patience, and bargaining or engaging in other strategic interactions.</p>
+                <p>Although we will be happy to talk to you more about the scientific findings of our work, we will not be able to give you any clinical feedback. This means we cannot tell you how you compare to other people on any measures.</p>
+                <p>If you have any questions about any part of this informed consent, please ask the researcher. Questions are encouraged.</p>
+
+                <p><strong>Duration:</strong> 1 hour</p>
+
+                <h2>Who Can Participate</h2>
+                <p>We anticipate that this study will include approximately 800 participants in the age ranges of 18-65 years. Participants include: English-speaking adults aged 18-65.</p>
+                <p>The following will disqualify you from participation in this study: physical or mental disability, critical illness.</p>
+                <div class="notice-box">
+                    If you are participating in this research because you are in a class offered by the researchers, or work in the same lab as the researchers, or are otherwise employed by the researchers, it is important that you understand that your participation is still entirely voluntary; you have the right to decline. If you think that you are being unduly pressured to participate, or that you will be penalized in some way for non-participation, please contact the Institutional Review Board (IRB) that is tasked with protecting human subjects at 626-395-8448 or irb@caltech.edu.
+                </div>
+
+                <h2>What Will Be Done</h2>
+                <p>All participants may be asked to do one or more of the following experimental tasks. Before each task, you will receive verbal or written instructions for the specific task(s) and a description of measurements that will be recorded.</p>
+            </div>
+
+            <!-- PAGE 2 -->
+            <div class="consent-page" id="cp-2">
+                <h1>Caltech</h1>
+                <div class="irb-header">Committee for the Protection of Human Subjects (IRB)</div>
+
+                <p>a. Choose between monetary risks which have known chances of paying specific amounts of money. Which amount is earned will be determined by a chance device described such as a spinner or random number generator.</p>
+                <p>b. Choose between money payments which are made at different points in time.</p>
+                <p>c. Make choices in a strategic "game" played with other participants who are playing simultaneously or, in some cases, against participants who recorded their choices at an earlier time.</p>
+                <p>d. Trade artificial (experimental) currency which can be sold to or bought from other participants. Experimental currency retained at the end of the trading period may be added to actual compensation as a bonus.</p>
+                <p>Participants may be invited to also provide physiological information during these games. For example, we may ask to monitor your eye-movements and pupil dilation using an eye-tracking device or webcam (however, no video footage is recorded during this study). For individuals tested on-campus, we may also ask to record physiological measurements such as heart rate, breathing, and skin conductance, and may record brain activation using electrodes placed on the scalp.</p>
+                <p>Participants will also be asked to complete questionnaires about personal history, personality traits, preferences, and psychological symptoms.</p>
+                <p>During on-campus testing, we may ask if the participant is willing to have a non-research observer present during the study. The observer is a minor (under 18 years old) who is volunteering as an intern to learn about social science. Participant must provide verbal assent immediately prior to observation.</p>
+
+                <h2>Electroencephalogram (EEG) Study</h2>
+                <p>Commercially available EEG recording device such as Biosemi Active Two. EEG recording will take a maximum of 60 minutes. Participant will have electrodes attached to the scalp using a small amount of paste for each one. While electrodes are attached, participant will complete the questionnaires and rating tasks used throughout this protocol.</p>
+
+                <h2>Eye Tracker Study</h2>
+                <p>Commercial eye-tracker such as Tobii. Maximum of 1 hour. Eye-tracking is recorded while the participant view images on a computer screen and makes decisions related to the images.</p>
+
+                <h2>Heart Rate Monitor Study</h2>
+                <p>A commercially available device that measures heart rate. Monitor will be worn for approximately 60 minutes. Participant will wear the monitor during the behavioral task.</p>
+
+                <h2>Physiological Wristband Study</h2>
+                <p>A commercially available wristband that measures skin conductance. Monitor will be worn for approximately 60 minutes. Participant will wear the wristband during the behavioral task.</p>
+            </div>
+
+            <!-- PAGE 3 -->
+            <div class="consent-page" id="cp-3">
+                <h1>Caltech</h1>
+                <div class="irb-header">Committee for the Protection of Human Subjects (IRB)</div>
+
+                <h2>Data and Biospecimens</h2>
+                <p>In this study, the following data about you and/or biospecimens will be collected and studied: Behavioral Measurements, Instrument or Device Data/Measurements, Electroencephalogram (EEG), Eye Tracker, Heart Rate Monitor, Physiological Wristband, Survey or Questionnaire Data.</p>
+                <p>All data are linked to unique identifiers. Any identifying information acquired by the Caltech Social Sciences Experimental Laboratory (SSEL) is stored in SSEL and investigators on this application do not have access to identifying information.</p>
+                <p>Personal information acquired from participants recruited outside of SSEL and mTurk will be stored in an encrypted file physically separately from the data on a password-protected computer that is not connected to the internet.</p>
+                <p>All data are stored and published anonymized. All data will be stored indefinitely. However, data will be deleted upon the request of any participant.</p>
+
+                <h2>Possible Risks and Discomforts</h2>
+                <p><strong>Risks &amp; Discomforts Associated with Devices:</strong></p>
+                <table>
+                    <tr><th>Device</th><th>Risk Description</th></tr>
+                    <tr><td>Respiration belt</td><td>None</td></tr>
+                    <tr><td>Eye Tracker</td><td>None</td></tr>
+                    <tr><td>Heart Rate Monitor</td><td>None</td></tr>
+                    <tr><td>Electroencephalogram (EEG)</td><td>None</td></tr>
+                    <tr><td>Physiological Wristband</td><td>None</td></tr>
+                </table>
+
+                <p><strong>Risks &amp; Discomforts Associated with Participant Activities:</strong></p>
+                <table>
+                    <tr><th>Activity</th><th>Risk Description</th></tr>
+                    <tr>
+                        <td>Physical Contact</td>
+                        <td>Part of this study requires that the researcher have physical contact with you. The contact consists of attaching physiological recording devices (i.e., electrodes to your scalp, skin conductance and heart monitors to your hands, and a respiration belt around your rib-cage). This requires the researcher to touch that body part briefly. At any time during the study, you have the right not to be touched if you say you don't want to be touched anymore.</td>
+                    </tr>
+                    <tr>
+                        <td>Psychological Discomfort</td>
+                        <td>There can be mild anxiety induced in some tasks due to uncertainty about rewards or mental states about what others are doing. Participants may feel uneasy or self-conscious if they are being observed during the study.</td>
+                    </tr>
+                </table>
+                <p>The questionnaires administered in this study are commonly used standardized instruments. Participants may cease testing, or ask to skip a particular test, at any time without penalty.</p>
+                <p>Participants cannot risk any money they brought into the experiment and choices made during the experiments will not have consequences beyond the end of the test session.</p>
+                <p>There may be additional risks with this research that are currently unforeseeable. Please do not participate in this study if you feel ill.</p>
+            </div>
+
+            <!-- PAGE 4 -->
+            <div class="consent-page" id="cp-4">
+                <h1>Caltech</h1>
+                <div class="irb-header">Committee for the Protection of Human Subjects (IRB)</div>
+
+                <h2>Collaborative Study/Sharing Research Data</h2>
+                <p>This project will also be conducted in collaboration with researchers who test human subjects under the umbrella of the Chen Center for Social and Decision Neuroscience and the Chen Participant Center at Caltech. Data acquired under this protocol may be shared with other researchers affiliated with these centers and may be used for research that is different from what was described in participants' previous informed consent(s).</p>
+
+                <h2>Site Specific Language</h2>
+                <p>Human subjects research at Caltech follows Caltech's campus-wide guidance regarding COVID restrictions. While the COVID-pandemic is officially no longer considered a global health emergency, participating in this research may expose you to infectious agents that cause COVID, influenza or other respiratory infections. The IRB recommends that you are up-to-date on your influenza and COVID vaccinations.</p>
+                <p>You should not participate in this study if you feel ill. Please practice good hygiene and wash your hands before and after you do the study session.</p>
+
+                <h2>Possible Benefits</h2>
+                <p>You personally will not benefit directly from participation in this research study in any way. The study may provide insights into the factors that influence complex decisions.</p>
+
+                <h2>Alternatives</h2>
+                <p>Your alternative is to choose not to participate in this study.</p>
+
+                <h2>Future Contact</h2>
+                <p>The researchers may wish to contact you in the future, by email or phone, about performing additional tasks on this study or about participation in a related, follow-up study.</p>
+                <p>Please indicate whether you consent to the researchers contacting you in the future about other Caltech studies:</p>
+                <ul>
+                    <li>I consent to being contacted about non-profit funded studies.</li>
+                    <li>I consent to being contacted about for-profit funded studies.</li>
+                    <li>I consent to being contacted about any Caltech studies regardless of funding.</li>
+                    <li>I do not wish to be contacted about future research studies.</li>
+                </ul>
+                <p><em>(You will select your preference on the consent form below after reading all pages.)</em></p>
+            </div>
+
+            <!-- PAGE 5 -->
+            <div class="consent-page" id="cp-5">
+                <h1>Caltech</h1>
+                <div class="irb-header">Committee for the Protection of Human Subjects (IRB)</div>
+
+                <h2>Confidentiality of Records</h2>
+                <p>Any information from this study in which you might be identified will be confidential. We will take reasonable steps to ensure that no unauthorized person will have access to the data and/or biospecimens used or created in this study. If the information generated during this study is published, you will never be identified by name. By signing this form, however, you allow us to make your records available to the Caltech Institutional Review Board (IRB) and administrative authorities, Collaborators and their IRBs, and Regulatory Agencies as required by law.</p>
+                <p>Due to the small size of the Caltech community, it may be possible for somebody to discover your identity from your responses to certain questions.</p>
+
+                <h2>Compensation</h2>
+                <p>You are entitled to compensation for participating in the study. $5 minimum for showing up on time for in-person testing. Incentives depend on performance. Incentives are generally planned so that subjects who make typical choices expect to earn $18/hour.</p>
+                <p>For mTurk and Prolific workers, incentives are also tied to performance and are generally lower, $3-10 per hour. You can quit the study or any session at any time. If you quit in the middle of a session, you will still be compensated for the time you participated.</p>
+                <p>If you receive more than $600 in one year for taking part in these research studies, Caltech must report this income to the IRS and you will receive an IRS Form 1099.</p>
+
+                <h2>Voluntary Participation with Right of Refusal</h2>
+                <p>You have been informed that your participation in this research study is voluntary. You are free to withdraw your consent for participation in any part of this study without any penalty.</p>
+
+                <h2>Withdrawal from Study</h2>
+                <p>Your participation is voluntary. If you first agree to participate and then you change your mind, you are <strong>free to withdraw</strong> your consent and discontinue your participation in this study at any time. Your decision will not affect your relationship, if any, with the California Institute of Technology or the Jet Propulsion Laboratory.</p>
+                <p>To withdraw from the study, you only need to let the researcher or the principal investigator (Colin Camerer) know. You can do this by calling them on the phone or email. You will not be asked to explain your reasons. You can withdraw from the study at any time.</p>
+            </div>
+
+            <!-- PAGE 6 -->
+            <div class="consent-page" id="cp-6">
+                <h1>Caltech</h1>
+                <div class="irb-header">Committee for the Protection of Human Subjects (IRB)</div>
+
+                <p>We may also withdraw you from the study without your consent for scientific or technical reasons. We will not be able to give you detailed explanations of the reasons.</p>
+
+                <h2>Offer to Answer Questions and Research Injury Notification</h2>
+                <p>The principal investigators or their research associates have offered to answer any and all questions regarding your participation in this research study. If you have any further questions or in the event of a research related injury, you can contact the principal investigator at 626-395-4054, or the Caltech Institutional Review Board Administrator at (626)395-8448 or at irb@caltech.edu.</p>
+
+                <h2>Sponsor of This Research</h2>
+                <p>This study is funded by the following sponsor(s): CIT ENDOWMENT; CIT ENDOWMENT</p>
+
+                <h2>Explanation of Treatment and Compensation for Injury</h2>
+                <p>In the unlikely event of illness or physical injury resulting during participation in this research, the principal investigator and the research study staff will assist you in obtaining appropriate medical treatment by summoning the paramedics by calling Caltech Security (x5000). Should the medical professionals determine a need, you will be transported to the nearest hospital emergency room. In most cases this would be Huntington Hospital located in Pasadena. This study does not provide financial assistance for medical or other related costs. Your insurance carrier will be billed for the cost of such treatment. You, however, do not waive any legal rights by signing this form.</p>
+
+                <h2>IRB Review and Impartial Third Party</h2>
+                <p>This study has been reviewed and approved by the Institutional Review Board (IRB) of the California Institute of Technology. The telephone number of the IRB office is 626-395-8448 and their email is irb@caltech.edu. The telephone number of the IRB Chair is 626-395-4486 and the email is radolphs@caltech.edu.</p>
+            </div>
+
+            <!-- PAGE 7 -->
+            <div class="consent-page" id="cp-7">
+                <h1>Caltech</h1>
+                <div class="irb-header">Committee for the Protection of Human Subjects (IRB)</div>
+
+                <p><strong>Signature for Consent:</strong> The above-named investigator has answered your questions and you agree to be a research participant in this study. You have carefully read the information contained above in the "Experimental Subject's Bill of Rights" and understand fully your rights as a potential participant in a research experiment involving people as participants.</p>
+
+                <h2>Experimental Subject's Bill of Rights</h2>
+                <p>You have been asked to participate as a subject in a research study. Before you decide whether you want to participate in the study, you have a right to:</p>
+                <ol type="a">
+                    <li>Be informed of the nature and purpose of the experiment;</li>
+                    <li>Be given an explanation of the procedures to be followed in the research experiment, and any drug or device to be utilized;</li>
+                    <li>Be given a description of any attendant discomforts and risks reasonably to be expected from your participation in the experiment;</li>
+                    <li>Be given an explanation of any benefits reasonably to be expected from your participation in the experiment;</li>
+                    <li>Be given a disclosure of any appropriate alternative procedures, drugs or devices that might be advantageous to you and their relative risks and benefits;</li>
+                    <li>Be informed of the avenues of medical treatment, if any, available to you after the experimental procedure if complications should arise;</li>
+                    <li>Be given an opportunity to ask any questions concerning the research experiment or the procedures involved;</li>
+                    <li>Be instructed that consent to participate in the experimental procedure may be withdrawn at any time and that you may discontinue participation in the research experiment without prejudice;</li>
+                    <li>Be given a copy of this form and the signed and dated consent form; and</li>
+                    <li>Be given the opportunity to decide to consent or not to consent to the research experiment without the intervention of any element of force, fraud, deceit, duress, coercion or undue influence on your decision.</li>
+                </ol>
+                <p>I understand my rights as described above.</p>
+                <p><em>Please scroll down to complete the consent form below.</em></p>
+            </div>
+
+        </div><!-- /consent-pages -->
+    </div><!-- /consent-viewer -->
+
+    <!-- Nudge shown if they try to submit before reading all pages -->
+    <div class="read-nudge" id="readNudge">
+        ℹ️ Please read all 7 pages of the consent form before submitting your response.
+    </div>
+
+    <!-- Consent form (always visible, but buttons disabled until page 7 reached) -->
+    <div class="consent-form-section">
+        <h3>Consent Form</h3>
+
+        <!-- Q1: Eligibility confirmation -->
+        <div class="consent-question">
+            <label>1. Given the exclusion criteria, please confirm that you qualify to participate in the experiment: <span class="req">*</span></label>
+            <label class="radio-opt">
+                <input type="radio" name="qualifies" value="yes" id="q_yes">
+                Yes, I qualify to participate
+            </label>
+            <label class="radio-opt">
+                <input type="radio" name="qualifies" value="no" id="q_no">
+                No, I do not qualify
+            </label>
+        </div>
+
+        <!-- Q2: Future contact preference -->
+        <div class="consent-question">
+            <label>2. Please indicate your preference regarding future contact by Caltech researchers: <span class="req">*</span></label>
+            <label class="radio-opt">
+                <input type="radio" name="future_contact" value="1">
+                I consent to being contacted about studies funded by non-profit organizations, government agencies, universities, and other non-commercial entities.
+            </label>
+            <label class="radio-opt">
+                <input type="radio" name="future_contact" value="2">
+                I consent to being contacted about studies funded by for-profit companies and other commercial entities.
+            </label>
+            <label class="radio-opt">
+                <input type="radio" name="future_contact" value="3">
+                I consent to being contacted about any other studies at Caltech, regardless of who is funding the research.
+            </label>
+            <label class="radio-opt">
+                <input type="radio" name="future_contact" value="4">
+                I do not wish to be contacted about participating in future research studies.
+            </label>
+        </div>
+        
+        <!-- Initials field -->
+        <div class="consent-question" id="initialsWrap" style="display:block;">
+            <label for="initialsInput">
+                Print your initials (as substitute for signature): 
+                <span class="req">*</span>
+            </label>
+            <input type="text" id="initialsInput" maxlength="10" 
+                   style="width:120px; font-size:16px; padding:6px; border:1px solid #ccc; border-radius:4px;"
+                   placeholder="e.g. R.S.">
+        </div>
+
+        <div class="consent-btn-row">
+            <button class="btn-give-consent" id="btnConsent"
+                    onclick="return submitConsent(true)" disabled>
+                ✓ I Give Consent
+            </button>
+            <button class="btn-no-consent" id="btnNoConsent"
+                    onclick="return submitConsent(false)">
+                ✗ I Do Not Give Consent
+            </button>
+        </div>
+        <div class="validation-msg" id="validationMsg"></div>
+    </div>
+
+</div><!-- /consent-wrap -->
+
+<!-- Hidden oTree form fields -->
+<div style="display:none;">
+    {{ formfield 'consent_given' }}
+    {{ formfield 'qualifies_for_study' }}
+    {{ formfield 'future_contact_pref' }}
+    <button id="otree-next" type="submit" class="otree-btn-next btn btn-primary">Next</button>
+</div>
+    {{if show_next }} <button class="btn-give-consent" id="btnConsent"
+            onclick="nextShort();"> Next </button>
+    {{ endif }}
+
+
+{{ block scripts }}
+<script>
+var currentPage = 1;
+var totalPages  = 7;
+var allRead     = false;
+
+function changePage(dir) {
+    document.getElementById('cp-' + currentPage).classList.remove('active');
+    currentPage += dir;
+    document.getElementById('cp-' + currentPage).classList.add('active');
+    document.getElementById('curPage').textContent = currentPage;
+
+    var prev = document.getElementById('prevBtn');
+    var next = document.getElementById('nextBtn');
+    prev.classList.toggle('disabled', currentPage === 1);
+    next.classList.toggle('disabled', currentPage === totalPages);
+
+    if (currentPage === totalPages) {
+        allRead = true;
+        document.getElementById('btnConsent').disabled = false;
+        document.getElementById('readNudge').classList.remove('visible');
+    }
+    document.querySelector('.consent-pages').scrollTop = 0;
+}
+
+function submitConsent(gives) {
+    var validationMsg = document.getElementById('validationMsg');
+
+//    if (!allRead) {
+//        document.getElementById('readNudge').classList.add('visible');
+//        validationMsg.textContent = 'Please read all 7 pages before submitting.';
+//        return false;
+//    }
+
+    var qualifies = document.querySelector('input[name="qualifies"]:checked');
+    if (!qualifies && gives) {
+        validationMsg.textContent = 'Please answer question 1 (eligibility confirmation).';
+        return false;
+    }
+
+    var futureContact = document.querySelector('input[name="future_contact"]:checked');
+    if (gives && !futureContact) {
+        validationMsg.textContent = 'Please indicate your future contact preference (question 2).';
+        return false;
+    }
+    
+    var initials = document.getElementById('initialsInput').value.trim();
+    if (gives && !initials) {
+        validationMsg.textContent = 'Please enter your initials as your electronic signature.';
+        return false;
+    }
+    
+    // Set the hidden oTree field
+    var initialsField = document.getElementById('id_consent_initials');
+    if (initialsField) initialsField.value = initials;
+
+    validationMsg.textContent = '';
+
+    // consent_given is a BooleanField — oTree renders it as two radios:
+    //   id_consent_given-0 = True, id_consent_given-1 = False
+    var consentRadio = document.getElementById(
+        gives ? 'id_consent_given-0' : 'id_consent_given-1'
+    );
+    if (consentRadio) consentRadio.checked = true;
+
+    // qualifies_for_study
+    var qRadio = document.getElementById(
+        qualifies.value === 'yes' ? 'id_qualifies_for_study-0' : 'id_qualifies_for_study-1'
+    );
+    if (qRadio) qRadio.checked = true;
+
+    // future_contact_pref — IntegerField, rendered as radios -0 through -3
+    if (futureContact) {
+        var fcIndex = parseInt(futureContact.value) - 1;  // value 1-4 → index 0-3
+        var fcRadio = document.getElementById('id_future_contact_pref-' + fcIndex);
+        if (fcRadio) fcRadio.checked = true;
+    }
+
+    document.getElementById('otree-next').click();
+    return false;
+}
+
+
+function nextShort() {
+    allRead = true
+    document.getElementById('q_yes').checked = true;
+    document.querySelector('input[name="future_contact"][value="1"]').checked= true;
+    document.getElementById('initialsInput').value = 'DEV';
+    submitConsent(true);
+}
+
+</script>
+{{ endblock }}
+
+{{ endblock }}

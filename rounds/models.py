@@ -123,7 +123,7 @@ class Group(BaseGroup):
         return max(allowable, 0)
 
     def determine_float(self):
-        total_shares = sum(p.shares for p in self.get_players() if p.did_give_consent())
+        total_shares = sum(p.shares for p in self.get_players() if p.is_active())
         self.float = total_shares
 
 
@@ -362,10 +362,10 @@ class Player(BasePlayer):
     def is_auto_sell(self):
         return self.periods_until_auto_sell == 0
 
-    def did_give_consent(self):
+    def is_active(self):
         part = self.participant
-        consent = part.vars.get('CONSENT')
-        return consent
+        active = not part.vars.get('is_dropout')
+        return active
     
     
     def get_risk_task_data(self):

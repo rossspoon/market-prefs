@@ -6,7 +6,7 @@ from . import tool_tip
 from .models import Player, Group, Order, OrderErrorCode, OrderType, cu, Page, WaitPage, BaseSubsession, BaseConstants, Subsession
 from .sample_hist import SAMPLE_HIST
 import common.SessionConfigFunctions as scf
-from common.ParticipantFuctions import generate_participant_ids, is_button_click
+from common.ParticipantFuctions import generate_participant_ids, is_active
 from otree import database
 import os
 import json
@@ -55,9 +55,6 @@ def creating_session(subsession: Subsession):
     session.label=today
     session.comment = "Market Experiment"
     
-    if subsession.round_number <= Constants.num_practice:
-        for g in subsession.get_groups():
-            g.is_practice = True
             
     #initialize quiz bonus
     for p in subsession.get_players():
@@ -66,6 +63,7 @@ def creating_session(subsession: Subsession):
 
 # assign treatments
 def assign_endowments(subsession):
+    
     # only set up endowments in the first round
     if subsession.round_number != 1 and subsession.round_number != Constants.num_practice + 1:
         return
@@ -77,7 +75,7 @@ def assign_endowments(subsession):
     stock_endowments = scf.get_endow_stocks(subsession)
     worth = scf.get_endow_worth(subsession)
     fund_val = scf.get_fundamental_value(subsession)
-    clickers = list(filter(lambda x: is_button_click(x), subsession.get_players()))
+    clickers = list(filter(lambda x: is_active(x), subsession.get_players()))
     num_click = len(clickers)
 
     # Remainder - This part is particular to the experiment and based on three possible opening share positions
@@ -94,7 +92,7 @@ def assign_endowments(subsession):
         shares =  0
         worth_for_player = 0
 
-        if is_button_click(p):
+        if is_active(p):
             shares = stock_for_players[idx]
             worth_for_player = worth
             idx += 1
@@ -210,9 +208,6 @@ def get_websockets_vars(player: Player, event_type='page_name'):
     is_practice = is_practice,
     )
 
-
-def get_js_vars_fixate(player: Player):
-    return get_websockets_vars(player, 'fixate')
 
 
 def get_grid_setting(extreme: int):
@@ -952,6 +947,10 @@ def get_round_result_messages(player: Player, d: dict):
 
 
 def pre_round_tasks(group: Group):
+    
+    if group.round_number <= Constants.num_practice:
+        group.is_practice = True
+
 
     assign_endowments(group)
 
@@ -968,6 +967,8 @@ def pre_round_tasks(group: Group):
 
     # Determine the float and set it on all group objects
     if group.round_number == 1:
+        print(f"PRE_ROUND: {group}")
+        print(group.get_players())
         group.determine_float()
     else:
         # copy float from previous round
@@ -1171,51 +1172,47 @@ def determine_bonus(player: Player):
     participant.payoff = cu(max(bonus, 0))
 
 
-    
-def group_by_arrival_time_method(subsession: Subsession, waiting_players:list):
-    print('######   group_by_arrival_time_method')
+def group_by_arrival_time_method(subsession, players: list) -> list | None:
+    if not players:
+        return None
 
-    print(f'    waiting: {len(waiting_players)} / {len(subsession.get_players())}')
-    print([p.participant.label for p in waiting_players])
-    if len(waiting_players) != len(subsession.get_players()):
-        return
-    
-    print(f'   round_number: {subsession.round_number}')
-    if subsession.round_number != 1:
-        # should never get here.  The wait page GroupingWaitPage only runs once
-        # during round 1
-        return
-    
-    #group labels and non responders
-    responders = [p for p in subsession.get_players() if p.participant.label]
-    
-    print(f'    responders:  {len(responders)}')
-    return responders
-    
+    session = players[0].session
+
+    # All participants in the session who are not marked as dropout
+    all_participants = session.get_participants()
+    expected = [
+        p for p in all_participants
+        if not p.vars.get('is_dropout', False)
+    ]
+
+    # Subset of expected who have actually arrived at this wait page
+    active = [
+        p for p in players
+        if not p.participant.vars.get('is_dropout', False)
+    ]
+
+    # Not ready yet — no non-dropouts exist, or not all have arrived
+    if not expected or len(active) < len(expected):
+        return None
+
+    return active
 
 ############
 # PAGES
 ##########
-class GroupingWaitPage(WaitPage):
-    body_text = "Waiting for the experiment to begin"
-    group_by_arrival_time=True
-    
+class WaitForAll(WaitPage):
+    group_by_arrival_time = True
+
     @staticmethod
-    def is_displayed(player: Player):
-        return player.round_number==1
+    def is_displayed(player):
+        return player.round_number == 1
+
     
     
 class PreMarketWait(WaitPage):
     body_text = "Waiting for the experiment to begin"
     after_all_players_arrive = pre_round_tasks
         
-
-class Fixate(Page):
-    get_timeout_seconds = scf.get_fixate_time
-    form_model = 'player'
-
-    # method bindings
-    js_vars = get_js_vars_fixate
 
 
 class MarketGridChoice(Page):
@@ -1404,9 +1401,7 @@ class FinalResultsPage(Page):
         return rn == Constants.num_rounds or rn == Constants.num_practice
 
     @staticmethod
-    def vars_for_template(player: Player):
-        player.participant.finished = not(player.group.is_practice)  # Set true only on the very last round
-        
+    def vars_for_template(player: Player):        
         ret = standard_vars_for_template(player)
         
         determine_bonus(player)
@@ -1461,7 +1456,7 @@ class PracticeMarkerPage(Page):
 
 
 
-page_sequence = [#GroupingWaitPage,
+page_sequence = [WaitForAll,
                  PreMarketWait,
                  PracticeMarkerPage,
                  #Fixate,

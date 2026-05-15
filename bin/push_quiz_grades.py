@@ -38,4 +38,4 @@ for row in landing_data[landing_data['player.consent_given']==1][['participant.l
     print(p, q)
     res = call_api(POST, 'participant_vars', room_name='market2', participant_label=p, vars={'quiz_grade': q})
 
-    res = call_api(POST, 'participant_vars', room_name='market2', participant_label='lkjlkj', vars={'quiz_grade': q})
+#res = call_api(POST, 'participant_vars', room_name='market2', participant_label='lkjlkj', vars={'quiz_grade': q})

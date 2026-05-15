@@ -1,0 +1,58 @@
+{{ block title }}Demographics{{ endblock }}
+
+{{ block content }}
+
+{{ formfield 'age' }}
+{{ formfield 'gender' }}
+{{ formfield 'hispanic' }}
+{{ formfield 'race' }}
+
+{{ formfield 'studies_background' }}
+
+<div id="studies-other-wrap" style="display:none; margin-top: -8px; margin-bottom: 16px;">
+    {{ formfield 'studies_other' }}
+</div>
+
+{{ formfield 'native_english' }}
+{{ formfield 'english_proficiency' }}
+{{ formfield 'medication' }}
+
+{{ next_button }}
+
+{{ block scripts }}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // ── Studies "Other" show/hide ──────────────────────────────────
+    function updateStudiesOther() {
+        const checked = document.querySelector('input[name="studies_background"]:checked');
+        const studiesOtherWrap = document.getElementById('studies-other-wrap');
+        studiesOtherWrap.style.display = (checked && checked.value === '6') ? 'block' : 'none';
+    }
+    document.querySelectorAll('input[name="studies_background"]').forEach(radio => {
+        radio.addEventListener('change', updateStudiesOther);
+    });
+    updateStudiesOther();
+
+    // ── Required asterisks ─────────────────────────────────────────
+    document.querySelectorAll('._formfield').forEach(field => {
+        const hasRequired = field.querySelector('[required]');
+        if (hasRequired) {
+            const label = field.querySelector('label.col-form-label');
+            if (label) {
+                const star = document.createElement('span');
+                star.textContent = ' *';
+                star.style.color = 'red';
+                star.style.fontSize = '1.5em';
+                star.style.fontWeight = 'bold';
+                star.style.lineHeight = '1';
+                label.appendChild(star);
+            }
+        }
+    });
+
+});
+</script>
+{{ endblock }}
+
+{{ endblock }}

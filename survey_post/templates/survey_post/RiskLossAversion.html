@@ -1,0 +1,72 @@
+{{ block title }}Risk and Loss Aversion{{ endblock }}
+
+{{ block content }}
+<p><strong>Which gambles would you be willing to take?</strong></p>
+<p style="color:#666; font-size:0.9em; margin-bottom:20px;">
+    <span style="color: red;">All rows are required.</span>
+    For each row, choose between a guaranteed $10 (Option 1) and a 50/50 gamble (Option 2).
+</p>
+
+<style>
+/* Table layout for the gambles */
+.gamble-table {
+    width: 100%; max-width: 700px;
+    border-collapse: collapse; margin-bottom: 24px;
+}
+.gamble-table th, .gamble-table td {
+    border: 1px solid #dee2e6;
+    padding: 10px 14px;
+    vertical-align: middle;
+}
+.gamble-table thead th {
+    background: #f8f9fa; text-align: center; font-weight: 600;
+}
+.gamble-table .col-choice { text-align: center; }
+
+/* Each gamble row contains one oTree formfield (RadioSelect with 2 options).
+   We hide the field label and lay the two radio buttons across two columns. */
+.gamble-row-radios {
+    display: flex; justify-content: space-around; align-items: center;
+}
+/* oTree wraps RadioSelect in <ul class="controls"> */
+.gamble-table ul.controls {
+    display: flex; justify-content: space-around;
+    list-style: none; margin: 0; padding: 0; width: 100%;
+}
+.gamble-table ul.controls li { flex: 1; text-align: center; }
+/* Hide the text labels (Option 1 / Option 2), keep only the radio button */
+.gamble-table ul.controls li label { font-size: 0; }
+.gamble-table ul.controls li label input { font-size: initial; }
+/* Hide the field-level label (gamble_01, gamble_02 …) */
+.gamble-table .col-choices .field-required,
+.gamble-table .col-choices label.col-form-label { display: none; }
+.gamble-table .col-choices .controls { margin: 0; }
+</style>
+
+<table class="gamble-table">
+    <thead>
+        <tr>
+            <th style="width:38%">Option 1</th>
+            <th style="width:12%">1</th>
+            <th style="width:12%">2</th>
+            <th style="width:38%">Option 2</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for field_name, risky_amount in gambles %}
+        <tr>
+            <td>100% chance of winning $10</td>
+            <td colspan="2" class="col-choices">
+                {{ formfield field_name }}
+            </td>
+            <td>
+                50% chance of winning $0,<br>
+                50% chance of winning ${{ risky_amount }}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{{ next_button }}
+{{ endblock }}

@@ -1,0 +1,66 @@
+{{ block title }}{{ endblock }}
+
+{{ block content }}
+
+<link rel="stylesheet" href="{{ static 'css/global.css' }}">
+
+<div class="rts-wrap">
+
+    <div id="full" style="display:none">
+        <p>Sorry this session is full. Thanks for your interest.</p>
+        <p>Please use the code C1KGSHEV to get your completion payment.</p>
+    </div>
+
+    <div id="start">
+        <p><b>You need to click Start the Experiment button before the timer runs out to be considered eligible.</b></p>
+            {{ next_button }}
+    </div>
+
+</div>
+
+<style>
+.rts-wrap {
+    text-align: center;
+    max-width: 950px;
+    margin: 0 auto;
+    font-size: 18px;
+}
+.rts-wrap p {
+    margin-bottom: 20px;
+}
+.r_just {
+    margin-top: 20px;
+}
+#next {
+    font-size: 20px;
+    width: 180px;
+    height: 60px;
+    border-radius: 8px;
+    background-color: Orange;
+    border: none;
+    cursor: pointer;
+    color: white;
+}
+</style>
+
+<script>
+    var full = document.getElementById("full");
+
+    window.onbeforeunload = function () {
+        liveSend({"enrolled": 1});
+    }
+
+    function sayReady() {
+        let msg = new SpeechSynthesisUtterance();
+        msg.language = 'en-US';
+        msg.text = "All players have arrived";
+        window.speechSynthesis.speak(msg);
+    }
+
+    function checkStatus() {
+        sayReady();
+    }
+    setInterval(checkStatus, 1000);
+</script>
+
+{{ endblock }}

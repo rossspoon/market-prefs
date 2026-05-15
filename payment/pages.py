@@ -31,12 +31,20 @@ class FinalResultsPage(Page):
     def vars_for_template(self):
 
         participant = self.player.participant
+        participant.finished = True
+
         session = self.player.session
-        market_bonus = participant.vars.get('MARKET_PAYMENT').to_real_world_currency(session)
-        forecast_bonus = participant.vars.get('FORECAST_PAYMENT').to_real_world_currency(session)
-        risk_bonus = participant.vars.get('RISK_PAYMENT').to_real_world_currency(session)
-        quiz_bonus = participant.vars.get('QUIZ_PAYMENT').to_real_world_currency(session)
+        market_payment   = participant.vars.get('MARKET_PAYMENT')   or cu(0)
+        forecast_payment = participant.vars.get('FORECAST_PAYMENT') or cu(0)
+        risk_payment     = participant.vars.get('RISK_PAYMENT')     or cu(0)
+        quiz_payment     = participant.vars.get('QUIZ_PAYMENT')     or cu(0)
         
+        market_bonus   = market_payment.to_real_world_currency(session)
+        forecast_bonus = forecast_payment.to_real_world_currency(session)
+        risk_bonus     = risk_payment.to_real_world_currency(session)
+        quiz_bonus     = quiz_payment.to_real_world_currency(session)
+        
+        participant.payoff = market_payment + forecast_payment + risk_payment + quiz_payment        
         is_online = scf.is_online(self.player)
         is_prolific = scf.is_prolific(self.player)
         is_mturk = scf.is_mturk(self.player)
@@ -66,7 +74,7 @@ class FinalResultsPage(Page):
 
     def is_displayed(self):
         participant = self.player.participant
-        return participant.vars.get('CONSENT') and participant.vars.get('CONSENT_BUTTON_CLICKED')
+        return not participant.vars.get('is_dropout')
 
 
 class NonParticipantPage(Page):

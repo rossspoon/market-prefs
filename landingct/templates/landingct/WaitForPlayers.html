@@ -59,22 +59,33 @@
     
     //send a message to server when this page is shown
     document.addEventListener("DOMContentLoaded", (event) => {
-        liveSend({"out":0});
+        liveSend({"func": "status_change", "out":0});
+            
+        const liveUpdateInterval = setInterval(() => {
+            liveSend({"func": "update"});
+        }, 10000);
+        
+        window.addEventListener('beforeunload', () => {
+            clearInterval(liveUpdateInterval);
+        });
     });
 
     //if closed the tab, remove from waiting list
     window.onbeforeunload = function () {
         //player hasn't dropped, some but not enough ppl has enterred the game
         if (player_dropout==0 & num_more >0){
-            liveSend({"out":1});
+            liveSend({"func": "status_change", "out":1});
         }
     };
 
     //receive player data from server
     function liveRecv(data) {
         console.log(data);
-        progress_bar.value = data['arrived'];
-        num_more = {{ waiting_group_size }} - data['arrived'];
+        out_of = data['out_of']
+        arrived = data['arrived'];
+        progress_bar.value = arrived;
+        progress_bar.max = out_of
+        num_more = out_of - arrived;
         waiting_text.innerHTML = "Waiting for " + String(Math.max(num_more, 0)) + " more players to join.";
     }
 

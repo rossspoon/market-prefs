@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>oTree Session Creator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #0e1117;
+  --surface:    #161b25;
+  --surface2:   #1e2535;
+  --border:     #2a3348;
+  --border-hi:  #3d4f6e;
+  --accent:     #4f9cf9;
+  --accent-dim: #1e3a5f;
+  --green:      #3ddc97;
+  --green-dim:  #0d3324;
+  --amber:      #f5a623;
+  --amber-dim:  #3d2800;
+  --red:        #f05252;
+  --red-dim:    #3d1010;
+  --text:       #e8eaf0;
+  --text-muted: #b0bac8;
+  --text-dim:   #7a8fa8;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --r: 6px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.logo { font-family: var(--mono); font-weight: 600; font-size: 15px; letter-spacing: .06em; color: var(--accent); }
+.logo span { color: var(--text-muted); font-weight: 400; }
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+.badge { font-family: var(--mono); font-size: 12px; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); border-radius: 3px; padding: 1px 7px; letter-spacing: .08em; }
+.save-ind { font-family: var(--mono); font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; }
+.save-ind.saved { color: var(--green); }
+.save-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.cfg-path { font-family: var(--mono); font-size: 12px; color: var(--text-dim); max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 310px 1fr;
+  grid-template-areas:
+      "config monitor"
+      "config log";
+
+  grid-template-rows: 5fr 1fr;
+  height: calc(100vh - 48px);   /* viewport minus topbar */
+  overflow: hidden;
+}
+
+.layout div.config {
+    grid-area: config;
+    overflow-y: auto;     /* left panel scrolls vertically */
+    overflow-x: hidden;
+}
+
+.layout div.monitor {
+    grid-area: monitor;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;     /* monitor manages its own scroll internally */
+    min-height: 0;
+}
+
+.layout div.log {
+    grid-area: log;
+    overflow: hidden;
+}
+
+/* ── SHARED PANEL STYLES ── */
+.panel { display: flex; flex-direction: column; }
+
+.section { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.sec-label {
+  font-family: var(--mono); font-size: 12px; letter-spacing: .12em;
+  color: var(--text-dim); text-transform: uppercase; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.field { margin-bottom: 11px; }
+.field:last-child { margin-bottom: 0; }
+
+label.fl {
+  display: block; font-size: 13px; font-weight: 500;
+  color: var(--text-muted); margin-bottom: 4px;
+  letter-spacing: .03em; font-family: var(--mono);
+}
+
+input[type=text], input[type=number], input[type=password], select {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--text); font-family: var(--mono);
+  font-size: 13px; padding: 6px 9px; outline: none; transition: border-color .15s;
+  -webkit-appearance: none;
+}
+input:focus, select:focus { border-color: var(--accent); }
+input::placeholder { color: var(--text-dim); }
+select { cursor: pointer; }
+select option { background: var(--surface2); }
+select:disabled { opacity: .5; cursor: not-allowed; }
+
+.select-wrap { position: relative; }
+.select-wrap::after { content: '▾'; position: absolute; right: 9px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; font-size: 12px; }
+.select-wrap.loading::after { content: ''; }
+.select-wrap select { padding-right: 26px; }
+
+.label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.label-row label.fl { margin-bottom: 0; }
+.refresh-btn { font-family: var(--mono); font-size: 11px; background: none; border: 1px solid var(--border); border-radius: 3px; color: var(--text-dim); padding: 1px 7px; cursor: pointer; transition: all .15s; line-height: 1.6; }
+.refresh-btn:hover { border-color: var(--border-hi); color: var(--text-muted); }
+.refresh-btn:disabled { opacity: .4; cursor: not-allowed; }
+.fetch-status { font-family: var(--mono); font-size: 11px; margin-top: 4px; min-height: 16px; }
+.fetch-status.ok   { color: var(--green); }
+.fetch-status.err  { color: var(--red); }
+.fetch-status.info { color: var(--text-dim); }
+
+.radio-row { display: flex; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.radio-row input[type=radio] { display: none; }
+.radio-row label { flex: 1; }
+.rb { display: block; text-align: center; padding: 6px 10px; font-family: var(--mono); font-size: 13px; color: var(--text-muted); background: var(--surface2); border-right: 1px solid var(--border); cursor: pointer; transition: all .15s; }
+.radio-row label:last-child .rb { border-right: none; }
+.radio-row input:checked + .rb { background: var(--accent-dim); color: var(--accent); }
+
+.cb-row { display: flex; align-items: center; gap: 9px; padding: 7px 9px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; transition: border-color .15s; }
+.cb-row:hover { border-color: var(--border-hi); }
+.cb-row input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent); flex-shrink: 0; cursor: pointer; }
+.cb-label { font-family: var(--mono); font-size: 13px; color: var(--text-muted); cursor: pointer; user-select: none; }
+
+.url-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); padding: 6px 9px; font-family: var(--mono); font-size: 12px; color: var(--accent); word-break: break-all; min-height: 30px; }
+
+.conn-strip { display: flex; align-items: center; gap: 8px; padding: 7px 9px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); }
+.cdot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); flex-shrink: 0; }
+.cdot.ok  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.cdot.err { background: var(--red); }
+.cdot.checking { background: var(--amber); }
+.ctext { font-family: var(--mono); font-size: 13px; color: var(--text-muted); flex: 1; }
+
+/* ── ACTION BAR ── */
+.action-bar { padding: 14px 18px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 7px; margin-top: auto; }
+.btn-primary { width: 100%; background: var(--accent); color: #000; border: none; border-radius: var(--r); font-family: var(--mono); font-size: 15px; font-weight: 600; padding: 11px 14px; cursor: pointer; letter-spacing: .06em; transition: opacity .15s, transform .1s; }
+.btn-primary:hover { opacity: .88; }
+.btn-primary:active { transform: scale(.99); }
+.btn-primary:disabled { opacity: .3; cursor: not-allowed; }
+.btn-sec { width: 100%; background: none; color: var(--text-muted); border: 1px solid var(--border); border-radius: var(--r); font-family: var(--mono); font-size: 13px; padding: 7px 14px; cursor: pointer; letter-spacing: .04em; transition: all .15s; }
+.btn-sec:hover { border-color: var(--border-hi); color: var(--text); }
+.btn-sm { background: none; color: var(--text-muted); border: 1px solid var(--border); border-radius: var(--r); font-family: var(--mono); font-size: 12px; padding: 4px 10px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.btn-sm:hover { border-color: var(--border-hi); color: var(--text); }
+
+/* ── ADVANCED CONFIG OVERLAY ── */
+.adv-overlay {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  align-items: flex-start; justify-content: center;
+}
+.adv-overlay.open { display: flex; }
+.adv-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.6); backdrop-filter: blur(3px);
+}
+.adv-sheet {
+  position: relative; z-index: 1;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  width: min(860px, 94vw); max-height: calc(100vh - 64px); margin-top: 32px;
+  display: flex; flex-direction: column;
+  box-shadow: 0 28px 70px rgba(0,0,0,.7); overflow: hidden;
+}
+.adv-sheet-header {
+  padding: 14px 22px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.adv-sheet-title { font-family: var(--mono); font-size: 13px; letter-spacing: .1em; color: var(--text-muted); text-transform: uppercase; }
+.adv-sheet-close {
+  font-family: var(--mono); font-size: 20px; line-height: 1;
+  background: none; border: none; color: var(--text-dim);
+  cursor: pointer; padding: 2px 8px; border-radius: 4px; transition: color .15s, background .15s;
+}
+.adv-sheet-close:hover { color: var(--text); background: var(--surface2); }
+.adv-form { flex: 1; overflow-y: auto; padding: 18px 22px; }
+.adv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
+.adv-grid .field { margin-bottom: 0; }
+.adv-grid .full { grid-column: 1 / -1; }
+.adv-sec { grid-column: 1 / -1; font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--text-dim); text-transform: uppercase; padding: 14px 0 8px; border-top: 1px solid var(--border); margin-top: 4px; }
+.adv-sec:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+/* trigger button inside config panel */
+.adv-trigger-btn {
+  width: 100%; font-family: var(--mono); font-size: 12px; letter-spacing: .06em;
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
+  border-radius: var(--r); padding: 7px 14px; cursor: pointer; transition: all .15s; text-align: center;
+}
+.adv-trigger-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+/* ── LOG (bottom of middle) ── */
+.log-area { background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0; height: 200px; display: flex; flex-direction: column; }
+.log-header { padding: 8px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.log-title { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; color: var(--text-dim); text-transform: uppercase; }
+.log-clear { background: none; border: none; color: var(--text-dim); font-family: var(--mono); font-size: 12px; cursor: pointer; transition: color .15s; }
+.log-clear:hover { color: var(--text-muted); }
+#log { flex: 1; overflow-y: auto; padding: 8px 22px; font-family: var(--mono); font-size: 13px; line-height: 1.7; }
+.ll { display: flex; gap: 10px; }
+.lt { color: var(--text-dim); flex-shrink: 0; }
+.lm { color: var(--text-muted); }
+.lm.ok   { color: var(--green); }
+.lm.err  { color: var(--red); }
+.lm.info { color: var(--accent); }
+.lm.warn { color: var(--amber); }
+
+.result-card { background: var(--green-dim); border: 1px solid var(--green); border-radius: var(--r); padding: 10px 14px; margin-top: 6px; font-family: var(--mono); font-size: 12px; line-height: 2; }
+.result-card a { color: var(--green); text-decoration: underline; }
+.rc-label { color: var(--text-dim); display: inline-block; width: 100px; }
+
+/* ── MONITOR PANEL (right column) ── */
+.monitor-header { flex-shrink: 0;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.monitor-title { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
+
+.monitor-controls { display: flex; gap: 7px; align-items: center; }
+.monitor-code-wrap { flex: 1; position: relative; }
+.monitor-code-wrap input { font-size: 12px; padding: 5px 8px; }
+
+.poll-toggle {
+  font-family: var(--mono); font-size: 11px; background: var(--surface2);
+  border: 1px solid var(--border); color: var(--text-dim);
+  border-radius: var(--r); padding: 5px 10px; cursor: pointer; transition: all .15s;
+  white-space: nowrap;
+}
+.poll-toggle:hover { border-color: var(--border-hi); color: var(--text-muted); }
+.poll-toggle.active { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+
+.monitor-meta { flex-shrink: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 16px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0; font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+  min-height: 32px;
+}
+.monitor-stat { color: var(--text-muted); }
+.monitor-stat span { color: var(--accent); }
+.poll-indicator { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+.poll-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); }
+.poll-dot.active { background: var(--green); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+/* participant table */
+.monitor-body { flex: 1; overflow-y: auto; }
+.ptable { width: 100%; border-collapse: collapse; }
+.ptable thead { position: sticky; top: 0; background: var(--surface2); z-index: 1; }
+.ptable th {
+  font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .08em;
+  color: var(--text-dim); text-transform: uppercase; text-align: left;
+  padding: 7px 10px; border-bottom: 1px solid var(--border);
+}
+.ptable td {
+  font-family: var(--mono); font-size: 12px; color: var(--text-muted);
+  padding: 6px 10px; border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.ptable tr:last-child td { border-bottom: none; }
+.ptable tr:hover td { background: var(--surface2); }
+.ptable tr.is-dropout td { opacity: .45; }
+.ptable tr.is-finished td { color: var(--text-dim); }
+
+.p-code { color: var(--text-dim); font-size: 11px; }
+.p-label { color: var(--text); }
+.p-location { color: var(--text-muted); font-size: 11px; }
+.p-location .app-name { color: var(--accent); }
+
+/* status badge in table */
+.p-badge {
+  display: inline-block; font-family: var(--mono); font-size: 10px;
+  letter-spacing: .05em; padding: 1px 6px; border-radius: 3px;
+  border: 1px solid; white-space: nowrap;
+}
+.p-badge.active   { color: var(--green);  border-color: var(--green);  background: var(--green-dim); }
+.p-badge.finished { color: var(--text-dim); border-color: var(--border); background: transparent; }
+.p-badge.dropout  { color: var(--red);   border-color: var(--red);   background: var(--red-dim); }
+.p-badge.waiting  { color: var(--amber); border-color: var(--amber); background: var(--amber-dim); }
+
+/* drop button */
+.drop-btn {
+  font-family: var(--mono); font-size: 11px; background: none;
+  border: 1px solid var(--border); border-radius: 3px;
+  color: var(--text-dim); padding: 2px 8px; cursor: pointer;
+  transition: all .15s;
+}
+.drop-btn:hover:not(:disabled) { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+.drop-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+.monitor-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; padding: 40px 20px; text-align: center;
+  font-family: var(--mono); font-size: 12px; color: var(--text-dim); gap: 8px;
+}
+.monitor-empty .em-icon { font-size: 28px; opacity: .4; }
+
+/* drop-all button */
+.monitor-footer { flex-shrink: 0;
+  padding: 10px 16px; border-top: 1px solid var(--border); flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.drop-all-btn {
+  font-family: var(--mono); font-size: 12px; background: none;
+  border: 1px solid var(--border); border-radius: var(--r);
+  color: var(--text-dim); padding: 6px 12px; cursor: pointer; transition: all .15s;
+}
+.drop-all-btn:hover:not(:disabled) { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+.drop-all-btn:disabled { opacity: .3; cursor: not-allowed; }
+.monitor-footer-info { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+.copy-bonus-btn {
+  font-family: var(--mono); font-size: 12px; background: none;
+  border: 1px solid var(--border); border-radius: var(--r);
+  color: var(--text-muted); padding: 6px 12px; cursor: pointer;
+  transition: all .15s; margin-left: auto;
+}
+.copy-bonus-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.copy-bonus-btn:disabled { opacity: .3; cursor: not-allowed; }
+.copy-bonus-btn.copied { border-color: var(--green); color: var(--green); }
+
+/* scrollbars */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { display: inline-block; width: 11px; height: 11px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 5px; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="logo">oTree<span>/session-creator</span></span>
+    <span class="badge">v5.11</span>
+  </div>
+  <div class="topbar-right">
+    <span class="cfg-path" id="cfgPath">config: loading…</span>
+    <div class="save-ind" id="saveInd"><span class="save-dot"></span><span id="saveText">loading</span></div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ══════════════════════════════════════════
+       LEFT: CREATE SESSION
+  ══════════════════════════════════════════ -->
+  <div class="config">
+
+    <div class="section">
+      <div class="sec-label">Server</div>
+      <div class="field">
+        <label class="fl">Target</label>
+        <div class="radio-row">
+          <label><input type="radio" name="serverMode" value="remote" id="radioRemote" checked><span class="rb">Remote</span></label>
+          <label><input type="radio" name="serverMode" value="local"  id="radioLocal"><span class="rb">Local</span></label>
+        </div>
+      </div>
+      <div class="field" id="fieldRemote">
+        <label class="fl">Remote URL</label>
+        <input type="text" id="remoteUrl" placeholder="https://…">
+      </div>
+      <div class="field hidden" id="fieldLocal">
+        <label class="fl">Local URL</label>
+        <input type="text" id="localUrl" placeholder="http://localhost:8000">
+      </div>
+      <div class="field">
+        <label class="fl">Active URL</label>
+        <div class="url-chip" id="activeUrl">—</div>
+      </div>
+      <div class="field">
+        <label class="fl">REST Key <span style="color:var(--text-dim);font-weight:400">(blank for devserver)</span></label>
+        <input type="password" id="restKey" placeholder="leave blank for local devserver">
+      </div>
+      <div class="field">
+        <label class="fl">Secret Key <span style="color:var(--text-dim);font-weight:400">(settings.py SECRET_KEY)</span></label>
+        <input type="password" id="secretKey" placeholder="from settings.py">
+      </div>
+      <div class="field">
+        <label class="fl">Admin Password <span style="color:var(--text-dim);font-weight:400">(OTREE_ADMIN_PASSWORD, blank for devserver)</span></label>
+        <input type="password" id="adminPassword" placeholder="blank if devserver / no auth">
+      </div>
+      <div class="conn-strip">
+        <div class="cdot" id="cdot"></div>
+        <span class="ctext" id="ctext">Not tested</span>
+        <button class="btn-sm" onclick="testConn()">Test connection</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-label">Session Config</div>
+      <div class="field">
+        <div class="label-row">
+          <label class="fl">Session config name</label>
+          <button class="refresh-btn" id="refreshConfigs" onclick="fetchConfigs(true)">↻ refresh</button>
+        </div>
+        <div class="select-wrap" id="wrapConfigs">
+          <select id="sessionConfigName" onchange="onConfigChange()">
+            <option value="">— not connected —</option>
+          </select>
+        </div>
+        <div class="fetch-status info" id="statusConfigs"></div>
+      </div>
+      <div class="field">
+        <div class="label-row">
+          <label class="fl">Room</label>
+          <button class="refresh-btn" id="refreshRooms" onclick="fetchRooms(true)">↻ refresh</button>
+        </div>
+        <div class="select-wrap" id="wrapRooms">
+          <select id="roomName" onchange="setSaved(false)">
+            <option value="">— not connected —</option>
+          </select>
+        </div>
+        <div class="fetch-status info" id="statusRooms"></div>
+      </div>
+      <div class="field">
+        <label class="fl">Number of subjects</label>
+        <input type="number" id="numSubjects" min="1" max="500">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-label">Parameters</div>
+      <div class="field">
+        <label class="fl">Participation fee ($)</label>
+        <input type="number" id="participationFee" step="0.25" min="0">
+      </div>
+      <div class="field">
+        <label class="fl">Real-world currency / point</label>
+        <input type="number" id="rwcpp" step="0.001" min="0">
+      </div>
+      <div id="expParams">
+        <div class="field">
+          <div class="cb-row" onclick="toggleCb('showNext')">
+            <input type="checkbox" id="showNext">
+            <span class="cb-label">show_next</span>
+          </div>
+        </div>
+      </div>
+      <div id="screenParams" class="hidden">
+        <div class="field">
+          <label class="fl">Screening fee ($)</label>
+          <input type="number" id="screenFee" step="0.25" min="0">
+        </div>
+        <div class="field">
+          <label class="fl">Available times (space-separated)</label>
+          <input type="text" id="screenTimes" placeholder="09:00 10:00 11:00">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-label">Prolific</div>
+      <div class="field">
+        <label class="fl">Completion URL — experiment</label>
+        <input type="text" id="compUrlExp">
+      </div>
+      <div class="field">
+        <label class="fl">Completion URL — pre-screen</label>
+        <input type="text" id="compUrlPre">
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn-primary" id="createBtn" onclick="createSession()">Create Session</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+        <button class="btn-sec" onclick="saveConfig()">💾 Save config</button>
+        <button class="btn-sec" onclick="loadConfig()">↺ Reload config</button>
+      </div>
+      <button class="adv-trigger-btn" onclick="toggleAdv()">⚙ Advanced Configuration…</button>
+    </div>
+    
+
+  </div><!-- /left panel -->
+
+
+  <!-- ══════════════════════════════════════════
+       RIGHT: SESSION MONITOR
+  ══════════════════════════════════════════ -->
+  <div class="monitor">
+
+    <div class="monitor-header">
+      <div class="monitor-title">Session Monitor</div>
+      <div class="monitor-controls">
+        <div class="monitor-code-wrap">
+          <input type="text" id="monitorCode" placeholder="session code (e.g. 9pis7loc)"
+                 onkeydown="if(event.key==='Enter') fetchParticipants()">
+        </div>
+        <button class="btn-sm" onclick="fetchParticipants()">Fetch</button>
+        <button class="poll-toggle" id="pollToggle" onclick="togglePoll()">⏱ Auto</button>
+      </div>
+    </div>
+
+    <div class="monitor-meta" id="monitorMeta">
+      <span style="color:var(--text-dim)">Enter a session code to begin monitoring</span>
+    </div>
+
+    <div class="monitor-body" id="monitorBody">
+      <div class="monitor-empty">
+        <div class="em-icon">⬡</div>
+        <div>No session loaded</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Enter a code above or create a session —<br>it will populate automatically</div>
+      </div>
+    </div>
+
+    <div class="monitor-footer">
+      <button class="drop-all-btn" id="dropAllBtn" onclick="dropAllInactive()" disabled>
+        Drop all inactive
+      </button>
+      <span class="monitor-footer-info" id="dropAllInfo"></span>
+      <button class="copy-bonus-btn" id="copyBonusBtn" onclick="copyBonusData()" disabled
+              title="Copy Prolific bonus data to clipboard">
+        📋 Copy Bonus Data
+      </button>
+    </div>
+  </div><!-- /right panel -->
+
+  <div class="log">
+        <div class="log-area">
+          <div class="log-header">
+            <span class="log-title">Output Log</span>
+            <button class="log-clear" onclick="clearLog()">clear</button>
+          </div>
+          <div id="log"></div>
+        </div>
+  </div>
+</div><!-- /layout -->
+
+
+  <!-- ══════════════════════════════════════════
+       ADVANCED CONFIG OVERLAY (floating)
+  ══════════════════════════════════════════ -->
+  <div class="adv-overlay" id="advOverlay">
+    <div class="adv-backdrop" onclick="toggleAdv()"></div>
+    <div class="adv-sheet">
+      <div class="adv-sheet-header">
+        <span class="adv-sheet-title">Advanced Configuration</span>
+        <button class="adv-sheet-close" onclick="toggleAdv()" title="Close (Esc)">✕</button>
+      </div>
+      <div class="adv-form" id="advForm">
+              <div class="adv-grid">
+
+        <div class="adv-sec" id="advSecLanding">Landing / Consent (whole_exp)</div>
+        <div class="field" id="advInstructionId"><label class="fl">instruction_id (YouTube ID)</label><input type="text" id="instructionId"></div>
+        <div class="field" id="advWaitingGroupSize"><label class="fl">waiting_group_size</label><input type="number" id="waitingGroupSize"></div>
+        <div class="field" id="advLandingWaitTimeout"><label class="fl">landing_wait_timeout (s)</label><input type="number" id="landingWaitTimeout"></div>
+        <div class="adv-sec">Market / Timing (seconds)</div>
+        <div class="field"><label class="fl">market_time</label><input type="number" id="marketTime"></div>
+        <div class="field"><label class="fl">fixate_time</label><input type="number" id="fixateTime"></div>
+        <div class="field"><label class="fl">forecast_time</label><input type="number" id="forecastTime"></div>
+        <div class="field"><label class="fl">summary_time</label><input type="number" id="summaryTime"></div>
+        <div class="field"><label class="fl">practice_time</label><input type="number" id="practiceTime"></div>
+        <div class="field"><label class="fl">practice_end_time</label><input type="number" id="practiceEndTime"></div>
+        <div class="field"><label class="fl">final_results_time</label><input type="number" id="finalResultsTime"></div>
+        <div class="field"><label class="fl">risk_elic_time</label><input type="number" id="riskElicTime"></div>
+
+        <div class="adv-sec">Dividends &amp; Market</div>
+        <div class="field"><label class="fl">interest_rate</label><input type="number" id="interestRate" step="0.01"></div>
+        <div class="field"><label class="fl">initial_price</label><input type="number" id="initialPrice" step="0.5"></div>
+        <div class="field"><label class="fl">endow_worth</label><input type="number" id="endowWorth" step="1"></div>
+        <div class="field"><label class="fl">float_ratio_cap</label><input type="number" id="floatRatioCap" step="0.1" min="0" max="1"></div>
+        <div class="field full"><label class="fl">div_amount (space-separated)</label><input type="text" id="divAmount"></div>
+        <div class="field full"><label class="fl">div_dist (space-separated probabilities)</label><input type="text" id="divDist"></div>
+
+        <div class="adv-sec">Margin</div>
+        <div class="field"><label class="fl">margin_ratio</label><input type="number" id="marginRatio" step="0.05"></div>
+        <div class="field"><label class="fl">margin_premium</label><input type="number" id="marginPremium" step="0.01"></div>
+        <div class="field"><label class="fl">margin_target_ratio</label><input type="number" id="marginTargetRatio" step="0.05"></div>
+        <div class="field"><label class="fl">auto_trans_delay</label><input type="number" id="autoTransDelay"></div>
+
+        <div class="adv-sec">Forecasting</div>
+        <div class="field"><label class="fl">forecast_thold</label><input type="number" id="forecastThold" step="0.5"></div>
+        <div class="field"><label class="fl">forecast_reward</label><input type="number" id="forecastReward" step="0.5"></div>
+        <div class="field"><label class="fl">forecast_range</label><input type="number" id="forecastRange"></div>
+        <div class="field full"><label class="fl">forecast_periods (comma-separated)</label><input type="text" id="forecastPeriods"></div>
+
+        <div class="adv-sec">Rewards &amp; Bonuses</div>
+        <div class="field"><label class="fl">quiz_reward ($)</label><input type="number" id="quizReward" step="0.05"></div>
+        <div class="field"><label class="fl">bonus_cap (blank = None)</label><input type="text" id="bonusCap" placeholder="None"></div>
+
+        <div class="adv-sec">Flags</div>
+        <div class="field"><div class="cb-row" onclick="toggleCb('isProlific')"><input type="checkbox" id="isProlific"><span class="cb-label">is_prolific</span></div></div>
+        <div class="field"><div class="cb-row" onclick="toggleCb('isMturk')"><input type="checkbox" id="isMturk"><span class="cb-label">is_mturk</span></div></div>
+        <div class="field"><div class="cb-row" onclick="toggleCb('isPilot')"><input type="checkbox" id="isPilot"><span class="cb-label">is_pilot</span></div></div>
+        <div class="field"><div class="cb-row" onclick="toggleCb('randomHist')"><input type="checkbox" id="randomHist"><span class="cb-label">random_hist</span></div></div>
+
+        <div class="adv-sec">Expected Time</div>
+        <div class="field"><label class="fl">expected_time_pilot (hrs)</label><input type="number" id="expectedTimePilot" step="0.5"></div>
+        <div class="field"><label class="fl">expected_time_live (hrs)</label><input type="number" id="expectedTimeLive" step="0.5"></div>
+
+      </div>
+    </div>
+        <div class="adv-sec">Stock Distribution</div>
+        <div class="field full"><label class="fl">endow_stock (space-separated)</label><input type="text" id="endowStock" placeholder="4 4 4"></div>
+
+      </div>
+    </div>
+  </div><!-- /adv-overlay -->
+
+
+<script>
+// ── FIELD REGISTRY ─────────────────────────────────────────────────────────
+const CHECKBOXES = new Set(['showNext','isProlific','isMturk','isPilot','randomHist']);
+
+const ALL_FIELDS = [
+  'remoteUrl','localUrl','restKey','secretKey','adminPassword',
+  'sessionConfigName','roomName','numSubjects',
+  'participationFee','rwcpp','showNext','endowStock',
+  'screenFee','screenTimes','compUrlExp','compUrlPre',
+  'instructionId','waitingGroupSize','landingWaitTimeout',
+  'marketTime','fixateTime','forecastTime','summaryTime','practiceTime',
+  'practiceEndTime','finalResultsTime','riskElicTime',
+  'interestRate','initialPrice','divAmount','divDist','endowWorth','floatRatioCap',
+  'marginRatio','marginPremium','marginTargetRatio','autoTransDelay',
+  'forecastThold','forecastReward','forecastRange','forecastPeriods',
+  'quizReward','bonusCap',
+  'isProlific','isMturk','isPilot','randomHist',
+  'expectedTimePilot','expectedTimeLive',
+];
+
+// ── MONITOR STATE ──────────────────────────────────────────────────────────
+let pollInterval  = null;
+let pollActive    = false;
+const POLL_MS     = 10000;   // 10 second refresh
+let lastParticipants = [];   // cache for "drop all inactive"
+let lastSource = 'rest';    // 'export' or 'rest'
+
+// ── BOOT ───────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadConfig();
+  bindServerMode();
+  bindDirty();
+  loadCfgPath();
+  await Promise.all([fetchConfigs(false), fetchRooms(false)]);
+  log('info', 'oTree Session Creator ready.');
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && advOpen) toggleAdv(); });
+});
+
+// ── DYNAMIC DROPDOWNS ──────────────────────────────────────────────────────
+async function fetchConfigs(userInitiated) {
+  const savedVal = gv('sessionConfigName');
+  const btn  = document.getElementById('refreshConfigs');
+  const wrap = document.getElementById('wrapConfigs');
+  const stat = document.getElementById('statusConfigs');
+  const sel  = document.getElementById('sessionConfigName');
+  btn.disabled = true; wrap.classList.add('loading');
+  stat.className = 'fetch-status info'; stat.textContent = 'Fetching…';
+  try {
+    const r = await fetch('/proxy/session_configs', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({baseUrl: getBaseUrl(), restKey: gv('restKey')}),
+    });
+    const d = await r.json();
+    if (d.ok && d.configs.length > 0) {
+      sel.innerHTML = '';
+      d.configs.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.name;
+        o.textContent = c.doc ? `${c.name} — ${c.doc}` : c.name;
+        sel.appendChild(o);
+      });
+      if (d.configs.some(c => c.name === savedVal)) sel.value = savedVal;
+      stat.className = 'fetch-status ok'; stat.textContent = `${d.configs.length} configs loaded`;
+      if (userInitiated) log('ok', `Session configs: ${d.configs.map(c=>c.name).join(', ')}`);
+    } else {
+      stat.className = 'fetch-status err'; stat.textContent = d.text || 'No configs returned';
+      if (userInitiated) log('warn', 'Could not load session configs: ' + (d.text||'empty'));
+    }
+  } catch(e) {
+    stat.className = 'fetch-status err'; stat.textContent = 'Request failed';
+    if (userInitiated) log('err', 'fetchConfigs: ' + e.message);
+  }
+  btn.disabled = false; wrap.classList.remove('loading');
+  onConfigChange();
+}
+
+async function fetchRooms(userInitiated) {
+  const savedVal = gv('roomName');
+  const btn  = document.getElementById('refreshRooms');
+  const wrap = document.getElementById('wrapRooms');
+  const stat = document.getElementById('statusRooms');
+  const sel  = document.getElementById('roomName');
+  btn.disabled = true; wrap.classList.add('loading');
+  stat.className = 'fetch-status info'; stat.textContent = 'Fetching…';
+  try {
+    const r = await fetch('/proxy/rooms', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({baseUrl: getBaseUrl(), restKey: gv('restKey')}),
+    });
+    const d = await r.json();
+    if (d.ok && d.rooms.length > 0) {
+      sel.innerHTML = '<option value="">— no room —</option>';
+      d.rooms.forEach(rm => {
+        const o = document.createElement('option');
+        o.value = rm.name;
+        o.textContent = rm.display_name !== rm.name ? `${rm.name} — ${rm.display_name}` : rm.name;
+        sel.appendChild(o);
+      });
+      if (savedVal && d.rooms.some(r => r.name === savedVal)) sel.value = savedVal;
+      stat.className = 'fetch-status ok'; stat.textContent = `${d.rooms.length} rooms loaded`;
+      if (userInitiated) log('ok', `Rooms: ${d.rooms.map(r=>r.name).join(', ')}`);
+    } else {
+      stat.className = 'fetch-status err'; stat.textContent = d.text || 'No rooms returned';
+      if (userInitiated) log('warn', 'Could not load rooms: ' + (d.text||'empty'));
+    }
+  } catch(e) {
+    stat.className = 'fetch-status err'; stat.textContent = 'Request failed';
+    if (userInitiated) log('err', 'fetchRooms: ' + e.message);
+  }
+  btn.disabled = false; wrap.classList.remove('loading');
+}
+
+// ── CONFIG I/O ─────────────────────────────────────────────────────────────
+async function loadConfig() {
+  try {
+    const r = await fetch('/config');
+    const cfg = await r.json();
+    applyConfig(cfg);
+    setSaved(true);
+    log('ok', 'Configuration loaded from disk.');
+  } catch(e) { log('err', 'Could not load config: ' + e.message); }
+}
+
+async function saveConfig() {
+  try {
+    const r = await fetch('/config', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(gatherConfig()),
+    });
+    const d = await r.json();
+    if (d.ok) { setSaved(true); log('ok', 'Configuration saved → ' + d.path); }
+    else log('err', 'Save failed: ' + d.error);
+  } catch(e) { log('err', 'Save error: ' + e.message); }
+}
+
+async function loadCfgPath() {
+  try {
+    const r = await fetch('/config/path');
+    const d = await r.json();
+    const el = document.getElementById('cfgPath');
+    el.textContent = 'config: ' + d.path; el.title = d.path;
+  } catch(e) {}
+}
+
+function gatherConfig() {
+  const cfg = { serverMode: document.getElementById('radioRemote').checked ? 'remote' : 'local' };
+  ALL_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    cfg[id] = CHECKBOXES.has(id) ? el.checked : el.value;
+  });
+  return cfg;
+}
+
+function applyConfig(cfg) {
+  if (!cfg) return;
+  if (cfg.serverMode === 'local') {
+    document.getElementById('radioLocal').checked = true;
+    document.getElementById('fieldRemote').classList.add('hidden');
+    document.getElementById('fieldLocal').classList.remove('hidden');
+  } else {
+    document.getElementById('radioRemote').checked = true;
+    document.getElementById('fieldRemote').classList.remove('hidden');
+    document.getElementById('fieldLocal').classList.add('hidden');
+  }
+  ALL_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || cfg[id] === undefined) return;
+    if (CHECKBOXES.has(id)) {
+      el.checked = !!cfg[id];
+    } else if (el.tagName === 'SELECT') {
+      if (cfg[id] && ![...el.options].some(o => o.value === cfg[id])) {
+        const opt = document.createElement('option');
+        opt.value = cfg[id]; opt.textContent = cfg[id] + ' (saved)';
+        el.appendChild(opt);
+      }
+      el.value = cfg[id];
+    } else {
+      el.value = cfg[id];
+    }
+  });
+  updateActiveUrl();
+  onConfigChange();
+}
+
+function setSaved(yes) {
+  document.getElementById('saveInd').className = 'save-ind' + (yes ? ' saved' : '');
+  document.getElementById('saveText').textContent = yes ? 'saved' : 'unsaved';
+}
+
+function bindDirty() {
+  ALL_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.addEventListener('input', ()=>setSaved(false)); el.addEventListener('change', ()=>setSaved(false)); }
+  });
+  document.querySelectorAll('input[name=serverMode]').forEach(r =>
+    r.addEventListener('change', ()=>setSaved(false))
+  );
+}
+
+// ── SESSION CONFIG CHANGE ──────────────────────────────────────────────────
+function onConfigChange() {
+  const cfg = gv('sessionConfigName');
+  const isScreen = cfg === 'prescreen';
+  document.getElementById('expParams').classList.toggle('hidden', isScreen);
+  document.getElementById('screenParams').classList.toggle('hidden', !isScreen);
+  const landingIds = ['advSecLanding','advInstructionId','advWaitingGroupSize',
+                      'advLandingWaitTimeout','advConsentPgCnt','advSurvey1PgCnt',
+                      'advConsentLink','advSurvey1Link'];
+  landingIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', cfg !== 'whole_exp');
+  });
+}
+
+// ── SERVER MODE ────────────────────────────────────────────────────────────
+function bindServerMode() {
+  document.querySelectorAll('input[name=serverMode]').forEach(r => {
+    r.addEventListener('change', () => {
+      const isRemote = document.getElementById('radioRemote').checked;
+      document.getElementById('fieldRemote').classList.toggle('hidden', !isRemote);
+      document.getElementById('fieldLocal').classList.toggle('hidden', isRemote);
+      updateActiveUrl();
+    });
+  });
+  document.getElementById('remoteUrl').addEventListener('input', updateActiveUrl);
+  document.getElementById('localUrl').addEventListener('input', updateActiveUrl);
+}
+
+function updateActiveUrl() {
+  const isRemote = document.getElementById('radioRemote').checked;
+  document.getElementById('activeUrl').textContent =
+    (isRemote ? document.getElementById('remoteUrl').value : document.getElementById('localUrl').value) || '—';
+}
+
+function getBaseUrl() {
+  const isRemote = document.getElementById('radioRemote').checked;
+  return (isRemote ? document.getElementById('remoteUrl').value : document.getElementById('localUrl').value).replace(/\/$/, '');
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function toggleCb(id) { const el = document.getElementById(id); el.checked = !el.checked; setSaved(false); }
+let advOpen = false;
+function toggleAdv() {
+  advOpen = !advOpen;
+  document.getElementById('advOverlay').classList.toggle('open', advOpen);
+  document.body.style.overflow = advOpen ? 'hidden' : '';
+}
+function gv(id) { return document.getElementById(id)?.value ?? ''; }
+function gn(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+function gb(id) { return document.getElementById(id)?.checked ?? false; }
+
+// ── CONNECTION TEST ────────────────────────────────────────────────────────
+async function testConn() {
+  const dot = document.getElementById('cdot');
+  const txt = document.getElementById('ctext');
+  dot.className = 'cdot checking'; txt.textContent = 'Testing…';
+  log('info', 'Testing connection to ' + getBaseUrl() + '…');
+  try {
+    const r = await fetch('/proxy/test', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({baseUrl: getBaseUrl(), restKey: gv('restKey')}),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      dot.className = 'cdot ok'; txt.textContent = 'Connected (HTTP ' + d.status + ')';
+      log('ok', 'Connection OK — refreshing configs and rooms…');
+      await Promise.all([fetchConfigs(true), fetchRooms(true)]);
+    } else {
+      dot.className = 'cdot err'; txt.textContent = d.text || ('HTTP ' + d.status);
+      log('err', 'Connection failed: ' + d.text);
+    }
+  } catch(e) { dot.className = 'cdot err'; txt.textContent = 'Request error'; log('err', e.message); }
+}
+
+// ── CREATE SESSION ─────────────────────────────────────────────────────────
+async function createSession() {
+  const btn = document.getElementById('createBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Creating…';
+  try {
+    const cfg = gv('sessionConfigName');
+    if (cfg === 'prescreen') await doCreateScreen();
+    else await doCreateExp(cfg);
+  } catch(e) { log('err', 'Unexpected error: ' + e.message); }
+  btn.disabled = false; btn.innerHTML = 'Create Session';
+}
+
+async function doCreateExp(configName) {
+  const baseUrl  = getBaseUrl();
+  const restKey  = gv('restKey');
+  const N        = parseInt(gv('numSubjects')) || 1;
+  const roomName = gv('roomName');
+
+  const modFields = {
+    participation_fee: gn('participationFee'), real_world_currency_per_point: gn('rwcpp'),
+    show_next: gb('showNext'), endow_stock: gv('endowStock'), random_hist: gb('randomHist'),
+    market_time: gn('marketTime'), fixate_time: gn('fixateTime'), forecast_time: gn('forecastTime'),
+    summary_time: gn('summaryTime'), practice_time: gn('practiceTime'), practice_end_time: gn('practiceEndTime'),
+    final_results_time: gn('finalResultsTime'), risk_elic_time: gn('riskElicTime'),
+    interest_rate: gn('interestRate'), initial_price: gn('initialPrice'),
+    div_amount: gv('divAmount'), div_dist: gv('divDist'),
+    endow_worth: gn('endowWorth'), float_ratio_cap: gn('floatRatioCap'),
+    margin_ratio: gn('marginRatio'), margin_premium: gn('marginPremium'),
+    margin_target_ratio: gn('marginTargetRatio'), auto_trans_delay: gn('autoTransDelay'),
+    forecast_thold: gn('forecastThold'), forecast_reward: gn('forecastReward'),
+    forecast_range: gn('forecastRange'), forecast_periods: gv('forecastPeriods'),
+    quiz_reward: gn('quizReward'), is_prolific: gb('isProlific'), is_mturk: gb('isMturk'),
+    is_pilot: gb('isPilot'), expected_time_pilot: gn('expectedTimePilot'), expected_time_live: gn('expectedTimeLive'),
+  };
+  const bonusCap = gv('bonusCap').trim();
+  if (bonusCap && bonusCap.toLowerCase() !== 'none') modFields.bonus_cap = parseFloat(bonusCap);
+  if (configName === 'whole_exp') {
+    modFields.consent_link = gv('consentLink'); modFields.consent_pg_cnt = gn('consentPgCnt');
+    modFields.survey_1_link = gv('survey1Link'); modFields.survey_1_pg_cnt = gn('survey1PgCnt');
+    modFields.instruction_id = gv('instructionId');
+    modFields.waiting_group_size = gn('waitingGroupSize'); modFields.landing_wait_timeout = gn('landingWaitTimeout');
+  }
+
+  log('info', `Creating "${configName}" session: N=${N}, room=${roomName||'(none)'}`);
+  const payload = {baseUrl, restKey, session_config_name: configName, num_participants: N, modified_session_config_fields: modFields};
+  if (roomName) payload.room_name = roomName;
+
+  const cr = await fetch('/proxy/create_session', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload),
+  });
+  const cd = await cr.json();
+  if (!cd.ok) { log('err', 'Create failed: ' + (cd.text || cd.status)); return; }
+
+  const code = cd.data.code;
+  log('ok', `Session created — code: ${code}`);
+  await setCompletionUrl(baseUrl, restKey, code, gv('compUrlExp'));
+  showResult(code, baseUrl);
+  // Auto-load monitor
+  document.getElementById('monitorCode').value = code;
+  await fetchParticipants();
+}
+
+async function doCreateScreen() {
+  const baseUrl  = getBaseUrl();
+  const restKey  = gv('restKey');
+  const N        = parseInt(gv('numSubjects')) || 1;
+  const roomName = gv('roomName');
+  const times    = gv('screenTimes').trim().split(/\s+/).filter(Boolean);
+
+  const modFields = {
+    participation_fee: gn('screenFee'), is_prolific: true,
+    slot_01:'',slot_02:'',slot_03:'',slot_04:'',slot_05:'',
+    slot_06:'',slot_07:'',slot_08:'',slot_09:'',slot_10:'',
+  };
+  times.forEach((t, i) => { modFields[`slot_${String(i+1).padStart(2,'0')}`] = t; });
+
+  log('info', `Creating "prescreen" session: N=${N}, times=[${times.join(', ')}]`);
+  const payload = {baseUrl, restKey, session_config_name: 'prescreen', num_participants: N, modified_session_config_fields: modFields};
+  if (roomName) payload.room_name = roomName;
+
+  const cr = await fetch('/proxy/create_session', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload),
+  });
+  const cd = await cr.json();
+  if (!cd.ok) { log('err', 'Create failed: ' + (cd.text || cd.status)); return; }
+
+  const code = cd.data.code;
+  log('ok', `Screening session created — code: ${code}`);
+  await setCompletionUrl(baseUrl, restKey, code, gv('compUrlPre'));
+  showResult(code, baseUrl);
+  document.getElementById('monitorCode').value = code;
+  await fetchParticipants();
+}
+
+async function setCompletionUrl(baseUrl, restKey, code, compUrl) {
+  try {
+    const r = await fetch('/proxy/set_vars', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({baseUrl, restKey, sessionCode: code, vars: {prolific_completion_url: compUrl}}),
+    });
+    const d = await r.json();
+    if (d.ok) log('ok', 'Prolific completion URL set.');
+    else log('warn', 'Could not set completion URL: ' + d.text);
+  } catch(e) { log('warn', 'Could not set completion URL: ' + e.message); }
+}
+
+function showResult(code, baseUrl) {
+  const monitorUrl = `${baseUrl}/SessionMonitor/${code}`;
+  const startUrl   = `${baseUrl}/SessionStartLinks/${code}`;
+  const dataUrl    = `${baseUrl}/ExportSessionWide/${code}`;
+  log('ok', `Monitor: ${monitorUrl}`);
+  log('ok', `Start:   ${startUrl}`);
+  const logEl = document.getElementById('log');
+  const card = document.createElement('div');
+  card.className = 'result-card';
+  card.innerHTML = `
+    <span class="rc-label">Session code</span> <strong>${code}</strong><br>
+    <span class="rc-label">Monitor</span> <a href="${monitorUrl}" target="_blank">${monitorUrl}</a><br>
+    <span class="rc-label">Start links</span> <a href="${startUrl}" target="_blank">${startUrl}</a><br>
+    <span class="rc-label">Data export</span> <a href="${dataUrl}" target="_blank">${dataUrl}</a>
+  `;
+  logEl.appendChild(card);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ── SESSION MONITOR ────────────────────────────────────────────────────────
+
+async function fetchParticipants() {
+  const code = document.getElementById('monitorCode').value.trim();
+  if (!code) { setMonitorMeta('Enter a session code'); return; }
+
+  // Try the rich export endpoint first; fall back to basic REST
+  try {
+    const r = await fetch('/proxy/session_data_rich', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({baseUrl: getBaseUrl(), sessionCode: code,
+                             secretKey: gv('secretKey'), adminPassword: gv('adminPassword')}),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      lastParticipants = d.participants;
+      lastSource = d.source;
+      renderTable(d.participants, true);
+      updateMonitorMeta(d.participants, d.source);
+      return;
+    }
+    // Rich endpoint failed — fall through to basic
+    log('warn', 'Rich export unavailable (' + d.text + '), using basic REST data');
+  } catch(e) {
+    log('warn', 'Rich export error: ' + e.message + ', falling back to REST');
+  }
+
+  // Fallback: basic REST (5 fields only)
+  try {
+    const r = await fetch('/proxy/session_data', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({baseUrl: getBaseUrl(), restKey: gv('restKey'), sessionCode: code}),
+    });
+    const d = await r.json();
+    if (!d.ok) { setMonitorMeta('Error: ' + d.text, true); return; }
+    lastParticipants = d.participants;
+    lastSource = d.source;
+    renderTable(d.participants, false);
+    updateMonitorMeta(d.participants, 'rest');
+  } catch(e) {
+    setMonitorMeta('Request failed: ' + e.message, true);
+  }
+}
+
+function renderTable(participants, richData) {
+  const body = document.getElementById('monitorBody');
+  if (!participants || participants.length === 0) {
+    body.innerHTML = '<div class="monitor-empty"><div class="em-icon">⬡</div><div>No participants yet</div></div>';
+    document.getElementById('dropAllBtn').disabled = true;
+    document.getElementById('dropAllInfo').textContent = '';
+    return;
+  }
+
+  const active = participants.filter(p => !p.finished && !p.is_dropout);
+
+  // "Drop all inactive" is only safe with rich export data (current_app populated).
+  // richData is the parameter passed in — do NOT redeclare it here.
+  const inactiveList = richData
+    ? participants.filter(p => !p.finished && !p.is_dropout && !p.current_app)
+    : [];
+
+  // Enable copy bonus button if rich data and any payoffs exist
+  const copyBonusBtn = document.getElementById('copyBonusBtn');
+  if (copyBonusBtn) {
+    copyBonusBtn.disabled = !richData || !participants.some(p => p.payoff > 0);
+  }
+
+  const dropAllBtn  = document.getElementById('dropAllBtn');
+  const dropAllInfo = document.getElementById('dropAllInfo');
+  if (!richData) {
+    dropAllBtn.disabled = true;
+    dropAllInfo.textContent = 'full detail required';
+  } else if (inactiveList.length === 0) {
+    dropAllBtn.disabled = true;
+    dropAllInfo.textContent = active.length > 0 ? 'none inactive' : '';
+  } else {
+    dropAllBtn.disabled = false;
+    dropAllInfo.textContent = `${inactiveList.length} inactive`;
+  }
+
+  const rows = participants.map(p => {
+    let status, badgeClass;
+    if (p.is_dropout)    { status = 'dropout';  badgeClass = 'dropout'; }
+    else if (p.finished) { status = 'finished'; badgeClass = 'finished'; }
+    else if (!p.current_app && !p.app) { status = 'waiting'; badgeClass = 'waiting'; }
+    else                 { status = 'active';   badgeClass = 'active'; }
+
+    // Location cell — rich if we have it
+    const appName  = p.current_app  || p.app  || '';
+    const pageName = p.current_page || p.page || '';
+    const roundNum = p.round_number || p.round || '';
+    let location;
+    if (appName) {
+      location = `<span class="app-name">${escHtml(appName)}</span>`
+               + (pageName ? ` › ${escHtml(pageName)}` : '')
+               + (roundNum ? ` <span style="color:var(--text-dim)">r${escHtml(String(roundNum))}</span>` : '');
+    } else {
+      location = richData
+        ? '<span style="color:var(--text-dim)">waiting to start</span>'
+        : '<span style="color:var(--text-dim)">—</span>';
+    }
+
+    const canDrop = !p.is_dropout && !p.finished;
+    const dropBtn = canDrop
+      ? `<button class="drop-btn" onclick="dropParticipant('${p.code}', this)" title="Set is_dropout=True">Drop</button>`
+      : `<button class="drop-btn" disabled>${p.is_dropout ? 'Dropped' : 'Done'}</button>`;
+
+    const rowClass = p.is_dropout ? 'is-dropout' : p.finished ? 'is-finished' : '';
+    const label = p.label
+      ? escHtml(p.label)
+      : `<span style="color:var(--text-dim)">${p.code.slice(0,8)}…</span>`;
+    const payoff = (p.payoff && p.payoff > 0)
+      ? `<span style="color:var(--green)">$${Number(p.payoff).toFixed(2)}</span>`
+      : '';
+
+    return `<tr class="${rowClass}">
+      <td style="color:var(--text-dim);font-size:11px">${p.id_in_session || ''}</td>
+      <td class="p-label">${label}</td>
+      <td><span class="p-badge ${badgeClass}">${status}</span></td>
+      <td class="p-location">${location}</td>
+      <td>${payoff}</td>
+      <td>${dropBtn}</td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML = `
+    <table class="ptable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Label</th>
+          <th>Status</th>
+          <th>Location</th>
+          <th>Payoff</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function updateMonitorMeta(participants, source) {
+  const total    = participants.length;
+  const active   = participants.filter(p => !p.finished && !p.is_dropout).length;
+  const finished = participants.filter(p => p.finished).length;
+  const dropped  = participants.filter(p => p.is_dropout).length;
+  const meta = document.getElementById('monitorMeta');
+  const pollDot = pollActive
+    ? `<div class="poll-indicator"><div class="poll-dot active"></div><span style="color:var(--text-dim)">polling</span></div>`
+    : '';
+  const srcBadge = source === 'export'
+    ? `<span style="color:var(--green);font-size:11px;margin-left:4px" title="Rich data via ExportSessionWide">● full detail</span>`
+    : `<span style="color:var(--amber);font-size:11px;margin-left:4px" title="Basic data only — ExportSessionWide unavailable">● basic only</span>`;
+  meta.innerHTML = `
+    <span class="monitor-stat">Total <span>${total}</span></span>
+    <span style="color:var(--border)">|</span>
+    <span class="monitor-stat">Active <span style="color:var(--green)">${active}</span></span>
+    <span style="color:var(--border)">|</span>
+    <span class="monitor-stat">Finished <span>${finished}</span></span>
+    <span style="color:var(--border)">|</span>
+    <span class="monitor-stat">Dropped <span style="color:var(--red)">${dropped}</span></span>
+    ${srcBadge}
+    ${pollDot}
+  `;
+}
+
+function setMonitorMeta(msg, isErr = false) {
+  const meta = document.getElementById('monitorMeta');
+  meta.innerHTML = `<span style="color:${isErr ? 'var(--red)' : 'var(--text-dim)'}">${escHtml(msg)}</span>`;
+}
+
+// ── DROP PARTICIPANT ───────────────────────────────────────────────────────
+
+async function dropParticipant(participantCode, btn) {
+  if (!confirm(`Mark participant ${participantCode.slice(0,8)}… as dropout?\n\nThis sets is_dropout=True. Their pages will auto-advance within 1 second if your app uses get_timeout_seconds to check this flag.`)) return;
+
+  btn.disabled = true; btn.textContent = '…';
+
+  try {
+    const r = await fetch('/proxy/drop_participant', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({baseUrl: getBaseUrl(), restKey: gv('restKey'), participantCode}),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      log('ok', `Dropped participant ${participantCode.slice(0,8)}…`);
+      btn.textContent = 'Dropped'; btn.disabled = true;
+      // Refresh table
+      await fetchParticipants();
+    } else {
+      log('err', `Drop failed for ${participantCode.slice(0,8)}: ${d.text}`);
+      btn.disabled = false; btn.textContent = 'Drop';
+    }
+  } catch(e) {
+    log('err', 'Drop error: ' + e.message);
+    btn.disabled = false; btn.textContent = 'Drop';
+  }
+}
+
+async function dropAllInactive() {
+  if (lastSource !== 'export') {
+    log('err', 'Drop all inactive requires full detail mode. Cannot safely identify inactive participants without current app/page data.');
+    return;
+  }
+  const inactive = lastParticipants.filter(
+    p => !p.finished && !p.is_dropout && !p.current_app
+  );
+  if (inactive.length === 0) { log('warn', 'No inactive participants to drop.'); return; }
+  const labels = inactive.map(p => p.label || p.code.slice(0,8)).join(', ');
+  if (!confirm(
+    `Drop ${inactive.length} inactive participant(s)?\n\n` +
+    `These participants have no current app/page.\n\nParticipants: ${labels}`
+  )) return;
+
+  log('info', `Dropping ${inactive.length} inactive participants…`);
+  let ok = 0, fail = 0;
+  await Promise.all(inactive.map(async p => {
+    try {
+      const r = await fetch('/proxy/drop_participant', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({baseUrl: getBaseUrl(), restKey: gv('restKey'), participantCode: p.code}),
+      });
+      const d = await r.json();
+      if (d.ok) ok++; else fail++;
+    } catch(e) { fail++; }
+  }));
+  log(fail === 0 ? 'ok' : 'warn', `Drop all complete: ${ok} dropped, ${fail} failed`);
+  await fetchParticipants();
+}
+
+// ── AUTO-POLL ──────────────────────────────────────────────────────────────
+
+function togglePoll() {
+  pollActive = !pollActive;
+  const btn = document.getElementById('pollToggle');
+  btn.classList.toggle('active', pollActive);
+  btn.textContent = pollActive ? '⏹ Stop' : '⏱ Auto';
+
+  if (pollActive) {
+    pollInterval = setInterval(fetchParticipants, POLL_MS);
+    log('info', `Auto-poll started (every ${POLL_MS/1000}s)`);
+    fetchParticipants();
+  } else {
+    clearInterval(pollInterval);
+    pollInterval = null;
+    log('info', 'Auto-poll stopped');
+    // Re-render meta without poll dot
+    if (lastParticipants.length > 0) updateMonitorMeta(lastParticipants, 'unknown');
+  }
+}
+
+// ── BONUS DATA ────────────────────────────────────────────────────────────
+
+function copyBonusData() {
+  // label format: <session_id>_<prolific_id>
+  // Prolific bonus format: <prolific_id>,<bonus>  one per line
+  const rows = lastParticipants
+    .filter(p => p.payoff > 0 && p.label && p.label.includes('_'))
+    .map(p => {
+      const prolificId = p.label.substring(p.label.indexOf('_') + 1);
+      return `${prolificId},${p.payoff.toFixed(2)}`;
+    });
+
+  if (rows.length === 0) {
+    log('warn', 'No participants with non-zero payoff and Prolific labels found.');
+    return;
+  }
+
+  const text = rows.join('\n');
+
+  navigator.clipboard.writeText(text).then(() => {
+    log('ok', `Copied bonus data for ${rows.length} participant(s) to clipboard.`);
+    const btn = document.getElementById('copyBonusBtn');
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Copy Bonus Data';
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(e => {
+    log('err', 'Clipboard copy failed: ' + e.message);
+  });
+}
+
+// ── LOG ────────────────────────────────────────────────────────────────────
+function log(level, msg) {
+  const logEl = document.getElementById('log');
+  const now = new Date().toTimeString().slice(0,8);
+  const line = document.createElement('div');
+  line.className = 'll';
+  line.innerHTML = `<span class="lt">${now}</span><span class="lm ${level}">${escHtml(msg)}</span>`;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function clearLog() { document.getElementById('log').innerHTML = ''; }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>

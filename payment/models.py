@@ -13,7 +13,7 @@ from pdflatex import pdflatex
 
 import common.SessionConfigFunctions as scf
 import rounds
-from common.ParticipantFuctions import generate_participant_ids, is_button_click
+from common.ParticipantFuctions import generate_participant_ids, is_active
 
 doc = """
 This application handles the final pay off
