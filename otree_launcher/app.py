@@ -445,7 +445,7 @@ def proxy_download_orders():
             timeout=30,
         )
         ws.send(_json.dumps({
-            "app_name": "market",
+            "app_name": "rounds",
             "is_custom": True,
             "link_id": "order_export",
         }))
