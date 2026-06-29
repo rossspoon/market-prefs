@@ -978,6 +978,13 @@ def pre_round_tasks(group: Group):
 
     # Calculate total shorts
     group.short = abs(sum(p.shares for p in group.get_players() if p.shares < 0))
+    
+    # update round number
+    # this step is necessary for the monitoring app to correctly pick up the
+    # current round number.
+    for p in group.get_players():
+        p.participant.current_round = group.round_number
+
 
 #######################################
 # CALCULATE MARKET
@@ -989,14 +996,6 @@ def calculate_market(group: Group):
     for p in group.get_players():
         # Process current round forecasts
         p.determine_forecast_reward(group.price)
-
-
-def not_displayed_for_simulation(player: Player):
-    return not scf.get_session_name(player) == 'sim_1'
-
-
-def not_displayed_for_simulation_except_last_round(player: Player):
-    return not scf.get_session_name(player) == 'sim_1' or player.round_number == Constants.num_rounds
 
 
 def custom_export(players):
@@ -1077,31 +1076,31 @@ def determine_bonus(player: Player):
         for look_ahead in range(4):
             p = players[source_rnd]
 
-        #Determine target round, and convert to overall round number
-        target_rnd = p.field_maybe_none(f'fcast_rnd_{look_ahead}')
-        if not target_rnd:
-            continue
-        
-        target_rnd = target_rnd + Constants.num_practice
-        if target_rnd > Constants.num_rounds:
-            continue
-        
-        #Get the price data and the forecast for the target round
-        g = groups.get(target_rnd)
-        if not g:
-            continue
-        
-        price = g.price
-        forecast = p.field_maybe_none(f'f{look_ahead}')
-    
-        if not forecast:
-            continue  # skip out if no forecast was made
+            #Determine target round, and convert to overall round number
+            target_rnd = p.field_maybe_none(f'fcast_rnd_{look_ahead}')
+            if not target_rnd:
+                continue
             
-        # Determine error and apply threshold rule
-        error = abs(price - forecast)
-        freward = scf.get_forecast_reward(player) if error <= scf.get_forecast_thold(player) else 0
-        # aggergate
-        forecast_bonus += freward
+            target_rnd = target_rnd + Constants.num_practice
+            if target_rnd > Constants.num_rounds:
+                continue
+            
+            #Get the price data and the forecast for the target round
+            g = groups.get(target_rnd)
+            if not g:
+                continue
+            
+            price = g.price
+            forecast = p.field_maybe_none(f'f{look_ahead}')
+        
+            if not forecast:
+                continue  # skip out if no forecast was made
+                
+            # Determine error and apply threshold rule
+            error = abs(price - forecast)
+            freward = scf.get_forecast_reward(player) if error <= scf.get_forecast_thold(player) else 0
+            # aggergate
+            forecast_bonus += freward
         
         # Assemble debugging data
         round_look_data = dict(
@@ -1197,6 +1196,19 @@ def group_by_arrival_time_method(subsession, players: list) -> list | None:
 
     return active
 
+
+def app_after_this_page_common(player: Player, upcoming_apps):
+    if not upcoming_apps or len(upcoming_apps) == 0:
+        return None 
+
+    p = player.participant
+    is_dropout = p.vars.get('is_dropout', False)
+    if is_dropout:
+        return upcoming_apps[-1]
+    
+    return None
+    
+        
 ############
 # PAGES
 ##########
@@ -1212,6 +1224,7 @@ class WaitForAll(WaitPage):
 class PreMarketWait(WaitPage):
     body_text = "Waiting for the experiment to begin"
     after_all_players_arrive = pre_round_tasks
+    app_after_this_page = app_after_this_page_common
         
 
 
@@ -1227,6 +1240,13 @@ class MarketGridChoice(Page):
     live_method = market_page_live_method
 
 
+    @staticmethod
+    def is_displayed(player: Player):
+        p = player.participant
+        is_active = not p.vars.get('is_dropout', False)
+        return is_active
+
+
 class ForecastPage(Page):
     template_name = 'rounds/MarketPageModular.html'
     form_model = 'player'
@@ -1236,12 +1256,18 @@ class ForecastPage(Page):
     js_vars = get_js_vars_forcast_page
     vars_for_template = vars_for_forecast_template
     get_timeout_seconds = scf.get_forecast_time
-    is_displayed = not_displayed_for_simulation
     live_method = forecast_page_live_method
+
+    @staticmethod
+    def is_displayed(player: Player):
+        p = player.participant
+        is_active = not p.vars.get('is_dropout', False)
+        return is_active
 
 
 class MarketWaitPage(WaitPage):
     after_all_players_arrive = calculate_market
+    app_after_this_page = app_after_this_page_common
 
 
 class RoundResultsPage(Page):
@@ -1252,7 +1278,6 @@ class RoundResultsPage(Page):
     js_vars = get_js_vars_round_results
     vars_for_template = vars_for_round_results_template
     get_timeout_seconds = scf.get_summary_time
-    is_displayed = not_displayed_for_simulation_except_last_round
     live_method = result_page_live_method
 
     @staticmethod
@@ -1271,6 +1296,14 @@ class RoundResultsPage(Page):
 
             return upcoming_apps[0]
 
+
+    @staticmethod
+    def is_displayed(player: Player):
+        p = player.participant
+        is_active = not p.vars.get('is_dropout', False)
+        return is_active
+
+
         
         
 
@@ -1285,7 +1318,14 @@ class RiskPage(Page):
 
     vars_for_template = vars_for_risk_template
     get_timeout_seconds = scf.get_risk_elic_time
-    is_displayed = not_displayed_for_simulation
+
+
+    @staticmethod
+    def is_displayed(player: Player):
+        p = player.participant
+        is_active = not p.vars.get('is_dropout', False)
+        return is_active
+
 
 
 class RiskPage1(RiskPage):
@@ -1395,10 +1435,6 @@ class FinalResultsPage(Page):
     get_timeout_seconds = scf.get_final_results_time
     timer_text = "Next Page in:"
 
-    @staticmethod
-    def is_displayed(player: Player):
-        rn = player.round_number
-        return rn == Constants.num_rounds or rn == Constants.num_practice
 
     @staticmethod
     def vars_for_template(player: Player):        
@@ -1425,10 +1461,18 @@ class FinalResultsPage(Page):
                 'market_price': player.group.price,
                 }
 
+    @staticmethod
+    def is_displayed(player: Player):
+        p = player.participant
+        is_active = not p.vars.get('is_dropout', False)
+
+        rn = player.round_number
+        return is_active and (rn == Constants.num_rounds or rn == Constants.num_practice)
+
+
 
 class PracticeMarkerPage(Page):
     vars_for_template = vars_for_practice
-    js_vars = get_websockets_vars
     timer_text = 'Next page in:'
     
     @staticmethod
@@ -1451,7 +1495,10 @@ class PracticeMarkerPage(Page):
 
     @staticmethod
     def is_displayed(player: Player):
-        return player.round_number == 1  or player.round_number == Constants.num_practice + 1
+        p = player.participant
+        is_active = not p.vars.get('is_dropout', False)
+
+        return is_active and (player.round_number == 1  or player.round_number == Constants.num_practice + 1)
 
 
 

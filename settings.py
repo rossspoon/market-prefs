@@ -21,7 +21,7 @@ SESSION_CONFIGS = [
     
     ,dict(
         name='rounds',
-        app_sequence=['consent', 'rounds', 'payment'],
+        app_sequence=['rounds', 'payment'],
         num_demo_participants=2,
         random_hist=False
     )
@@ -203,7 +203,7 @@ elif environ.get('MTURK_HIT_TYPE') == 'EXP':
 PARTICIPANT_FIELDS = ['CONSENT', 'CONSENT_BUTTON_CLICKED', 'MARKET_PAYMENT', 
                       'FORECAST_PAYMENT', 'RISK_PAYMENT', 'QUIZ_PAYMENT',  
                       'quiz_grade', 'finished', 'consent', 'inactive', 'wait_page_arrival', 
-                      'survey_1_click', 'is_dropout']
+                      'survey_1_click', 'is_dropout', 'current_round']
 SESSION_FIELDS = ['prolific_completion_url', 'arrived_ids']
 
 # ISO-639 code

@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>oTree Session Creator</title>
+<title>oPAL Session Creator</title>
+<link rel="shortcut icon" href="/static/favicon.ico">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
 
@@ -67,31 +68,39 @@ body {
 .layout {
   display: grid;
   grid-template-columns: 310px 1fr;
-  grid-template-areas:
-      "config monitor"
-      "config log";
-
-  grid-template-rows: 5fr 1fr;
-  height: calc(100vh - 48px);   /* viewport minus topbar */
+  grid-template-areas: "config right";
+  grid-template-rows: 1fr;
+  height: calc(100vh - 48px);
   overflow: hidden;
 }
 
 .layout div.config {
     grid-area: config;
-    overflow-y: auto;     /* left panel scrolls vertically */
+    overflow-y: auto;
     overflow-x: hidden;
 }
 
-.layout div.monitor {
-    grid-area: monitor;
+.layout div.right-col {
+    grid-area: right;
     display: flex;
     flex-direction: column;
-    overflow: hidden;     /* monitor manages its own scroll internally */
+    overflow: hidden;
+    min-height: 0;
+}
+
+.layout div.monitor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     min-height: 0;
 }
 
 .layout div.log {
-    grid-area: log;
+    flex-shrink: 0;
+    height: 180px;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
 }
 
@@ -217,7 +226,7 @@ select:disabled { opacity: .5; cursor: not-allowed; }
 .adv-trigger-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 
 /* ── LOG (bottom of middle) ── */
-.log-area { background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0; height: 200px; display: flex; flex-direction: column; }
+.log-area { background: var(--surface); border-top: 1px solid var(--border); flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .log-header { padding: 8px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .log-title { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; color: var(--text-dim); text-transform: uppercase; }
 .log-clear { background: none; border: none; color: var(--text-dim); font-family: var(--mono); font-size: 12px; cursor: pointer; transition: color .15s; }
@@ -359,8 +368,8 @@ select:disabled { opacity: .5; cursor: not-allowed; }
 <!-- TOP BAR -->
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:10px">
-    <span class="logo">oTree<span>/session-creator</span></span>
-    <span class="badge">v5.11</span>
+    <span class="logo">oPAL<span>/session-creator</span></span>
+    <span class="badge">v0.9.0</span>
   </div>
   <div class="topbar-right">
     <span class="cfg-path" id="cfgPath">config: loading…</span>
@@ -505,6 +514,7 @@ select:disabled { opacity: .5; cursor: not-allowed; }
   <!-- ══════════════════════════════════════════
        RIGHT: SESSION MONITOR
   ══════════════════════════════════════════ -->
+  <div class="right-col">
   <div class="monitor">
 
     <div class="monitor-header">
@@ -540,6 +550,14 @@ select:disabled { opacity: .5; cursor: not-allowed; }
               title="Copy Prolific bonus data to clipboard">
         📋 Copy Bonus Data
       </button>
+      <button class="copy-bonus-btn" id="downloadWideBtn" onclick="downloadExport('wide')"
+              title="Download ExportSessionWide CSV">
+        ⬇ Session Wide
+      </button>
+      <button class="copy-bonus-btn" id="downloadOrderBtn" onclick="downloadExport('orders')"
+              title="Download market order data (custom export)">
+        ⬇ Order Data
+      </button>
     </div>
   </div><!-- /right panel -->
 
@@ -552,6 +570,7 @@ select:disabled { opacity: .5; cursor: not-allowed; }
           <div id="log"></div>
         </div>
   </div>
+  </div><!-- /right-col -->
 </div><!-- /layout -->
 
 
@@ -566,61 +585,72 @@ select:disabled { opacity: .5; cursor: not-allowed; }
         <button class="adv-sheet-close" onclick="toggleAdv()" title="Close (Esc)">✕</button>
       </div>
       <div class="adv-form" id="advForm">
-              <div class="adv-grid">
+        <div class="adv-grid">
 
-        <div class="adv-sec" id="advSecLanding">Landing / Consent (whole_exp)</div>
-        <div class="field" id="advInstructionId"><label class="fl">instruction_id (YouTube ID)</label><input type="text" id="instructionId"></div>
-        <div class="field" id="advWaitingGroupSize"><label class="fl">waiting_group_size</label><input type="number" id="waitingGroupSize"></div>
-        <div class="field" id="advLandingWaitTimeout"><label class="fl">landing_wait_timeout (s)</label><input type="number" id="landingWaitTimeout"></div>
-        <div class="adv-sec">Market / Timing (seconds)</div>
-        <div class="field"><label class="fl">market_time</label><input type="number" id="marketTime"></div>
-        <div class="field"><label class="fl">fixate_time</label><input type="number" id="fixateTime"></div>
-        <div class="field"><label class="fl">forecast_time</label><input type="number" id="forecastTime"></div>
-        <div class="field"><label class="fl">summary_time</label><input type="number" id="summaryTime"></div>
-        <div class="field"><label class="fl">practice_time</label><input type="number" id="practiceTime"></div>
-        <div class="field"><label class="fl">practice_end_time</label><input type="number" id="practiceEndTime"></div>
-        <div class="field"><label class="fl">final_results_time</label><input type="number" id="finalResultsTime"></div>
-        <div class="field"><label class="fl">risk_elic_time</label><input type="number" id="riskElicTime"></div>
+          <div class="adv-sec">Market / Timing (seconds)</div>
+          <div class="field"><label class="fl">market_time</label><input type="number" id="marketTime"></div>
+          <div class="field"><label class="fl">forecast_time</label><input type="number" id="forecastTime"></div>
+          <div class="field"><label class="fl">summary_time</label><input type="number" id="summaryTime"></div>
+          <div class="field"><label class="fl">practice_time</label><input type="number" id="practiceTime"></div>
+          <div class="field"><label class="fl">practice_end_time</label><input type="number" id="practiceEndTime"></div>
+          <div class="field"><label class="fl">final_results_time</label><input type="number" id="finalResultsTime"></div>
+          <div class="field"><label class="fl">risk_elic_time</label><input type="number" id="riskElicTime"></div>
 
-        <div class="adv-sec">Dividends &amp; Market</div>
-        <div class="field"><label class="fl">interest_rate</label><input type="number" id="interestRate" step="0.01"></div>
-        <div class="field"><label class="fl">initial_price</label><input type="number" id="initialPrice" step="0.5"></div>
-        <div class="field"><label class="fl">endow_worth</label><input type="number" id="endowWorth" step="1"></div>
-        <div class="field"><label class="fl">float_ratio_cap</label><input type="number" id="floatRatioCap" step="0.1" min="0" max="1"></div>
-        <div class="field full"><label class="fl">div_amount (space-separated)</label><input type="text" id="divAmount"></div>
-        <div class="field full"><label class="fl">div_dist (space-separated probabilities)</label><input type="text" id="divDist"></div>
+          <div class="adv-sec">Survey / Consent Timing (seconds)</div>
+          <div class="field"><label class="fl">consent_time</label><input type="number" id="consentTime"></div>
+          <div class="field"><label class="fl">instruction_time</label><input type="number" id="instructionTime"></div>
+          <div class="field"><label class="fl">quiz_instr_time</label><input type="number" id="quizInstrTime"></div>
+          <div class="field"><label class="fl">quiz_time</label><input type="number" id="quizTime"></div>
+          <div class="field"><label class="fl">pre_surv_intro_time</label><input type="number" id="preSurvIntroTime"></div>
+          <div class="field"><label class="fl">demographics_time</label><input type="number" id="demographicsTime"></div>
+          <div class="field"><label class="fl">risk_pref_time</label><input type="number" id="riskPrefTime"></div>
+          <div class="field"><label class="fl">pre_surv_conclude_time</label><input type="number" id="preSurvConcludeTime"></div>
 
-        <div class="adv-sec">Margin</div>
-        <div class="field"><label class="fl">margin_ratio</label><input type="number" id="marginRatio" step="0.05"></div>
-        <div class="field"><label class="fl">margin_premium</label><input type="number" id="marginPremium" step="0.01"></div>
-        <div class="field"><label class="fl">margin_target_ratio</label><input type="number" id="marginTargetRatio" step="0.05"></div>
-        <div class="field"><label class="fl">auto_trans_delay</label><input type="number" id="autoTransDelay"></div>
+          <div class="adv-sec">Dividends &amp; Market</div>
+          <div class="field"><label class="fl">interest_rate</label><input type="number" id="interestRate" step="0.01"></div>
+          <div class="field"><label class="fl">initial_price</label><input type="number" id="initialPrice" step="0.5"></div>
+          <div class="field"><label class="fl">endow_worth</label><input type="number" id="endowWorth" step="1"></div>
+          <div class="field"><label class="fl">float_ratio_cap</label><input type="number" id="floatRatioCap" step="0.1" min="0" max="1"></div>
+          <div class="field full"><label class="fl">div_amount (space-separated)</label><input type="text" id="divAmount"></div>
+          <div class="field full"><label class="fl">div_dist (space-separated probabilities)</label><input type="text" id="divDist"></div>
+          <div class="field full"><label class="fl">endow_stock (space-separated)</label><input type="text" id="endowStock" placeholder="4 4 4"></div>
 
-        <div class="adv-sec">Forecasting</div>
-        <div class="field"><label class="fl">forecast_thold</label><input type="number" id="forecastThold" step="0.5"></div>
-        <div class="field"><label class="fl">forecast_reward</label><input type="number" id="forecastReward" step="0.5"></div>
-        <div class="field"><label class="fl">forecast_range</label><input type="number" id="forecastRange"></div>
-        <div class="field full"><label class="fl">forecast_periods (comma-separated)</label><input type="text" id="forecastPeriods"></div>
+          <div class="adv-sec">Margin</div>
+          <div class="field"><label class="fl">margin_ratio</label><input type="number" id="marginRatio" step="0.05"></div>
+          <div class="field"><label class="fl">margin_target_ratio</label><input type="number" id="marginTargetRatio" step="0.05"></div>
+          <div class="field"><label class="fl">auto_trans_delay</label><input type="number" id="autoTransDelay"></div>
+          <div class="field"><div class="cb-row" onclick="toggleCb('allowShort')"><input type="checkbox" id="allowShort"><span class="cb-label">allow_short</span></div></div>
+          <div class="field"><div class="cb-row" onclick="toggleCb('allowBorrow')"><input type="checkbox" id="allowBorrow"><span class="cb-label">allow_borrow</span></div></div>
 
-        <div class="adv-sec">Rewards &amp; Bonuses</div>
-        <div class="field"><label class="fl">quiz_reward ($)</label><input type="number" id="quizReward" step="0.05"></div>
-        <div class="field"><label class="fl">bonus_cap (blank = None)</label><input type="text" id="bonusCap" placeholder="None"></div>
+          <div class="adv-sec">Forecasting</div>
+          <div class="field"><label class="fl">forecast_thold</label><input type="number" id="forecastThold" step="0.5"></div>
+          <div class="field"><label class="fl">forecast_reward</label><input type="number" id="forecastReward" step="0.5"></div>
+          <div class="field full"><label class="fl">forecast_periods (comma-separated)</label><input type="text" id="forecastPeriods"></div>
 
-        <div class="adv-sec">Flags</div>
-        <div class="field"><div class="cb-row" onclick="toggleCb('isProlific')"><input type="checkbox" id="isProlific"><span class="cb-label">is_prolific</span></div></div>
-        <div class="field"><div class="cb-row" onclick="toggleCb('isMturk')"><input type="checkbox" id="isMturk"><span class="cb-label">is_mturk</span></div></div>
-        <div class="field"><div class="cb-row" onclick="toggleCb('isPilot')"><input type="checkbox" id="isPilot"><span class="cb-label">is_pilot</span></div></div>
-        <div class="field"><div class="cb-row" onclick="toggleCb('randomHist')"><input type="checkbox" id="randomHist"><span class="cb-label">random_hist</span></div></div>
+          <div class="adv-sec">Rewards &amp; Bonuses</div>
+          <div class="field"><label class="fl">quiz_reward ($)</label><input type="number" id="quizReward" step="0.05"></div>
+          <div class="field"><label class="fl">bonus_cap (blank = None)</label><input type="text" id="bonusCap" placeholder="None"></div>
 
-        <div class="adv-sec">Expected Time</div>
-        <div class="field"><label class="fl">expected_time_pilot (hrs)</label><input type="number" id="expectedTimePilot" step="0.5"></div>
-        <div class="field"><label class="fl">expected_time_live (hrs)</label><input type="number" id="expectedTimeLive" step="0.5"></div>
+          <div class="adv-sec">UI</div>
+          <div class="field full">
+            <label class="fl">action_include</label>
+            <select id="actionInclude" style="width:100%;background:var(--input-bg);color:var(--text);border:1px solid var(--border);border-radius:var(--r);padding:5px 8px;font-family:var(--mono);font-size:13px;">
+              <option value="insert_order_form.html">insert_order_form.html</option>
+              <option value="insert_order_grid.html">insert_order_grid.html</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label class="fl">instruction_page</label>
+            <select id="instructionPage" style="width:100%;background:var(--input-bg);color:var(--text);border:1px solid var(--border);border-radius:var(--r);padding:5px 8px;font-family:var(--mono);font-size:13px;">
+              <option value="slides">slides</option>
+              <option value="video">video</option>
+            </select>
+          </div>
 
-      </div>
-    </div>
-        <div class="adv-sec">Stock Distribution</div>
-        <div class="field full"><label class="fl">endow_stock (space-separated)</label><input type="text" id="endowStock" placeholder="4 4 4"></div>
+          <div class="adv-sec">Flags</div>
+          <div class="field"><div class="cb-row" onclick="toggleCb('randomHist')"><input type="checkbox" id="randomHist"><span class="cb-label">random_hist</span></div></div>
 
+        </div>
       </div>
     </div>
   </div><!-- /adv-overlay -->
@@ -628,22 +658,23 @@ select:disabled { opacity: .5; cursor: not-allowed; }
 
 <script>
 // ── FIELD REGISTRY ─────────────────────────────────────────────────────────
-const CHECKBOXES = new Set(['showNext','isProlific','isMturk','isPilot','randomHist']);
+const CHECKBOXES = new Set(['showNext','allowShort','allowBorrow','randomHist']);
 
 const ALL_FIELDS = [
   'remoteUrl','localUrl','restKey','secretKey','adminPassword',
   'sessionConfigName','roomName','numSubjects',
   'participationFee','rwcpp','showNext','endowStock',
   'screenFee','screenTimes','compUrlExp','compUrlPre',
-  'instructionId','waitingGroupSize','landingWaitTimeout',
-  'marketTime','fixateTime','forecastTime','summaryTime','practiceTime',
+  'marketTime','forecastTime','summaryTime','practiceTime',
   'practiceEndTime','finalResultsTime','riskElicTime',
+  'consentTime','instructionTime','quizInstrTime','quizTime',
+  'preSurvIntroTime','demographicsTime','riskPrefTime','preSurvConcludeTime',
   'interestRate','initialPrice','divAmount','divDist','endowWorth','floatRatioCap',
-  'marginRatio','marginPremium','marginTargetRatio','autoTransDelay',
-  'forecastThold','forecastReward','forecastRange','forecastPeriods',
+  'marginRatio','marginTargetRatio','autoTransDelay',
+  'allowShort','allowBorrow',
+  'forecastThold','forecastReward','forecastPeriods',
   'quizReward','bonusCap',
-  'isProlific','isMturk','isPilot','randomHist',
-  'expectedTimePilot','expectedTimeLive',
+  'randomHist','actionInclude','instructionPage',
 ];
 
 // ── MONITOR STATE ──────────────────────────────────────────────────────────
@@ -660,7 +691,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   bindDirty();
   loadCfgPath();
   await Promise.all([fetchConfigs(false), fetchRooms(false)]);
-  log('info', 'oTree Session Creator ready.');
+  log('info', 'oPAL Session Creator ready.');
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && advOpen) toggleAdv(); });
 });
 
@@ -832,13 +863,6 @@ function onConfigChange() {
   const isScreen = cfg === 'prescreen';
   document.getElementById('expParams').classList.toggle('hidden', isScreen);
   document.getElementById('screenParams').classList.toggle('hidden', !isScreen);
-  const landingIds = ['advSecLanding','advInstructionId','advWaitingGroupSize',
-                      'advLandingWaitTimeout','advConsentPgCnt','advSurvey1PgCnt',
-                      'advConsentLink','advSurvey1Link'];
-  landingIds.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('hidden', cfg !== 'whole_exp');
-  });
 }
 
 // ── SERVER MODE ────────────────────────────────────────────────────────────
@@ -922,27 +946,26 @@ async function doCreateExp(configName) {
   const modFields = {
     participation_fee: gn('participationFee'), real_world_currency_per_point: gn('rwcpp'),
     show_next: gb('showNext'), endow_stock: gv('endowStock'), random_hist: gb('randomHist'),
-    market_time: gn('marketTime'), fixate_time: gn('fixateTime'), forecast_time: gn('forecastTime'),
+    market_time: gn('marketTime'), forecast_time: gn('forecastTime'),
     summary_time: gn('summaryTime'), practice_time: gn('practiceTime'), practice_end_time: gn('practiceEndTime'),
     final_results_time: gn('finalResultsTime'), risk_elic_time: gn('riskElicTime'),
+    consent_time: gn('consentTime'), instruction_time: gn('instructionTime'),
+    quiz_instr_time: gn('quizInstrTime'), quiz_time: gn('quizTime'),
+    pre_surv_intro_time: gn('preSurvIntroTime'), demographics_time: gn('demographicsTime'),
+    risk_pref_time: gn('riskPrefTime'), pre_surv_conclude_time: gn('preSurvConcludeTime'),
     interest_rate: gn('interestRate'), initial_price: gn('initialPrice'),
     div_amount: gv('divAmount'), div_dist: gv('divDist'),
     endow_worth: gn('endowWorth'), float_ratio_cap: gn('floatRatioCap'),
-    margin_ratio: gn('marginRatio'), margin_premium: gn('marginPremium'),
+    margin_ratio: gn('marginRatio'),
     margin_target_ratio: gn('marginTargetRatio'), auto_trans_delay: gn('autoTransDelay'),
+    allow_short: gb('allowShort'), allow_borrow: gb('allowBorrow'),
     forecast_thold: gn('forecastThold'), forecast_reward: gn('forecastReward'),
-    forecast_range: gn('forecastRange'), forecast_periods: gv('forecastPeriods'),
-    quiz_reward: gn('quizReward'), is_prolific: gb('isProlific'), is_mturk: gb('isMturk'),
-    is_pilot: gb('isPilot'), expected_time_pilot: gn('expectedTimePilot'), expected_time_live: gn('expectedTimeLive'),
+    forecast_periods: gv('forecastPeriods'),
+    quiz_reward: gn('quizReward'), random_hist: gb('randomHist'),
+    action_include: gv('actionInclude'), instruction_page: gv('instructionPage'),
   };
   const bonusCap = gv('bonusCap').trim();
   if (bonusCap && bonusCap.toLowerCase() !== 'none') modFields.bonus_cap = parseFloat(bonusCap);
-  if (configName === 'whole_exp') {
-    modFields.consent_link = gv('consentLink'); modFields.consent_pg_cnt = gn('consentPgCnt');
-    modFields.survey_1_link = gv('survey1Link'); modFields.survey_1_pg_cnt = gn('survey1PgCnt');
-    modFields.instruction_id = gv('instructionId');
-    modFields.waiting_group_size = gn('waitingGroupSize'); modFields.landing_wait_timeout = gn('landingWaitTimeout');
-  }
 
   log('info', `Creating "${configName}" session: N=${N}, room=${roomName||'(none)'}`);
   const payload = {baseUrl, restKey, session_config_name: configName, num_participants: N, modified_session_config_fields: modFields};
@@ -1011,8 +1034,15 @@ function showResult(code, baseUrl) {
   const monitorUrl = `${baseUrl}/SessionMonitor/${code}`;
   const startUrl   = `${baseUrl}/SessionStartLinks/${code}`;
   const dataUrl    = `${baseUrl}/ExportSessionWide/${code}`;
+  const roomName   = gv('roomName');
+  const roomUrl    = roomName ? `${baseUrl}/room/${roomName}` : null;
+  const prolificUrl = roomUrl
+    ? `${roomUrl}?PROLIFIC_PID={{%PROLIFIC_PID%}}`
+    : null;
   log('ok', `Monitor: ${monitorUrl}`);
   log('ok', `Start:   ${startUrl}`);
+  if (roomUrl)    log('ok', `Room URL: ${roomUrl}`);
+  if (prolificUrl) log('ok', `Prolific URL: ${prolificUrl}`);
   const logEl = document.getElementById('log');
   const card = document.createElement('div');
   card.className = 'result-card';
@@ -1020,6 +1050,8 @@ function showResult(code, baseUrl) {
     <span class="rc-label">Session code</span> <strong>${code}</strong><br>
     <span class="rc-label">Monitor</span> <a href="${monitorUrl}" target="_blank">${monitorUrl}</a><br>
     <span class="rc-label">Start links</span> <a href="${startUrl}" target="_blank">${startUrl}</a><br>
+    ${roomUrl ? `<span class="rc-label">Room URL</span> <span style="font-family:var(--mono);font-size:12px;user-select:all">${roomUrl}</span><br>` : ''}
+    ${prolificUrl ? `<span class="rc-label">Prolific URL</span> <span style="font-family:var(--mono);font-size:12px;user-select:all">${prolificUrl}</span><br>` : ''}
     <span class="rc-label">Data export</span> <a href="${dataUrl}" target="_blank">${dataUrl}</a>
   `;
   logEl.appendChild(card);
@@ -1027,6 +1059,45 @@ function showResult(code, baseUrl) {
 }
 
 // ── SESSION MONITOR ────────────────────────────────────────────────────────
+
+async function downloadExport(type) {
+  const code = document.getElementById('monitorCode').value.trim();
+  if (!code) { log('warn', 'Enter a session code first'); return; }
+  const endpoint = type === 'wide' ? '/proxy/download_wide' : '/proxy/download_orders';
+  const label = type === 'wide' ? 'Session Wide' : 'Order Data';
+  log('info', `Downloading ${label}...`);
+  try {
+    const r = await fetch(endpoint, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        baseUrl: getBaseUrl(),
+        sessionCode: code,
+        secretKey: gv('secretKey'),
+        adminPassword: gv('adminPassword'),
+      }),
+    });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      log('err', `Download failed: ${d.text || r.statusText}`);
+      return;
+    }
+    const blob = await r.blob();
+    const disposition = r.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="([^"]+)"/);
+    const filename = match ? match[1] : `${type}_export.csv`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    log('info', `Downloaded ${filename}`);
+  } catch(e) {
+    log('err', `Download error: ${e.message}`);
+  }
+}
+
 
 async function fetchParticipants() {
   const code = document.getElementById('monitorCode').value.trim();
@@ -1114,14 +1185,17 @@ function renderTable(participants, richData) {
     else                 { status = 'active';   badgeClass = 'active'; }
 
     // Location cell — rich if we have it
-    const appName  = p.current_app  || p.app  || '';
-    const pageName = p.current_page || p.page || '';
-    const roundNum = p.round_number || p.round || '';
+    const appName    = p.current_app   || p.app  || '';
+    const pageName   = p.current_page  || p.page || '';
+    const roundNum   = p.current_round || '';
     let location;
     if (appName) {
+      const roundBadge = roundNum
+        ? ` <span style="background:var(--border);color:var(--text);font-size:10px;padding:1px 5px;border-radius:3px;font-weight:600">r${escHtml(String(roundNum))}</span>`
+        : '';
       location = `<span class="app-name">${escHtml(appName)}</span>`
                + (pageName ? ` › ${escHtml(pageName)}` : '')
-               + (roundNum ? ` <span style="color:var(--text-dim)">r${escHtml(String(roundNum))}</span>` : '');
+               + roundBadge;
     } else {
       location = richData
         ? '<span style="color:var(--text-dim)">waiting to start</span>'

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-oTree Session Creator — Launcher
+oPAL Session Creator — Launcher
 Double-click this file (or run: python launcher.py) to start the app.
 Opens automatically in your default browser.
 """

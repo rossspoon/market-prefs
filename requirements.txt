@@ -1,7 +1,7 @@
 # oTree-may-overwrite-this-file
 # IF YOU MODIFY THIS FILE, remove this comment.
 # otherwise, oTree will automatically overwrite it.
-otree
+otree==5.10.2
 psycopg2>=2.8.4
 pandas
 numpy

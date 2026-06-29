@@ -224,8 +224,13 @@ def template_vars_commom(player: Player):
 
 
 def is_displayed_common(player: Player):
-    return player.consent_given and not player.quiz_failed
+    is_active =  not player.participant.vars.get('is_dropout', False)
+    return is_active and player.consent_given and not player.quiz_failed
 
+
+def js_vars_all(player: Player):
+    ret = scf.ensure_config(player)
+    return ret
 
 # ── Pages ──────────────────────────────────────────────────────────────────
 
@@ -265,7 +270,8 @@ class NoConsent(Page):
 
     @staticmethod
     def is_displayed(player: Player):
-        return not player.consent_given
+        return not is_displayed_common(player)
+
 
 
 class Instructions(Page):

@@ -403,7 +403,7 @@ def get_dec_tree(ps:BaseParamSpace, payouts:dict):
 #################################
 ##       Main Procedure        ##
 #################################
-if __name__ == '__main__':
+if __name__ == '__main__2':
     
     import pandas as pd
     import json
@@ -489,7 +489,7 @@ if __name__ == '__main__':
 
 ## Test Harness.  Use this to test the calculation without the multiprocessing 
 ## getting in the way.
-if __name__ == '__main__2':
+if __name__ == '__main__':
 
     bps = BaseParamSpace()
     #bps.MU = np.arange(0, 10.1, 0.1)

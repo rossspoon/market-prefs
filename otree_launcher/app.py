@@ -45,9 +45,8 @@ DEFAULT_CONFIG = {
 
     # ── Core params ─────────────────────────────────────────────
     "participationFee": 12.00,
-    "rwcpp":            0.005,
+    "rwcpp":            0.01,
     "showNext":         False,
-    "endowStock":       "4 4 4",
 
     # Prescreening-only
     "screenFee":   0.50,
@@ -57,14 +56,8 @@ DEFAULT_CONFIG = {
     "compUrlExp": "https://app.prolific.com/submissions/complete?cc=CT8QWJ3A",
     "compUrlPre": "https://app.prolific.com/submissions/complete?cc=C1BNU59M",
 
-    # ── Landing / consent (whole_exp) ───────────────────────────
-    "instructionId":      "232inD_HChc",
-    "waitingGroupSize":   25,
-    "landingWaitTimeout": 1200,
-
     # ── Advanced: market timing (seconds) ───────────────────────
     "marketTime":       20,
-    "fixateTime":       2,
     "forecastTime":     30,
     "summaryTime":      10,
     "practiceTime":     15,
@@ -72,39 +65,49 @@ DEFAULT_CONFIG = {
     "finalResultsTime": 75,
     "riskElicTime":     5,
 
+    # ── Advanced: survey / consent timing (seconds) ─────────────
+    "consentTime":         900,
+    "instructionTime":     600,
+    "quizInstrTime":        60,
+    "quizTime":            300,
+    "preSurvIntroTime":     30,
+    "demographicsTime":    180,
+    "riskPrefTime":        180,
+    "preSurvConcludeTime": 1800,
+
     # ── Advanced: dividends & market ────────────────────────────
     "interestRate":  0.05,
     "initialPrice":  14.0,
     "divAmount":     "0.40 1.00",
     "divDist":       ".5 .5",
+    "endowStock":    "4 4 4",
     "endowWorth":    156.0,
     "floatRatioCap": 1.0,
 
     # ── Advanced: margin ────────────────────────────────────────
     "marginRatio":       0.5,
-    "marginPremium":     0.1,
     "marginTargetRatio": 0.6,
     "autoTransDelay":    0,
+    "allowShort":        True,
+    "allowBorrow":       True,
 
     # ── Advanced: forecasting ───────────────────────────────────
     "forecastThold":   2.5,
     "forecastReward":  2.5,
-    "forecastRange":   50,
     "forecastPeriods": "0,2,5,10",
 
     # ── Advanced: rewards ───────────────────────────────────────
     "quizReward": 0.25,
     "bonusCap":   "",
 
-    # ── Advanced: flags ─────────────────────────────────────────
-    "isProlific": False,
-    "isMturk":    False,
-    "isPilot":    False,
-    "randomHist": False,
+    # ── Advanced: UI ────────────────────────────────────────────
+    "actionInclude":   "insert_order_form.html",
+    "instructionPage": "slides",
 
-    # ── Advanced: expected time ─────────────────────────────────
-    "expectedTimePilot": 1,
-    "expectedTimeLive":  2,
+    # ── Advanced: flags ─────────────────────────────────────────
+    "randomHist":   False,
+
+    # ── Advanced: session state ─────────────────────────────────
 }
 
 
@@ -272,6 +275,7 @@ def proxy_session_data():
             "current_app":   "",
             "current_page":  "",
             "round_number":  "",
+            "current_round": "",
         })
     rows.sort(key=lambda r: r["id_in_session"] or 0)
     return jsonify({"ok": True, "participants": rows, "source": "rest"})
@@ -314,25 +318,13 @@ def proxy_session_data_rich():
     text = r.content.decode("utf-8-sig")
     reader = csv.DictReader(io.StringIO(text))
 
-    # The wide export has one row per participant (per round for multi-round
-    # apps it repeats — we only want the latest row per participant code).
-    # Key fields from oTree's wide export:
-    #   participant.code, participant.label, participant._current_app_name,
-    #   participant._current_page_name, participant._round_number,
-    #   participant.finished (if defined), participant.is_dropout (if defined)
     by_code = {}
     for row in reader:
         code = row.get("participant.code", "")
         if not code:
             continue
-        # Keep the row with the highest round number (most recent state)
-        existing = by_code.get(code)
-        try:
-            this_round = int(row.get("participant._round_number", 0) or 0)
-        except ValueError:
-            this_round = 0
-        if existing is None or this_round >= existing.get("_round_int", 0):
-            by_code[code] = {**row, "_round_int": this_round}
+        # Deduplicate by code — keep last row seen (wide export may repeat per round)
+        by_code[code] = row
 
     rows = []
     for code, row in by_code.items():
@@ -361,7 +353,8 @@ def proxy_session_data_rich():
             "id_in_session": id_in_session,
             "current_app":   row.get("participant._current_app_name", "") or "",
             "current_page":  row.get("participant._current_page_name", "") or "",
-            "round_number":  row.get("participant._round_number", "") or "",
+            "round_number":  "",
+            "current_round": row.get("participant.current_round", "") or "",
             "finished":      finished,
             "is_dropout":    is_dropout,
             "payoff":        payoff,
@@ -371,7 +364,109 @@ def proxy_session_data_rich():
     return jsonify({"ok": True, "participants": rows, "source": "export"})
 
 
+# ── Download ExportSessionWide CSV ───────────────────────────────────────────
+
+@app.route("/proxy/download_wide", methods=["POST"])
+def proxy_download_wide():
+    """Proxy the ExportSessionWide CSV for direct download."""
+    body         = request.get_json()
+    base_url     = body.get("baseUrl", "").rstrip("/")
+    session_code = body.get("sessionCode", "")
+    secret_key   = body.get("secretKey", "")
+    admin_password = body.get("adminPassword", "")
+    token = compute_export_hash(secret_key, admin_password)
+    url = f"{base_url}/ExportSessionWide/{session_code}/"
+    try:
+        r = requests.get(url, params={"token": token}, timeout=30)
+        if r.status_code != 200:
+            return jsonify({"ok": False, "text": f"oTree returned {r.status_code}"}), 502
+        import datetime
+        date = datetime.date.today().isoformat()
+        filename = f"session_wide_{session_code}_{date}.csv"
+        return app.response_class(
+            response=r.content,
+            status=200,
+            mimetype="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except Exception as e:
+        return jsonify({"ok": False, "text": str(e)}), 500
+
+
+# ── Download market custom export (order data) ────────────────────────────────
+
+@app.route("/proxy/download_orders", methods=["POST"])
+def proxy_download_orders():
+    """
+    Fetch the market app custom export via oTree's WebSocket export channel.
+    oTree serves custom exports through a WebSocket at /export — there is no
+    plain HTTP endpoint for this. We connect as a WebSocket client, send the
+    export request, and stream the response back as a CSV download.
+    """
+    import websocket, json as _json, datetime
+
+    body           = request.get_json()
+    base_url       = body.get("baseUrl", "").rstrip("/")
+    admin_password = body.get("adminPassword", "")
+    session_code   = body.get("sessionCode", "")
+
+    date = datetime.date.today().isoformat()
+    filename = f"order_data_{session_code}_{date}.csv"
+
+    # Convert http(s) to ws(s)
+    ws_url = base_url.replace("https://", "wss://").replace("http://", "ws://") + "/export"
+
+    # Build cookie header by logging in via HTTP first
+    http_session = requests.Session()
+    try:
+        login_url = f"{base_url}/accounts/login/"
+        login_page = http_session.get(login_url, timeout=10)
+        csrf = ""
+        for line in login_page.text.splitlines():
+            if "csrfmiddlewaretoken" in line:
+                csrf = line.split('value="')[1].split('"')[0]
+                break
+        http_session.post(login_url, data={
+            "username": "admin",
+            "password": admin_password,
+            "csrfmiddlewaretoken": csrf,
+        }, headers={"Referer": login_url}, timeout=10)
+        # Extract session cookie for WebSocket handshake
+        cookie_str = "; ".join(f"{k}={v}" for k, v in http_session.cookies.items())
+    except Exception as e:
+        return jsonify({"ok": False, "text": f"Login failed: {e}"}), 500
+
+    # Connect via WebSocket and request the custom export
+    result = {}
+    try:
+        ws = websocket.create_connection(
+            ws_url,
+            header=[f"Cookie: {cookie_str}"],
+            timeout=30,
+        )
+        ws.send(_json.dumps({
+            "app_name": "market",
+            "is_custom": True,
+            "link_id": "order_export",
+        }))
+        msg = _json.loads(ws.recv())
+        ws.close()
+        if "error" in msg:
+            return jsonify({"ok": False, "text": msg["error"]}), 502
+        result["data"] = msg.get("data", "")
+    except Exception as e:
+        return jsonify({"ok": False, "text": f"WebSocket error: {e}"}), 500
+
+    return app.response_class(
+        response=result["data"].encode("utf-8"),
+        status=200,
+        mimetype="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ── Drop participant ──────────────────────────────────────────────────────────
+
 
 @app.route("/proxy/drop_participant", methods=["POST"])
 def proxy_drop_participant():
