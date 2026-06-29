@@ -481,7 +481,7 @@ select:disabled { opacity: .5; cursor: not-allowed; }
         </div>
         <div class="field">
           <label class="fl">Available times (space-separated)</label>
-          <input type="text" id="screenTimes" placeholder="09:00 10:00 11:00">
+          <input type="text" id="screenTimes" placeholder="YYYYMMDD24mm">
         </div>
       </div>
     </div>
@@ -1037,7 +1037,7 @@ function showResult(code, baseUrl) {
   const roomName   = gv('roomName');
   const roomUrl    = roomName ? `${baseUrl}/room/${roomName}` : null;
   const prolificUrl = roomUrl
-    ? `${roomUrl}?PROLIFIC_PID={{%PROLIFIC_PID%}}`
+    ? `${roomUrl}?participant_label={{%PROLIFIC_PID%}}`
     : null;
   log('ok', `Monitor: ${monitorUrl}`);
   log('ok', `Start:   ${startUrl}`);
