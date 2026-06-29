@@ -298,7 +298,14 @@ the in-app Admin interface (`https://<app-name>.herokuapp.com/admin`) — see th
 oTree documentation for installation and the current feature set, since the launcher
 is updated independently of this experiment.
 
+
 ---
+
+## 7. Generate DOSE Desicion Trees
+To regenerate the DOSE decision trees:
+`python Risk_Elicitation_Task/all_decision_trees.py`
+The script takes as input the `all_dec_trees.txt`.  Modify that to change the hi-lo payouts for each round.
+After that, move the `decision_trees_and_gambles.json` file to the `common` directory so that otree can pick it up.
 
 ## Quick start checklist
 
