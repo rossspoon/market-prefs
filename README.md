@@ -7,6 +7,40 @@ session rooms.
 
 ---
 
+## Initial setup (local)
+
+Use **Python 3.10 or greater** — this is required for Heroku compatibility. Check with
+`python --version` (you may need `python3` / `python3.10` on some systems).
+
+```bash
+# Clone and enter the project (skip the clone if you already have it)
+git clone <repo-url>
+cd <local-checkout-directory>
+
+# Create and activate a virtual environment
+python -m venv venv
+. venv/bin/activate           # Windows: venv\Scripts\activate
+
+# Upgrade pip *inside* the venv, then install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Run the local development server
+otree devserver
+```
+
+`otree devserver` serves the site at <http://localhost:8000>. Leave `OTREE_PRODUCTION`
+**unset** locally so you keep full debug error pages (see section 1). Stop the server
+with `Ctrl-C`, and leave the venv with `deactivate`.
+
+> **Note on ordering:** activate the venv *before* `pip install --upgrade pip` —
+> otherwise you upgrade your system pip instead of the venv's.
+
+To deploy this checkout to Heroku later, also install the **Heroku CLI** and run
+`heroku login` (used throughout sections 3–4).
+
+---
+
 ## 1. Environment variables
 
 These are read at startup, so set them **before** launching the server (locally) or
