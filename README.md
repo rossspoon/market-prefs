@@ -48,8 +48,8 @@ These are read at startup, so set them **before** launching the server (locally)
 
 | Variable | Purpose | Example |
 |---|---|---|
-| `SSE_NUM_PRACTICE_ROUNDS` | Number of practice (unpaid, throwaway) rounds | `3` | (optional - defaults to 3)
-| `SSE_NUM_ROUNDS` | Number of main (recorded) rounds | `30` | (optional - defaults to 30)
+| `SSE_NUM_PRACTICE_ROUNDS` | Number of practice (unpaid, throwaway) rounds | `3`  (optional - defaults to 3) |
+| `SSE_NUM_ROUNDS` | Number of main (recorded) rounds | `30` (optional - defaults to 30) |
 | `OTREE_ADMIN_PASSWORD` | Password for the `/admin` interface | `change-me` |
 | `OTREE_AUTH_LEVEL` | Locks down the site | `STUDY` |
 | `OTREE_PRODUCTION` | Turns **off** debug mode | `1` |
