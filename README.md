@@ -48,8 +48,8 @@ These are read at startup, so set them **before** launching the server (locally)
 
 | Variable | Purpose | Example |
 |---|---|---|
-| `SSE_NUM_PRACTICE_ROUNDS` | Number of practice (unpaid, throwaway) rounds | `2` |
-| `SSE_NUM_ROUNDS` | Number of main (recorded) rounds | `20` |
+| `SSE_NUM_PRACTICE_ROUNDS` | Number of practice (unpaid, throwaway) rounds | `3` | (optional - defaults to 3)
+| `SSE_NUM_ROUNDS` | Number of main (recorded) rounds | `30` | (optional - defaults to 30)
 | `OTREE_ADMIN_PASSWORD` | Password for the `/admin` interface | `change-me` |
 | `OTREE_AUTH_LEVEL` | Locks down the site | `STUDY` |
 | `OTREE_PRODUCTION` | Turns **off** debug mode | `1` |
@@ -305,7 +305,7 @@ is updated independently of this experiment.
 1. `heroku create <app-name>` (or `heroku git:remote -a <app-name>`)
 2. `heroku addons:create heroku-postgresql:essential-0 -a <app-name>`
 3. `heroku config:set OTREE_ADMIN_PASSWORD=… OTREE_AUTH_LEVEL=STUDY OTREE_PRODUCTION=1 -a <app-name>`
-4. `heroku config:set SSE_NUM_PRACTICE_ROUNDS=2 SSE_NUM_ROUNDS=20 -a <app-name>`
+4. `heroku config:set SSE_NUM_PRACTICE_ROUNDS=X  SSE_NUM_ROUNDS=XX -a <app-name>` (optional - defaults to 3 and 30 respectively)
 5. `git push heroku main`
 6. `heroku run "otree resetdb" -a <app-name>`
 7. Open **Admin → Rooms** and launch the `market` and `prescreen` rooms.
